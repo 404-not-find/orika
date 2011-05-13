@@ -1,47 +1,33 @@
 package ma.glasnost.orika.impl;
 
-import java.util.HashSet;
-import java.util.Set;
-
+import static ma.glasnost.orika.impl.Specifications.aCollection;
+import static ma.glasnost.orika.impl.Specifications.aPrimitive;
+import static ma.glasnost.orika.impl.Specifications.anArray;
+import static ma.glasnost.orika.impl.Specifications.compatibleTypes;
+import static ma.glasnost.orika.impl.Specifications.immutable;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtNewMethod;
-import ma.glasnost.orika.CodeGenerator;
 import ma.glasnost.orika.Converter;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingException;
-import ma.glasnost.orika.impl.generator.ArrayCodeGenerator;
-import ma.glasnost.orika.impl.generator.CollectionCodeGenerator;
-import ma.glasnost.orika.impl.generator.ImmutableCodeGenerator;
-import ma.glasnost.orika.impl.generator.PrimitivesCodeGenerator;
 import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.FieldMap;
+import ma.glasnost.orika.metadata.Property;
 
 public final class MapperGenerator {
     
     private final MapperFactory mapperFactory;
     
-    private final Set<CodeGenerator> generators;
-    
     public MapperGenerator(MapperFactory mapperFactory) {
-        this(mapperFactory, new HashSet<CodeGenerator>());
-    }
-    
-    public MapperGenerator(MapperFactory mapperFactory, Set<CodeGenerator> generators) {
-        this.generators = generators;
         this.mapperFactory = mapperFactory;
-        generators.add(new ImmutableCodeGenerator());
-        generators.add(new PrimitivesCodeGenerator());
-        generators.add(new CollectionCodeGenerator());
-        generators.add(new ArrayCodeGenerator());
-        
     }
     
     public GeneratedMapperBase build(ClassMap<?, ?> classMap) {
         
         ClassPool pool = ClassPool.getDefault();
-        CtClass mapperClass = pool.makeClass("PA_" + classMap.getATypeName() + "_" + classMap.getBTypeName() + "_Mapper");
+        CtClass mapperClass = pool.makeClass("PA_" + System.identityHashCode(classMap) + Math.round(Math.random()) + "_Mapper");
         
         try {
             CtClass abstractMapperClass = pool.getCtClass(GeneratedMapperBase.class.getName());
@@ -58,8 +44,8 @@ public final class MapperGenerator {
     }
     
     private void addMapMethod(CtClass mapperClass, boolean aToB, ClassMap<?, ?> classMap) throws CannotCompileException {
-        StringBuilder out = new StringBuilder("public void ").append("map" + (aToB ? "AtoB" : "BtoA")).append(
-                "(java.lang.Object a, java.lang.Object b) {");
+        CodeSourceBuilder out = new CodeSourceBuilder();
+        out.append("public void ").append("map" + (aToB ? "AtoB" : "BtoA")).append("(java.lang.Object a, java.lang.Object b) {");
         
         Class<?> sourceClass, destinationClass;
         if (aToB) {
@@ -69,10 +55,9 @@ public final class MapperGenerator {
             sourceClass = classMap.getBType();
             destinationClass = classMap.getAType();
         }
-        out.append("\nif(!(a instanceof ").append(sourceClass.getName())
-                .append(")) throw new Exception(\"Not supported source object.\");");
-        out.append("\nif(!(b instanceof ").append(destinationClass.getName())
-                .append(")) throw new Exception(\"Not supported source object.\");\n");
+        out.assertType("a", sourceClass);
+        out.assertType("b", destinationClass);
+        
         out.append(sourceClass.getName()).append(" source = (").append(sourceClass.getName()).append(") a; \n");
         out.append(destinationClass.getName()).append(" destination = (").append(destinationClass.getName()).append(") b; \n");
         
@@ -84,37 +69,59 @@ public final class MapperGenerator {
                     }
                     generateFieldMapCode(out, fieldMap);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    throw new MappingException(e);
                 }
             }
         }
         
         out.append("\n}");
         
-        System.out.println(out.toString());
         mapperClass.addMethod(CtNewMethod.make(out.toString(), mapperClass));
     }
     
-    private void generateFieldMapCode(StringBuilder code, FieldMap fieldMap) throws Exception {
-        
+    private void generateFieldMapCode(CodeSourceBuilder code, FieldMap fieldMap) throws Exception {
+        Property sp = fieldMap.getSource(), dp = fieldMap.getDestination();
         if (generateConverterCode(code, fieldMap)) {
             return;
         }
-        for (CodeGenerator generator : generators) {
-            if (generator.accept(fieldMap)) {
-                try {
-                    generator.generate(fieldMap.getSource(), fieldMap.getDestination(), code);
-                } catch (Exception e) {
-                    if (fieldMap.isConfigured())
-                        throw e;
-                    // elsewise ignore
+        try {
+            
+            if (fieldMap.have(compatibleTypes()) && fieldMap.is(immutable())) {
+                code.ifSourceNotNull(sp).set(dp, sp);
+            } else if (fieldMap.is(anArray())) {
+                code.setArray(dp, sp);
+            } else if (fieldMap.is(aCollection())) {
+                code.ifSourceNotNull(sp).setCollection(dp, sp);
+            } else if (fieldMap.is(aPrimitive())) {
+                if (dp.isPrimitive() && !sp.isPrimitive()) {
+                    code.ifSourceNotNull(sp).setPrimitive(dp, sp);
+                } else if (!dp.isPrimitive() && sp.isPrimitive()) {
+                    code.setWrapper(dp, sp);
                 }
-                continue;
+            } else {
+                // Call
             }
+        } catch (Exception e) {
+            if (fieldMap.isConfigured())
+                throw e;
+            // elsewise ignore
         }
+        // for (CodeGenerator generator : generators) {
+        // if (generator.accept(fieldMap)) {
+        // try {
+        // generator.generate(fieldMap.getSource(), fieldMap.getDestination(),
+        // code);
+        // } catch (Exception e) {
+        // if (fieldMap.isConfigured())
+        // throw e;
+        // // elsewise ignore
+        // }
+        // continue;
+        // }
+        // }
     }
     
-    private boolean generateConverterCode(final StringBuilder code, final FieldMap fieldMap) {
+    private boolean generateConverterCode(final CodeSourceBuilder code, final FieldMap fieldMap) {
         Converter<?, ?> converter = mapperFactory.lookupConverter(fieldMap.getSource().getType(), fieldMap.getDestination().getType());
         if (converter != null) {
             code.append(String.format("destination.%s(mapperFacade.convert(source.%s(), %s); \n", fieldMap.getDestination().getSetter(),
@@ -127,8 +134,8 @@ public final class MapperGenerator {
     
     private void addGetTypeMethod(CtClass mapperClass, String methodName, Class<?> value) throws CannotCompileException {
         StringBuilder output = new StringBuilder();
-        output.append("\n").append("public java.lang.Class ").append(methodName).append("() { return ").append(value.getName())
-                .append(".class; }");
+        output.append("\n").append("public java.lang.Class ").append(methodName).append("() { return ").append(value.getName()).append(
+                ".class; }");
         mapperClass.addMethod(CtNewMethod.make(output.toString(), mapperClass));
     }
 }
