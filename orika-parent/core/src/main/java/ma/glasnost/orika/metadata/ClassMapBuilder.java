@@ -75,19 +75,24 @@ public final class ClassMapBuilder<A, B> {
 	}
 
 	public Property resolveAProperty(String expr) {
-		return resolveProperty(expr, classMap.getAType());
+		Property property;
+		if (PropertyUtil.isExpression(expr)) {
+			property = PropertyUtil.getNestedProperty(classMap.getAType(), expr);
+		} else if (aProperties.containsKey(expr)) {
+			property = aProperties.get(expr);
+		} else {
+			throw new MappingException(expr + " do not belongs to " + classMap.getATypeName());
+		}
+
+		return property;
 	}
 
 	public Property resolveBProperty(String expr) {
-		return resolveProperty(expr, classMap.getBType());
-	}
-
-	private Property resolveProperty(String expr, Class<?> clazz) {
 		Property property;
 		if (PropertyUtil.isExpression(expr)) {
-			property = PropertyUtil.getNestedProperty(clazz, expr);
-		} else if (aProperties.containsKey(expr)) {
-			property = aProperties.get(expr);
+			property = PropertyUtil.getNestedProperty(classMap.getBType(), expr);
+		} else if (bProperties.containsKey(expr)) {
+			property = bProperties.get(expr);
 		} else {
 			throw new MappingException(expr + " do not belongs to " + classMap.getATypeName());
 		}

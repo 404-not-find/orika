@@ -10,8 +10,8 @@ public class CodeSourceBuilder {
 	private final StringBuilder out = new StringBuilder();
 
 	public CodeSourceBuilder assertType(String var, Class<?> clazz) {
-		append("\nif(!(" + var + " instanceof ").append(clazz.getName()).append(
-				")) throw new IllegalStateException(\"[" + var + "] is not an instance of " + clazz.getName() + " \");");
+		append("if(!(" + var + " instanceof ").append(clazz.getName()).append(
+				")) throw new IllegalStateException(\"[" + var + "] is not an instance of " + clazz.getName() + " \");\n");
 		return this;
 	}
 
@@ -102,7 +102,7 @@ public class CodeSourceBuilder {
 	}
 
 	public CodeSourceBuilder setPrimitive(Property dp, Property sp) {
-		append("destination.%s(source.%s().%sValue());}\n", dp.getSetter(), sp.getGetter(), getType(dp.getType()));
+		append("destination.%s(source.%s().%sValue());\n", dp.getSetter(), sp.getGetter(), getType(dp.getType()));
 		return this;
 	}
 

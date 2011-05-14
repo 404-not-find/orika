@@ -91,7 +91,7 @@ public abstract class Specifications {
 	static final Specification PRIMITIVE_TO_WRAPPER = new Specification() {
 
 		public boolean apply(FieldMap fieldMap) {
-			return fieldMap.getDestination().isPrimitive() && !fieldMap.getSource().isPrimitive();
+			return !fieldMap.getDestination().isPrimitive() && fieldMap.getSource().isPrimitive();
 		}
 
 	};
