@@ -2,7 +2,9 @@ package ma.glasnost.orika.metadata;
 
 import java.util.Collection;
 
+// XXX must be immutable
 public class Property {
+	private static final Property[] EMPTY_PATH = new Property[0];
 	private String name;
 	private String getter;
 	private String setter;
@@ -84,6 +86,14 @@ public class Property {
 
 	public boolean isCollection() {
 		return Collection.class.isAssignableFrom(type);
+	}
+
+	public boolean hasPath() {
+		return false;
+	}
+
+	public Property[] getPath() {
+		return EMPTY_PATH;
 	}
 
 	@Override

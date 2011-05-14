@@ -42,7 +42,8 @@ public class MapperFacade implements Mapper {
 			throw new MappingException("Can not map a null object.");
 
 		if (Modifier.isAbstract(destinationClass.getModifiers())) {
-			mapperFactory.lookupConcreteDestinationClass(sourceObject.getClass(), destinationClass, context);
+			destinationClass = (Class<D>) mapperFactory.lookupConcreteDestinationClass(sourceObject.getClass(), destinationClass,
+					context);
 		}
 
 		// XXX when it's immutable it's ok to copy by ref
