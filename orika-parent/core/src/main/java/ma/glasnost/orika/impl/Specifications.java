@@ -1,9 +1,6 @@
 package ma.glasnost.orika.impl;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
-import ma.glasnost.orika.impl.util.CollectionUtil;
+import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.FieldMap;
 
 public abstract class Specifications {
@@ -16,6 +13,7 @@ public abstract class Specifications {
 		return IS_IMMUTABLE;
 	}
 
+	@Deprecated
 	public static Specification compatibleTypes() {
 		return HAVE_COMPATIBLE_TYPES;
 	}
@@ -43,9 +41,8 @@ public abstract class Specifications {
 	static final Specification IS_IMMUTABLE = new Specification() {
 
 		public boolean apply(FieldMap fieldMap) {
-			return CollectionUtil.equalsAny(fieldMap.getSource().getType(), String.class, Integer.class, Long.class,
-					Boolean.class, Character.class, Byte.class, Double.class, Float.class, BigDecimal.class, Integer.TYPE,
-					Boolean.TYPE, Long.TYPE, Float.TYPE, Double.TYPE, Character.TYPE, Date.class, java.sql.Date.class);
+			return ClassUtil.isImmutable(fieldMap.getSource().getType())
+					&& fieldMap.getDestination().isAssignableFrom(fieldMap.getSource());
 		}
 	};
 

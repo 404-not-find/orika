@@ -11,6 +11,7 @@ import ma.glasnost.orika.Mapper;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.ObjectFactory;
+import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.MapperKey;
 
 public class MapperFacade implements Mapper {
@@ -41,33 +42,40 @@ public class MapperFacade implements Mapper {
 		if (sourceObject == null)
 			throw new MappingException("Can not map a null object.");
 
+		// XXX when it's immutable it's ok to copy by ref
+		if (isImmutable(sourceObject) && sourceObject.getClass().equals(destinationClass)) {
+			return (D) sourceObject;
+		}
+
+		if (context.isAlreadyMapped(sourceObject)) {
+			return context.getMappedObject(sourceObject);
+		}
+
 		if (Modifier.isAbstract(destinationClass.getModifiers())) {
 			destinationClass = (Class<D>) mapperFactory.lookupConcreteDestinationClass(sourceObject.getClass(), destinationClass,
 					context);
 		}
 
-		// XXX when it's immutable it's ok to copy by ref
-		if (isImmutable(sourceObject) && sourceObject.getClass().equals(destinationClass))
-			return (D) sourceObject;
-
 		D destinationObject = newObject(destinationClass);
 
-		map(sourceObject, destinationObject);
+		context.cacheMappedObject(sourceObject, destinationObject);
+
+		map(sourceObject, destinationObject, context);
 		return destinationObject;
 	}
 
-	protected void map(Object sourceObject, Object destinationObject) {
+	protected void map(Object sourceObject, Object destinationObject, MappingContext context) {
 		Class<?> sourceClass = sourceObject.getClass();
 		Class<?> destinationClass = destinationObject.getClass();
 		while (!destinationClass.equals(Object.class)) {
-			mapDeclaredProperties(sourceObject, destinationObject, sourceClass, destinationClass);
+			mapDeclaredProperties(sourceObject, destinationObject, sourceClass, destinationClass, context);
 			destinationClass = destinationClass.getSuperclass();
 			sourceClass = sourceClass.getSuperclass();
 		}
 	}
 
 	protected void mapDeclaredProperties(Object sourceObject, Object destinationObject, Class<?> sourceClass,
-			Class<?> destinationClass) {
+			Class<?> destinationClass, MappingContext context) {
 		MapperKey mapperKey = new MapperKey(sourceClass, destinationClass);
 		GeneratedMapperBase mapper = mapperFactory.get(mapperKey);
 
@@ -77,9 +85,9 @@ public class MapperFacade implements Mapper {
 		}
 
 		if (mapper.getAType().equals(sourceClass)) {
-			mapper.mapAtoB(sourceObject, destinationObject);
+			mapper.mapAtoB(sourceObject, destinationObject, context);
 		} else if (mapper.getAType().equals(destinationClass)) {
-			mapper.mapBtoA(sourceObject, destinationObject);
+			mapper.mapBtoA(sourceObject, destinationObject, context);
 		} else {
 			throw new IllegalStateException(String.format("Source object type's must be one of '%s' or '%s'.", mapper.getAType(),
 					mapper.getBType()));
@@ -87,8 +95,7 @@ public class MapperFacade implements Mapper {
 	}
 
 	private <S> boolean isImmutable(S sourceObject) {
-		// XXX need to support all immutable type
-		return String.class.equals(sourceObject.getClass());
+		return ClassUtil.isImmutable(sourceObject.getClass());
 	}
 
 	/*
@@ -98,7 +105,11 @@ public class MapperFacade implements Mapper {
 	 * java.lang.Class)
 	 */
 	public final <D, S> Set<D> mapAsSet(Iterable<S> source, Class<D> destinationClass) {
-		return (Set<D>) mapAsCollection(source, destinationClass, new HashSet<D>());
+		return mapAsSet(source, destinationClass, new MappingContext());
+	}
+
+	public final <D, S> Set<D> mapAsSet(Iterable<S> source, Class<D> destinationClass, MappingContext context) {
+		return (Set<D>) mapAsCollection(source, destinationClass, new HashSet<D>(), context);
 	}
 
 	/*
@@ -108,10 +119,15 @@ public class MapperFacade implements Mapper {
 	 * java.lang.Class)
 	 */
 	public final <D, S> List<D> mapAsList(Iterable<S> source, Class<D> destinationClass) {
-		return (List<D>) mapAsCollection(source, destinationClass, new ArrayList<D>());
+		return (List<D>) mapAsCollection(source, destinationClass, new ArrayList<D>(), new MappingContext());
 	}
 
-	protected <D, S> Collection<D> mapAsCollection(Iterable<S> source, Class<D> destinationClass, Collection<D> destination) {
+	public final <D, S> List<D> mapAsList(Iterable<S> source, Class<D> destinationClass, MappingContext context) {
+		return (List<D>) mapAsCollection(source, destinationClass, new ArrayList<D>(), context);
+	}
+
+	protected <D, S> Collection<D> mapAsCollection(Iterable<S> source, Class<D> destinationClass, Collection<D> destination,
+			MappingContext context) {
 		for (S item : source) {
 			destination.add(map(item, destinationClass));
 		}
@@ -125,6 +141,14 @@ public class MapperFacade implements Mapper {
 	 * java.lang.Class)
 	 */
 	public <D, S> D[] mapAsArray(D[] destination, Iterable<S> source, Class<D> destinationClass) {
+		return mapAsArray(destination, source, destinationClass, new MappingContext());
+	}
+
+	public <D, S> D[] mapAsArray(D[] destination, S[] source, Class<D> destinationClass) {
+		return mapAsArray(destination, source, destinationClass, new MappingContext());
+	}
+
+	public <D, S> D[] mapAsArray(D[] destination, Iterable<S> source, Class<D> destinationClass, MappingContext context) {
 		int i = 0;
 		for (S s : source) {
 			destination[i++] = map(s, destinationClass);
@@ -132,7 +156,7 @@ public class MapperFacade implements Mapper {
 		return destination;
 	}
 
-	public <D, S> D[] mapAsArray(D[] destination, S[] source, Class<D> destinationClass) {
+	public <D, S> D[] mapAsArray(D[] destination, S[] source, Class<D> destinationClass, MappingContext context) {
 		int i = 0;
 		for (S s : source) {
 			destination[i++] = map(s, destinationClass);

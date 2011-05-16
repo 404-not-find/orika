@@ -14,6 +14,18 @@ public interface MapperFactory {
 
 	<S, D> void registerConverter(String converterId, Converter<S, D> converter);
 
+	/**
+	 * Lookup for converter in the following order
+	 * <ul>
+	 * <li>Destination class</li>
+	 * <li>Destination interface</li>
+	 * <li>Destination annotation</li>
+	 * </ul>
+	 * 
+	 * @param source
+	 * @param destination
+	 * @return
+	 */
 	<S, D> Converter<S, D> lookupConverter(Class<S> source, Class<D> destination);
 
 	<T> void registerObjectFactory(ObjectFactory<T> objectFactory, Class<T> targetClass);

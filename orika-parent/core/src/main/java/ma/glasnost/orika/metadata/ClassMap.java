@@ -3,11 +3,14 @@ package ma.glasnost.orika.metadata;
 import java.util.HashSet;
 import java.util.Set;
 
+import ma.glasnost.orika.CustomizedMapper;
+
 public class ClassMap<A, B> {
 
 	Class<A> aType;
 	Class<B> bType;
 	Set<FieldMap> fieldsMapping;
+	CustomizedMapper<A, B> customizedMapper;
 
 	public ClassMap(Class<A> aType, Class<B> bType) {
 		this.aType = aType;
@@ -38,6 +41,14 @@ public class ClassMap<A, B> {
 
 	public String getBTypeName() {
 		return bType.getSimpleName();
+	}
+
+	public CustomizedMapper<A, B> getCustomizedMapper() {
+		return customizedMapper;
+	}
+
+	public void setCustomizedMapper(CustomizedMapper<A, B> customizedMapper) {
+		this.customizedMapper = customizedMapper;
 	}
 
 	@Override

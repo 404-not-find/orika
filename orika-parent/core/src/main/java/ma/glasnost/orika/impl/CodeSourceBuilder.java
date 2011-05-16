@@ -3,6 +3,7 @@ package ma.glasnost.orika.impl;
 import java.util.List;
 import java.util.Set;
 
+import ma.glasnost.orika.metadata.NestedProperty;
 import ma.glasnost.orika.metadata.Property;
 
 public class CodeSourceBuilder {
@@ -20,16 +21,8 @@ public class CodeSourceBuilder {
 			append("/*One way for nested properties skipping mapping */\n");
 			return this;
 		}
-		if (s.hasPath()) {
-			append("try {");
-			append("destination.%s(source", d.getSetter(), s.getGetter());
-			for (Property p : s.getPath()) {
-				append(".%s()", p.getGetter());
-			}
-			append(".%s());} catch(NullPointerException e) {}", s.getGetter());
-		} else {
-			append("destination.%s(source.%s());", d.getSetter(), s.getGetter());
-		}
+		String getter = getGetter(s);
+		append("destination.%s(source.%s);", d.getSetter(), getter);
 		return this;
 	}
 
@@ -47,10 +40,15 @@ public class CodeSourceBuilder {
 			destinationCollection = "Set";
 		}
 
-		append("destination.%s(mapperFacade.mapAs%s(source.%s(), %s.class));", dp.getSetter(), destinationCollection, sp
-				.getGetter(), destinationElementClass.getName());
+		String getter = getGetter(sp);
+		append("destination.%s(mapperFacade.mapAs%s(source.%s, %s.class, mappingContext));", dp.getSetter(),
+				destinationCollection, getter, destinationElementClass.getName());
 
 		return this;
+	}
+
+	private String getGetter(Property sp) {
+		return sp.hasPath() ? ((NestedProperty) sp).getLongGetter() : sp.getGetter() + "()";
 	}
 
 	public CodeSourceBuilder append(String str, Object... args) {
@@ -60,13 +58,6 @@ public class CodeSourceBuilder {
 
 	public CodeSourceBuilder append(String str) {
 		out.append(str);
-		return this;
-	}
-
-	public CodeSourceBuilder ifSourceNotNull(Property p) {
-		if (!p.hasPath()) {
-			append("if(source.%s() != null)", p.getGetter());
-		}
 		return this;
 	}
 
@@ -85,9 +76,11 @@ public class CodeSourceBuilder {
 		return out.toString();
 	}
 
+	// TODO add support nested properties
 	public CodeSourceBuilder setWrapper(Property dp, Property sp) {
-		append("destination.%s(%s.valueOf((%s) source.%s()));\n", dp.getSetter(), dp.getType().getName(), getType(dp.getType()),
-				sp.getGetter());
+		String getter = getGetter(sp);
+		append("destination.%s(%s.valueOf((%s) source.%s));\n", dp.getSetter(), dp.getType().getName(), getType(dp.getType()),
+				getter);
 		return this;
 	}
 
@@ -101,19 +94,62 @@ public class CodeSourceBuilder {
 		return type;
 	}
 
+	// TODO add support nested properties
 	public CodeSourceBuilder setPrimitive(Property dp, Property sp) {
-		append("destination.%s(source.%s().%sValue());\n", dp.getSetter(), sp.getGetter(), getType(dp.getType()));
+		String getter = getGetter(sp);
+		append("destination.%s(source.%s.%sValue());\n", dp.getSetter(), getter, getType(dp.getType()));
 		return this;
 	}
 
-	public void setArray(Property dp, Property sp) {
+	// TODO add support nested properties
+	public CodeSourceBuilder setArray(Property dp, Property sp) {
 		String getSizeCode = sp.getType().isArray() ? "length" : "size()";
 		String paramType = dp.getType().getComponentType().getName();
 
-		ifSourceNotNull(sp).then().append("%s[] %s = new %s[source.%s().%s];", paramType, dp.getName(), paramType,
-				sp.getGetter(), getSizeCode).append("mapperFacade.mapAsArray(%s, source.%s(), %s.class);", dp.getName(),
-				sp.getGetter(), paramType).set(dp, dp.getName()).end();
+		String getter = getGetter(sp);
 
+		append("%s[] %s = new %s[source.%s.%s];", paramType, dp.getName(), paramType, getter, getSizeCode).append(
+				"mapperFacade.mapAsArray(%s, source.%s, %s.class, mappingContext);", dp.getName(), getter, paramType).set(dp,
+				dp.getName());
+
+		return this;
 	}
 
+	public CodeSourceBuilder setObject(Property dp, Property sp) {
+		String getter = getGetter(sp);
+		append("destination.%s((%s)mapperFacade.map(source.%s, %s.class, mappingContext));", dp.getSetter(), dp.getType()
+				.getName(), getter, dp.getType().getName());
+		return this;
+	}
+
+	// TODO add support nested properties
+	public CodeSourceBuilder ifSourceNotNull(Property sp) {
+
+		/*
+		 * in the case of nested properties ex. source.getBar().getFoo()
+		 * if(source.getBar() != null && source.getBar().getFoo() != null)
+		 */
+		if (sp.hasPath()) {
+			StringBuilder sb = new StringBuilder("source");
+			int i = 0;
+			append("if(");
+			for (Property p : sp.getPath()) {
+				sb.append(".").append(p.getGetter()).append("()");
+				append("%s != null", sb.toString());
+				if (i < sp.getPath().length - 1) {
+					append(" && ");
+				}
+				i++;
+			}
+			sb.append(".").append(sp.getGetter()).append("()");
+			if (!sp.isPrimitive()) {
+				append(sb.toString()).append(" != null");
+			}
+			append(")");
+		} else if (!sp.isPrimitive()) {
+			append("if(source.%s() != null)", sp.getGetter());
+		}
+
+		return this;
+	}
 }

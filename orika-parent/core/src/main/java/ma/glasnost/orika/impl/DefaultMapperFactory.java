@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import ma.glasnost.orika.Converter;
+import ma.glasnost.orika.CustomizedMapper;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.ObjectFactory;
@@ -111,6 +112,7 @@ public class DefaultMapperFactory implements MapperFactory {
 		return concreteClass;
 	}
 
+	@SuppressWarnings("unchecked")
 	public <S, D> void registerClassMap(ClassMap<S, D> classMap) {
 		register(classMap.getAType(), classMap.getBType());
 		register(classMap.getBType(), classMap.getAType());
@@ -118,6 +120,7 @@ public class DefaultMapperFactory implements MapperFactory {
 		MapperKey mapperKey = new MapperKey(classMap.getAType(), classMap.getBType());
 		GeneratedMapperBase mapper = this.mapperGenerator.build(classMap);
 		mapper.setMapperFacade(mapperFacade);
+		mapper.setCustomizedMapper((CustomizedMapper<Object, Object>) classMap.getCustomizedMapper());
 		mappersRegistry.put(mapperKey, mapper);
 	}
 

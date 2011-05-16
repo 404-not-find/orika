@@ -4,7 +4,6 @@ import static ma.glasnost.orika.impl.Specifications.aCollection;
 import static ma.glasnost.orika.impl.Specifications.aPrimitiveToWrapper;
 import static ma.glasnost.orika.impl.Specifications.aWrapperToPrimitive;
 import static ma.glasnost.orika.impl.Specifications.anArray;
-import static ma.glasnost.orika.impl.Specifications.compatibleTypes;
 import static ma.glasnost.orika.impl.Specifications.immutable;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -46,7 +45,9 @@ public final class MapperGenerator {
 
 	private void addMapMethod(CtClass mapperClass, boolean aToB, ClassMap<?, ?> classMap) throws CannotCompileException {
 		CodeSourceBuilder out = new CodeSourceBuilder();
-		out.append("public void ").append("map" + (aToB ? "AtoB" : "BtoA")).append("(java.lang.Object a, java.lang.Object b) {");
+		String mapMethod = "map" + (aToB ? "AtoB" : "BtoA");
+		out.append("public void ").append(mapMethod).append("(java.lang.Object a, java.lang.Object b, %s mappingContext) {",
+				MappingContext.class.getName());
 
 		Class<?> sourceClass, destinationClass;
 		if (aToB) {
@@ -61,6 +62,9 @@ public final class MapperGenerator {
 
 		out.append(sourceClass.getName()).append(" source = (").append(sourceClass.getName()).append(") a; \n");
 		out.append(destinationClass.getName()).append(" destination = (").append(destinationClass.getName()).append(") b; \n");
+
+		out.append("\nif(customizedMapper != null) customizedMapper.").append(mapMethod).append(
+				"(source, destination, mappingContext);\n");
 
 		for (FieldMap fieldMap : classMap.getFieldsMapping()) {
 			if (!fieldMap.isExcluded()) {
@@ -89,21 +93,18 @@ public final class MapperGenerator {
 		try {
 			if (fieldMap.getDestination().hasPath())
 				return;
-			if (fieldMap.have(compatibleTypes()) && fieldMap.is(immutable())) {
-				code.ifSourceNotNull(sp);
-				code.set(dp, sp);
+			if (fieldMap.is(immutable())) {
+				code.ifSourceNotNull(sp).set(dp, sp);
 			} else if (fieldMap.is(anArray())) {
-				code.setArray(dp, sp);
+				code.ifSourceNotNull(sp).then().setArray(dp, sp).end();
 			} else if (fieldMap.is(aCollection())) {
-				code.ifSourceNotNull(sp);
-				code.setCollection(dp, sp);
+				code.ifSourceNotNull(sp).setCollection(dp, sp);
 			} else if (fieldMap.is(aWrapperToPrimitive())) {
-				code.ifSourceNotNull(sp);
-				code.setPrimitive(dp, sp);
+				code.ifSourceNotNull(sp).setPrimitive(dp, sp);
 			} else if (fieldMap.is(aPrimitiveToWrapper())) {
-				code.setWrapper(dp, sp);
-			} else {
-				// Call
+				code.ifSourceNotNull(sp).setWrapper(dp, sp);
+			} else { /**/
+				code.ifSourceNotNull(sp).setObject(dp, sp);
 			}
 		} catch (Exception e) {
 			if (fieldMap.isConfigured())

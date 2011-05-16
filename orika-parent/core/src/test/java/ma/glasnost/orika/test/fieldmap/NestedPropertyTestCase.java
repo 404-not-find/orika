@@ -21,7 +21,7 @@ public class NestedPropertyTestCase {
 	}
 
 	@Test
-	public void testNestProperty() {
+	public void testNestedProperty() {
 
 		Point start = new Point(2, 4);
 		Point end = new Point(8, 9);

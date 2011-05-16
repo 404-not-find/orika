@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import ma.glasnost.orika.CustomizedMapper;
 import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.impl.util.PropertyUtil;
 
@@ -50,6 +51,11 @@ public final class ClassMapBuilder<A, B> {
 		Property aProperty = resolveAProperty(a), bProperty = resolveBProperty(b);
 		classMap.addFieldMapping(new FieldMap(aProperty, bProperty, true, true));
 		propertiesCache.add(a);
+		return this;
+	}
+
+	public ClassMapBuilder<A, B> customize(CustomizedMapper<A, B> customizedMapper) {
+		classMap.setCustomizedMapper(customizedMapper);
 		return this;
 	}
 
