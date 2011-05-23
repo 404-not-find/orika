@@ -1,4 +1,5 @@
 #summary A getting started guide.
+#labels Featured
 
 =Getting Started Guide=
 
