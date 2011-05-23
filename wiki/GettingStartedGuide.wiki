@@ -2,10 +2,13 @@
 #labels Featured
 
 =Getting Started Guide=
+_This guide is very brief and incomplete. Feel free to fix or improve it_
 
+==Installation==
 For maven users, the easiest way to get going is to add the following dependency to your project. 
 
 _Please verify the latest version_:
+
 
 {{{
 <dependency>
@@ -15,10 +18,33 @@ _Please verify the latest version_:
 </dependency> 
 }}}
 
-Once your project configured 
-== Introduction ==
+If you do not use maven please download the latest version of the archive zip with dependencies and put it on your classpath.
 
-Add your content here.
+Once your project configured you can start the following tutorial.
+
+== Tutorial ==
+
+=== Auto mapping ===
+
+At the heart of Orika there is the factory and the mapper facade : 
+
+ * `MapperFactory` : maintain a registry of mappers, converters and object factories 
+ * `MapperFacade` : handle all mapping operations
+
+By default Orika copy all properties with the same name and compatible types:
+
+{{{
+...
+MapperFacory mapperFactory = new OrikaMapperFactory();
+MapperFacade mapperFacade = mapperFactory.getMapperFacade();
+
+BeanA a = new BeanA();
+...
+BeanB b = mapperFacade.map(a, BeanB.class);
+
+System.out.println(b);
+}}}
+ 
 
 
 = Details =
