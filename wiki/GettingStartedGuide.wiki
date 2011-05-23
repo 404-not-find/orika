@@ -1,0 +1,28 @@
+#summary A getting started guide.
+
+=Getting Started Guide=
+
+For maven users, the easiest way to get going is to add the following dependency to your project. 
+
+_Please verify the latest version_:
+
+{{{
+<dependency>
+   <groupId>ma.glasnost.orika</groupId>
+   <artifactId>orika-core</artifactId>
+   <version>1.0</version>
+</dependency> 
+}}}
+
+Once your project configured 
+== Introduction ==
+
+Add your content here.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
