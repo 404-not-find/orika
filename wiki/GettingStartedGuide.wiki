@@ -1,16 +1,20 @@
 #summary A getting started guide.
 #labels Featured
-
 =Getting Started Guide=
 _This guide is very brief and incomplete. Feel free to fix or improve it_
 
 ==Installation==
-For maven users, the easiest way to get going is to add the following dependency to your project. 
+For maven users, the easiest way to get going is to add the following repository and dependency to your project. 
 
 _Please verify the latest version_:
 
 
 {{{
+<repository>
+   <id>orika-googlecode</id>
+   <url>http://orika.googlecode.com/svn/repo</url>
+</repository>
+...
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-core</artifactId>
@@ -21,6 +25,12 @@ _Please verify the latest version_:
 If you do not use maven please download the latest version of the archive zip with dependencies and put it on your classpath.
 
 Once your project configured you can start the following tutorial.
+
+===3rd Party Dependencies===
+
+Orika use javassist to generate byte-code dynamically. If you're downloading and installing the compiled jar in your local m2 repository rather than building from source using maven, you will not get any of the transitive dependencies
+
+
 
 == Tutorial ==
 
@@ -44,12 +54,3 @@ BeanB b = mapperFacade.map(a, BeanB.class);
 
 System.out.println(b);
 }}}
- 
-
-
-= Details =
-
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
