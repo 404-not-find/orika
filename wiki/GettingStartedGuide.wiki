@@ -54,3 +54,32 @@ BeanB b = mapperFacade.map(a, BeanB.class);
 
 System.out.println(b);
 }}}
+
+=== Configured mapping ===
+
+TODO
+
+=== Custom Java Mapping ===
+
+TODO
+
+=== Converters ===
+
+TODO
+
+=== Bi-directional mapping ===
+
+TODO
+
+=== Object factories ===
+
+TODO
+
+== Advanced topics ==
+=== Resolving concrete classes ===
+
+TODO
+
+=== Proxy handlers ===
+
+TODO
