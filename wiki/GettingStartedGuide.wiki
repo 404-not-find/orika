@@ -45,7 +45,7 @@ By default Orika copy all properties with the same name and compatible types:
 
 {{{
 ...
-MapperFacory mapperFactory = new OrikaMapperFactory();
+MapperFacory mapperFactory = new DefaultMapperFactory();
 MapperFacade mapperFacade = mapperFactory.getMapperFacade();
 
 BeanA a = new BeanA();
