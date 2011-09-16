@@ -11,8 +11,8 @@ _Please verify the latest version_:
 
 {{{
 <repository>
-   <id>orika-googlecode</id>
-   <url>http://orika.googlecode.com/svn/repo</url>
+   <id>orika-snapshot</id>
+   <url>https://repository-orika.forge.cloudbees.com/snapshot</url>
 </repository>
 ...
 <dependency>
