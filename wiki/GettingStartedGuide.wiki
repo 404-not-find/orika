@@ -258,7 +258,7 @@ NB: In sum, always remember when using orika, that it will automatically do ever
 Where not going to start a discussion on whether use or not a dto but we are going to illustrate some cases in which you may need mapping (Orika):
  * Multi layered applications
  * DDD you need for example an data mapper between bounded context
- * ... a lot when you want to deal with bean mapping
+
 
 
 		
