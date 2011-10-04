@@ -119,13 +119,15 @@ For specific field we have specific treatment, in this case we will create and r
 
 {{{
 // register your custom mapper
-mapperFactory.registerClassMap(ClassMapBuilder.map(ProductDto.class, Product.class).customize(new MapperBase<ProductDto, Product>() {
+ClassMapBuilder<ProductDto, Product> builder = ClassMapBuilder.map(ProductDto.class, Product.class);
+builder.customize(new MapperBase<ProductDto, Product>() {
 	
 // create your custom mapper				
 @Override
 public void mapBtoA( Product b,  ProductDto a, MappingContext  context) {
 a.setDescription("The " + b.getProductName() + " is a fabulous  product which only cost  " + b.getPrice());
 
-}}).toClassMap());
+}});
+mapperFactory.registerClassMap(builder.byDefault().toClassMap());
 
 }}}
