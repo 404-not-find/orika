@@ -131,3 +131,133 @@ a.setDescription("The " + b.getProductName() + " is a fabulous  product which on
 mapperFactory.registerClassMap(builder.byDefault().toClassMap());
 
 }}}
+
+
+=== Converter ===
+
+Let’s move now to the price, in our case we want to format the price:
+  * Price in our product class is a Double
+  * Price in our Dto class is a BigDecimal
+For this case we need to create a converter:
+
+{{{
+// register your converter
+mapperFactory.registerConverter(new ConverterBase<Double, String>() {
+
+        // converter
+	public BigDecimal convert(Double source) throws ConverterException {
+		return new BigDecimal(source);
+	}
+});
+}}
+
+=== Mapping fields with different name ===
+
+
+Is an easy task, you should just point for the name of the attribute in the class A and the supposed match in the class B , keep in mind that the fields should be of the same type ,otherwise use a converter.
+
+{{{
+mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,ProductDto.class).field("productDescription", "description").byDefault().toClassMap());
+}}}
+
+
+=== Nested property ===
+
+
+In some cases the class we’re mapping from is not a mirror of the one we’re mapping to, attribute we’re seeking can be at a different depth, use nested property expression to access attribute at different level/depth.
+We are going to introduce the order class:
+
+An order contains only one product at a time.
+
+Our Dto diagram contains a new attribute the orderNum which is in our case the product name.
+
+{{{
+// register the nested property expression
+mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDto.class).field("product.productName", "orderNum").byDefault().toClassMap());
+}}}
+
+=== Collections ===
+
+In reality an order contains a set of products:
+{{{
+// register product and order
+mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,
+ProductDto.class).field("productDescription", "description")
+.byDefault().toClassMap());
+
+mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,
+OrderDto.class).field("products", "productsDto").byDefault()
+.toClassMap());
+
+}}}
+
+You have guessed right, there is no special treatment for collections case, since it’s implicit, Orika will automatically detects the collection inside your source object and map it to the destination.
+
+=== Bi-directional mapping ====
+
+Let’s have a look at our bi-directional domain, 
+
+Our dto model :
+
+{{{
+BookDto bookDto = mapperFacade.map(book, BookDto.class);
+}}}
+
+As you can see, nothing has changed, and of course the destination object will have bi-directional references as well.
+
+=== Primitives ===
+
+
+Orika will map from primitives to their respective wrapper and vice versa automatically.
+
+=== Inheritance ===
+
+
+As of the primitives Orika detect inheritance and map automatically child and parent object.
+
+=== Object factories ===
+
+In some cases we want to add an object factory to our mapping processing, let’s take for instance a case where we have a Person with a default address that we want Orika to add automatically whenever facing a PersonDto.
+Let’s introduce the person domain’s model:
+                        
+Dto’s model :
+
+{{{
+public class PersonFactory implements ObjectFactory<PersonDto> {
+
+	@Override
+	public PersonDto create() {
+		PersonDto personDto = new PersonDto();
+		// set the default adress
+		personDto.setAdressDto(new AdressDto("Morocco", "Casablanca"));
+			return personDto;
+	}
+
+	@Override
+	public Class<PersonDto> getTargetClass() {
+		return PersonDto.class;
+	}
+
+}
+
+}}}
+
+Your factory must implements Orika’s ObjectFactory, then all you will have to do is to implement the create () method, and indicate the type to be expected by the object factory in the getTargetClass() method.
+
+{{{
+mapperFactory.registerObjectFactory(new PersonFactory(),PersonDto.class);
+}}}
+
+Don’t forget to register your Object factory.
+
+NB: In sum, always remember when using orika, that it will automatically do everything for you, you should be concerned by treat only your special cases.
+
+== Summary ==
+
+Where not going to start a discussion on whether use or not a dto but we are going to illustrate some cases in which you may need mapping (Orika):
+ * Multi layered applications
+ * DDD you need for example an data mapper between bounded context
+ * ... a lot when you want to deal with bean mapping
+
+
+		
