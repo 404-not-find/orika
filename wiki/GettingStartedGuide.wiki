@@ -24,6 +24,7 @@ _Please verify the latest version_:
 
 If you do not use maven please download the latest version of the archive zip with dependencies and put it on your classpath.
 
+
 Once your project configured you can start the following tutorial.
 
 ===3rd Party Dependencies===
@@ -34,23 +35,97 @@ Orika use javassist to generate byte-code dynamically. If you're downloading and
 
 == Tutorial ==
 
-=== Auto mapping ===
+=== Setup the mapping factory ===
 
-At the heart of Orika there is the factory and the mapper facade : 
-
- * `MapperFactory` : maintain a registry of mappers, converters and object factories 
- * `MapperFacade` : handle all mapping operations
-
-By default Orika copy all properties with the same name and compatible types:
+The get an instance of MapperFacade initialise a MapperFactory:
 
 {{{
-...
-MapperFacory mapperFactory = new DefaultMapperFactory();
-MapperFacade mapperFacade = mapperFactory.getMapperFacade();
+MapperFactory factory = MappingUtil.getMapperFactory();
+factory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
+  .field("product.state.type.label", "stateLabel")
+  .field("product.name", "productName").toClassMap());
+    	
+factory.build();
 
-BeanA a = new BeanA();
-...
-BeanB b = mapperFacade.map(a, BeanB.class);
+factory.getMapperFacade();
+}}}
 
-System.out.println(b);
+=== Reference ====
+
+n this example we will show you how to map from a class A to another class B and vice versa.
+Let’s have a look at our domain model:
+
+*Product (A) Source :*
+{{{
+public class Product {
+
+	private String productName;
+
+	private String productDescription;
+
+	private Double price;
+
+	private Boolean availability;
+
+	// getters & setters
+	
+}
+}}}
+
+*ProductDto (B) Destination :*
+
+{{{
+public class ProductDto {
+
+	private String productName;
+
+	private String description;
+
+	private BigDecimal price;
+
+	private Boolean availability;
+
+	// getters & setters
+}
+}}}
+
+Note that we have explicitly chosen different and alike attributes names and types.
+
+=== Auto mapping ===
+
+==== Map from Product to ProductDto ====
+
+*Result (Orika-AutoMapping) :*
+
+Orika will automatically find all attributes with the same name and type and map them.
+
+NB: remember that, declaring a custom mapper and/or a converter override the orika auto-mapping functionality, the byDefault() function set it  active again, this was deliberately done this way to give developers full  hands on their mapping.
+
+{{{
+// register the auto-mapping function
+mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,ProductDto.class).byDefault().toClassMap());
+}}}
+
+
+=== Custom Mapper ===
+
+*Let’s take now a closer look at our Dto:*
+
+The description field in our case has nothing to do with the former one from the product class, this field is now a set of information collected from other fields, let’s say that the description should look something like this:
+* Description example: The Dreamcast is a fabulous product which only cost 150
+* Description in java: {{{ "The " + product.getProductName() +" is a fabulous product which only cost " + product.getPrice() }}}
+
+For specific field we have specific treatment, in this case we will create and register a custom mapper :
+
+{{{
+// register your custom mapper
+mapperFactory.registerClassMap(ClassMapBuilder.map(ProductDto.class, Product.class).customize(new MapperBase<ProductDto, Product>() {
+	
+// create your custom mapper				
+@Override
+public void mapBtoA( Product b,  ProductDto a, MappingContext  context) {
+a.setDescription("The " + b.getProductName() + " is a fabulous  product which only cost  " + b.getPrice());
+
+}}).toClassMap());
+
 }}}
