@@ -1,6 +1,8 @@
-#summary A getting started guide.
 #labels Featured
 =Getting Started Guide=
+
+<wiki:toc max_depth="3" />
+
 _This guide is very brief and incomplete. Feel free to fix or improve it_
 
 ==Installation==
@@ -252,6 +254,10 @@ mapperFactory.registerObjectFactory(new PersonFactory(),PersonDto.class);
 Don’t forget to register your Object factory.
 
 NB: In sum, always remember when using orika, that it will automatically do everything for you, you should be concerned by treat only your special cases.
+
+=== Proxy ====
+
+_Implemented but not yet documented_
 
 == Summary ==
 
