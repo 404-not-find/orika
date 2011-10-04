@@ -149,7 +149,8 @@ mapperFactory.registerConverter(new ConverterBase<Double, String>() {
 		return new BigDecimal(source);
 	}
 });
-}}
+}}}
+
 
 === Mapping fields with different name ===
 
