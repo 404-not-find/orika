@@ -1,0 +1,13 @@
+#labels Phase-Requirements
+= Orika Roadmap =
+
+== Release 1.0 ==
+
+This is a list to thing we're working on to the 
+
+ * Mapping constructors support
+ * Externalize Hibernate support
+ * Add Spring integration module
+ * Documentation : ClassMapBuilder, MapperFactory, MapperFacade.
+
+Prevision date: January 2012 
