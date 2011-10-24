@@ -263,7 +263,7 @@ _Implemented but not yet documented_
 
 Where not going to start a discussion on whether use or not a dto but we are going to illustrate some cases in which you may need mapping (Orika):
  * Multi layered applications
- * DDD you need for example an data mapper between bounded context
+ * DDD you need for example a data mapper between bounded context
 
 
 
