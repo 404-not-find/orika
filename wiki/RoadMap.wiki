@@ -3,11 +3,10 @@
 
 == Release 1.0 ==
 
-This is a list to thing we're working on to the 
+We're working on these features for the first release:
 
- * Mapping constructors support
- * Externalize Hibernate support
- * Add Spring integration module
- * Documentation : ClassMapBuilder, MapperFactory, MapperFacade.
+ * Mapping constructors, and immutable objects
+ * Spring integration module
+ * Documentation, and javadoc
 
-Prevision date: January 2012 
+Release date: January 2012 
