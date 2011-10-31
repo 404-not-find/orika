@@ -46,7 +46,7 @@ MapperFactory factory = MappingUtil.getMapperFactory();
 factory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
   .field("product.state.type.label", "stateLabel")
   .field("product.name", "productName").toClassMap());
-    	
+        
 factory.build();
 
 factory.getMapperFacade();
@@ -61,16 +61,16 @@ Let’s have a look at our domain model:
 {{{
 public class Product {
 
-	private String productName;
+    private String productName;
 
-	private String productDescription;
+    private String productDescription;
 
-	private Double price;
+    private Double price;
 
-	private Boolean availability;
+    private Boolean availability;
 
-	// getters & setters
-	
+    // getters & setters
+    
 }
 }}}
 
@@ -79,15 +79,15 @@ public class Product {
 {{{
 public class ProductDto {
 
-	private String productName;
+    private String productName;
 
-	private String description;
+    private String description;
 
-	private BigDecimal price;
+    private BigDecimal price;
 
-	private Boolean availability;
+    private Boolean availability;
 
-	// getters & setters
+    // getters & setters
 }
 }}}
 
@@ -108,7 +108,6 @@ NB: remember that, declaring a custom mapper and/or a converter override the ori
 mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,ProductDto.class).byDefault().toClassMap());
 }}}
 
-
 === Custom Mapper ===
 
 *Let’s take now a closer look at our Dto:*
@@ -123,8 +122,8 @@ For specific field we have specific treatment, in this case we will create and r
 // register your custom mapper
 ClassMapBuilder<ProductDto, Product> builder = ClassMapBuilder.map(ProductDto.class, Product.class);
 builder.customize(new MapperBase<ProductDto, Product>() {
-	
-// create your custom mapper				
+    
+// create your custom mapper                
 @Override
 public void mapBtoA( Product b,  ProductDto a, MappingContext  context) {
 a.setDescription("The " + b.getProductName() + " is a fabulous  product which only cost  " + b.getPrice());
@@ -147,9 +146,9 @@ For this case we need to create a converter:
 mapperFactory.registerConverter(new ConverterBase<Double, String>() {
 
         // converter
-	public BigDecimal convert(Double source) throws ConverterException {
-		return new BigDecimal(source);
-	}
+    public BigDecimal convert(Double source) throws ConverterException {
+        return new BigDecimal(source);
+    }
 });
 }}}
 
@@ -157,10 +156,52 @@ mapperFactory.registerConverter(new ConverterBase<Double, String>() {
 === Mapping fields with different name ===
 
 
-Is an easy task, you should just point for the name of the attribute in the class A and the supposed match in the class B , keep in mind that the fields should be of the same type ,otherwise use a converter.
+Is an easy task--just point out the name of the attribute in class A and the supposed match in class B; keep in mind that the mapped attributes should be of an automatically-convertible type, otherwise you'll need to register a converter.
 
 {{{
-mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,ProductDto.class).field("productDescription", "description").byDefault().toClassMap());
+mapperFactory.registerClassMap(
+   ClassMapBuilder.map(Product.class,ProductDto.class)
+      .field("productDescription", "description")
+      .byDefault()
+      .toClassMap()
+   );
+}}}
+
+=== Auto mapping Hints ===
+In some cases, you may have a particular pattern that applies to the attributes to be mapped; or you might have some special property name mappings which are common to your whole object graph. 
+You can avoid declaring multiple explicit class (and field) mappings (if you wish) by registering a *MappingHint* on the MapperFactory.
+
+For example, suppose all of the properties on a class A have names like "name", "title", "age", etc., but the corresponding properties on another class B have names like "myName", "myTitle", "myAge", etc.
+{{{
+MappingHint myHint = new MappingHint() {
+   public String suggestMapping(String propertyName, Class<?> fromPropertyType) { 
+      if(propertyName.startsWith("my")) {
+         // Remove the "my" prefix and adjust camel-case
+         return propertyName.substring(2,1).toLowerCase() +
+               propertyName.substring(3);
+      } else {
+         // Add a "my" prefix and adjust camel-case
+         return "my" + propertyName.substring(0,1).toUpperCase() +
+               propertyName.substring(1);
+      }   
+   }
+}
+
+mapperFactory.registerMappingHint(myHint);
+}}}
+By using this hint, you could automatically map from A to B without any explicit class mapping declaration.
+
+The *MappingHints* registered are applied whenever the internal auto-mapping functionality is triggered, and are applied only _after_ a direct one-to-one mapping for the attribute has failed. This means that if you have any attribute names which *_do_* match exactly, the hints would not override them; hints are used to provide extra 'guesses' when the name doesn't match.
+
+You can also pass any hints you've defined (as var-args) into the *byDefault()* method when using ClassMapBuilder to build a class mapping; like so:
+{{{
+MappingHint myHint = ... // same hint as defined above
+
+mapperFactory.registerClassMap(
+   ClassMapBuilder.map(A.class,B.class)
+      .byDefault(myHint)
+      .toClassMap()
+   );
 }}}
 
 
@@ -176,7 +217,12 @@ Our Dto diagram contains a new attribute the orderNum which is in our case the p
 
 {{{
 // register the nested property expression
-mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDto.class).field("product.productName", "orderNum").byDefault().toClassMap());
+mapperFactory.registerClassMap(
+   ClassMapBuilder.map(Order.class,OrderDto.class)
+      .field("product.productName", "orderNum")
+      .byDefault()
+      .toClassMap()
+   );
 }}}
 
 === Collections ===
@@ -210,13 +256,18 @@ As you can see, nothing has changed, and of course the destination object will h
 
 === Primitives ===
 
-
 Orika will map from primitives to their respective wrapper and vice versa automatically.
+
+=== Enumerations ===
+
+Orika will map between the same Enum definition automatically.
+Orika will also map from one Enum to another Enum so long as a matching instance name is found; if the appropriate mapping can't be determined by instance name, you can resolve this by registering a converter.
 
 === Inheritance ===
 
-
 As of the primitives Orika detect inheritance and map automatically child and parent object.
+
+Orika will also attempt to use an existing mapping from a parent or interface if a mapping for a child cannot be found. This means that if you have a defined mapping for A to B, and Orika is asked to map A1 (which extends A) to B, it will use the declared mapping for A to B (assuming there's no mapping for A1 to B. 
 
 === Object factories ===
 
@@ -228,18 +279,18 @@ Dto’s model :
 {{{
 public class PersonFactory implements ObjectFactory<PersonDto> {
 
-	@Override
-	public PersonDto create() {
-		PersonDto personDto = new PersonDto();
-		// set the default adress
-		personDto.setAdressDto(new AdressDto("Morocco", "Casablanca"));
-			return personDto;
-	}
+    @Override
+    public PersonDto create() {
+        PersonDto personDto = new PersonDto();
+        // set the default adress
+        personDto.setAdressDto(new AdressDto("Morocco", "Casablanca"));
+            return personDto;
+    }
 
-	@Override
-	public Class<PersonDto> getTargetClass() {
-		return PersonDto.class;
-	}
+    @Override
+    public Class<PersonDto> getTargetClass() {
+        return PersonDto.class;
+    }
 
 }
 
@@ -255,16 +306,20 @@ Don’t forget to register your Object factory.
 
 NB: In sum, always remember when using orika, that it will automatically do everything for you, you should be concerned by treat only your special cases.
 
-=== Proxy ====
+=== Proxy Instances ====
 
-_Implemented but not yet documented_
+Orika will automatically handle proxy instances of java.lang.reflect.Proxy, as well as javassist and cglib style byte-code proxies. This handling is provided by using super-type resolution mechanism to find an accessible super-type (class or interface) from which to build a mapper. 
+
+
+_more specifics needed_
 
 == Summary ==
 
-Where not going to start a discussion on whether use or not a dto but we are going to illustrate some cases in which you may need mapping (Orika):
+Orika attempts to provide a relatively simple and painless means to map beans from one object graph to another, while also providing performance very close to coding by hand.
+
+It does this by generating and reusing byte-code for mappers, avoiding most of the extra processing that comes from relying on reflection.
+
+We're not attempting to discuss whether or not to use DTOs, or whether you _should_ perform mapping between object graphs. We _are_ going to illustrate some cases in which you may need to do this mapping, and where we hope Orika can help, such as:
  * Multi layered applications
  * DDD you need for example a data mapper between bounded context
-
-
-
-		
+ * Converting XML binding objects to UI beans
