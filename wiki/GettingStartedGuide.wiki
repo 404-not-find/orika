@@ -313,6 +313,17 @@ Orika will automatically handle proxy instances of java.lang.reflect.Proxy, as w
 
 _more specifics needed_
 
+== Advanced Troubleshooting (for the truly adventurous) ===
+Although by default the generated classes are produced in memory only, Orika can optionally be made to write out the source and/or class files of the generated types by setting some special system properties, like so:
+{{{
+// Write out source files to (classpath:)/ma/glasnost/orika/generated/
+System.setProperty(GeneratedSourceCode.PROPERTY_WRITE_SOURCE_FILES,"true");
+
+// Write out class files to (classpath:)/ma/glasnost/orika/generated/
+System.setProperty(GeneratedSourceCode.PROPERTY_WRITE_CLASS_FILES,"true");
+}}}
+
+----
 == Summary ==
 
 Orika attempts to provide a relatively simple and painless means to map beans from one object graph to another, while also providing performance very close to coding by hand.
