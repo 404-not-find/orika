@@ -314,7 +314,7 @@ Orika will automatically handle proxy instances of java.lang.reflect.Proxy, as w
 _more specifics needed_
 
 == Advanced Troubleshooting (for the truly adventurous) ===
-Although by default the generated classes are produced in memory only, Orika can optionally be made to write out the source and/or class files of the generated types by setting some special system properties, like so:
+If you're looking to dive into the generated mappers to modify or just to understand what's going on, Orika can optionally be made to write out the source and/or class files of the generated types by setting some special system properties, like so:
 {{{
 // Write out source files to (classpath:)/ma/glasnost/orika/generated/
 System.setProperty(GeneratedSourceCode.PROPERTY_WRITE_SOURCE_FILES,"true");
@@ -322,6 +322,9 @@ System.setProperty(GeneratedSourceCode.PROPERTY_WRITE_SOURCE_FILES,"true");
 // Write out class files to (classpath:)/ma/glasnost/orika/generated/
 System.setProperty(GeneratedSourceCode.PROPERTY_WRITE_CLASS_FILES,"true");
 }}}
+Note that currently, the debug info is not being generated with those types, so you can look at the code that was generated, but you _probably can't_ step into it during a debug session.
+
+You may also need to apply the auto-formatting feature of your favorite IDE as we're not really shooting for style points on these (normally in-memory only) classes.
 
 ----
 == Summary ==
