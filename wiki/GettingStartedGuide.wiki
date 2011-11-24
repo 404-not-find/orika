@@ -143,16 +143,43 @@ For this case we need to create a converter:
 
 {{{
 // register your converter
-mapperFactory.registerConverter(new ConverterBase<Double, String>() {
+mapperFactory.getConverterFactory().registerConverter(new Converter<Double, String>() {
+    public BigDecimal convert(Double source, Class<? extends BigDecimal> destinationClass) {
+        return new BigDecimal(source);
+    }
+    public boolean canConvert(Class<Double> sourceClass, Class<? extends BigDecimal> destinationClass) {
+        return Double.class.equals(sourceClass) && BigDecimal.class.equals(destinationClass);
+    }
+});
+}}}
 
-        // converter
-    public BigDecimal convert(Double source) throws ConverterException {
+In this example our converter was anonymous, Orika use the converter's `canConvert` to check if it can use it.
+
+Hopefully for this kind of simple types conversion, Orika provide a less verbose solution. You can just subclass the builtin `TypeConverter`:
+
+{{{
+// register your converter
+mapperFactory.getConverterFactory().registerConverter(new TypeConverter<Double, String>() {
+    public BigDecimal convert(Double source, Class<? extends BigDecimal> destinationClass) {
         return new BigDecimal(source);
     }
 });
 }}}
 
+To use a field map level converter,  it is required to register an identified converter:
 
+{{{
+ConverterFactory converterFactory = factory.getConverterFactory();
+        converterFactory.registerConverter("dateConverter1", new DateToStringConverter("dd/MM/yyyy"));
+converterFactory.registerConverter("dateConverter2", new DateToStringConverter("dd-MM-yyyy"));
+        
+factory.registerClassMap(ClassMapBuilder.map(A.class, B.class).fieldMap("date").converter("dateConverter1").add().toClassMap());
+factory.registerClassMap(ClassMapBuilder.map(A.class, C.class).fieldMap("date").converter("dateConverter2").add().toClassMap());
+}}}
+
+In the last snippet, two converters was registered using two identifier: dateConverter1 and dateConverter2 and was used on two diffirent field mapping.
+
+If the mapping is a two way one, it is necessary to use a bidirectional converter. (In the previous example the `DateToStringConverter` is builtin bidirectional converter).
 === Mapping fields with different name ===
 
 
