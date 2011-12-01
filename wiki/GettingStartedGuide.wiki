@@ -42,7 +42,7 @@ Orika use javassist to generate byte-code dynamically. If you're downloading and
 The get an instance of MapperFacade initialise a MapperFactory:
 
 {{{
-MapperFactory factory = new DefaultMapperFactory();
+MapperFactory factory = new DefaultMapperFactory.build();
 factory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
   .field("product.state.type.label", "stateLabel")
   .field("product.name", "productName").toClassMap());
@@ -331,7 +331,7 @@ mapperFactory.registerObjectFactory(new PersonFactory(),PersonDto.class);
 
 Don’t forget to register your Object factory.
 
-NB: In sum, always remember when using orika, that it will automatically do everything for you, you should be concerned by treat only your special cases.
+Orika is designed with the idea that the default behavior should be able to handle most scenarios automatically.  that it will automatically do everything for you, you should be concerned by treat only your special cases.
 
 === Proxy Instances ====
 
@@ -339,20 +339,71 @@ Orika will automatically handle proxy instances of java.lang.reflect.Proxy, as w
 
 
 _more specifics needed_
+----
+== Debugging Generated Mappers, Converters, etc. ==
+=== _Pre-requisites_ ===
+To enable step-through debugging for your generated objects, you'll need to include the *orika-eclipse-tools* module in your project, like so:
+{{{
+<dependency>
+   <groupId>ma.glasnost.orika</groupId>
+   <artifactId>orika-eclipse-tools</artifactId>
+   <version>1.0-SNAPSHOT</version>
+</dependency> 
+}}}
+In addition, you'll also need to tell Orika you want to use Eclipse Jdt as the compiler strategy; there are 2 ways to do this, listed in order of precedence: 
+ 
+  # Use the DefaultMapperFactory.Builder
+{{{
+MapperFactory factory = 
+        new DefaultMapperFactory.Builder()
+                .compilerStrategy(new EclipseJdtCompilerStrategy())
+                .build();
+// add mappers, hints, converters, etc...     
+}}}
+  # Set the system property
+{{{
+System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY,EclipseJdtCompilerStrategy.class.getName());
+}}}
 
-== Advanced Troubleshooting (for the truly adventurous) ===
-If you're looking to dive into the generated mappers to modify or just to understand what's going on, Orika can optionally be made to write out the source and/or class files of the generated types by setting some special system properties, like so:
+=== _Edit Source Lookup Path_ ===
+If you're using Eclipse as your IDE, you may initially receive the "Source not found" window with a button labeled "Edit Source Lookup Path..." while trying to (debug) step into the source of a generated object. When you click this button, you'll need to add the location of the *compiler output folder* for your project as a *File System Folder* (not a Workspace Folder). This is due to the fact that source files will not actually exist until just before you're at the break-point and Eclipse will have a "stale" view of the workspace folder by that time.
+
+If you're using an IDE other than Eclipse, the procedure should be similar. Note that although Orika is leveraging the Eclipse Jdt to format and compile the code, it resolves these from it's own dependencies, so if using Maven, there should be no change required.
+
+If your project follows the Maven folder structure, this folder would be the *target/test-classes* folder by default. Check your project configuration build path to see the target location if you're unsure.
+
+If not using Maven, you'll need to make sure the following Eclipse Jdt artifacts are added to the build path:
+
+|| *_jdt artifact_* || *_version_* ||
+|| core         || 3.5.2   ||
+|| text         || 3.3.0   ||
+|| commands     || 3.3.0   ||
+|| runtime      || 3.3.100 ||
+|| osgi         || 3.3.0   ||
+|| common       || 3.3.0   ||
+|| jobs         || 3.3.0   ||
+|| registry     || 3.3.0   ||
+|| preferences  || 3.2.100 ||
+|| contenttype  || 3.2.100 ||
+_Will other versions work (such as the latest from your own Eclipse IDE)? Probably...but we haven't confirmed this yet_
+
+=== _Generate Source and/or Class Files_ ===
+When using Javassist (the default) as the compiler strategy, Orika will not generate source or class files by default. When using Eclipse Jdt, Orika will generate source but not class files by default. 
+
+This behavior can be customized by setting some special system properties, like so:
 {{{
 // Write out source files to (classpath:)/ma/glasnost/orika/generated/
-System.setProperty(GeneratedSourceCode.PROPERTY_WRITE_SOURCE_FILES,"true");
+System.setProperty(OrikaSystemProperties.WRITE_SOURCE_FILES,"true");
 
 // Write out class files to (classpath:)/ma/glasnost/orika/generated/
-System.setProperty(GeneratedSourceCode.PROPERTY_WRITE_CLASS_FILES,"true");
+System.setProperty(OrikaSystemProperties.WRITE_CLASS_FILES,"true");
 }}}
-Note that currently, the debug info is not being generated with those types, so you can look at the code that was generated, but you _probably can't_ step into it during a debug session.
 
-You may also need to apply the auto-formatting feature of your favorite IDE as we're not really shooting for style points on these (normally in-memory only) classes.
+Note that when using Javassist, the debug info is not being generated  so you can look at the code, but you normally _can't_ step into it during a debug session.
 
+You may also need to apply the auto-formatting feature of your favorite IDE to the Javassist strategy source as we're not really shooting for style points on these (normally in-memory only) classes.
+
+The Eclipse strategy generated files includes auto-formatting of the source and includes debug info so that you can step into the code during a debug session (as mentioned in the section above).
 ----
 == Summary ==
 
