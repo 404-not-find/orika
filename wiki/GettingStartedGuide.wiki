@@ -339,10 +339,14 @@ Orika will automatically handle proxy instances of java.lang.reflect.Proxy, as w
 
 
 _more specifics needed_
+
 ----
+
 == Debugging Generated Mappers, Converters, etc. ==
 === _Pre-requisites_ ===
-To enable step-through debugging for your generated objects, you'll need to include the *orika-eclipse-tools* module in your project, like so:
+If you're not getting the expected results out of Orika (or you want to contribute a fix or feature), you may wish to download the source and step through the mapping process to see the details. 
+
+To enable step-through debugging into the generated objects (which Orika is building at run-time), you'll need to include the *orika-eclipse-tools* module in your project, like so:
 {{{
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
