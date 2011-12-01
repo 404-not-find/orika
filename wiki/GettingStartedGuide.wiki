@@ -368,7 +368,7 @@ System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY,EclipseJdtCompilerStr
 === _Edit Source Lookup Path_ ===
 If you're using Eclipse as your IDE, you may initially receive the "Source not found" window with a button labeled "Edit Source Lookup Path..." while trying to (debug) step into the source of a generated object. When you click this button, you'll need to add the location of the *compiler output folder* for your project as a *File System Folder* (not a Workspace Folder). This is due to the fact that source files will not actually exist until just before you're at the break-point and Eclipse will have a "stale" view of the workspace folder by that time.
 
-If you're using an IDE other than Eclipse, the procedure should be similar. Note that although Orika is leveraging the Eclipse Jdt to format and compile the code, it resolves these from it's own dependencies, so if using Maven, there should be no change required.
+If you're using an IDE other than Eclipse, the procedure should be similar. Note that although Orika is leveraging the Eclipse Jdt to format and compile the code, it resolves these from it's own dependencies, so if using Maven, there should be few differences.
 
 If your project follows the Maven folder structure, this folder would be the *target/test-classes* folder by default. Check your project configuration build path to see the target location if you're unsure.
 
@@ -385,6 +385,7 @@ If not using Maven, you'll need to make sure the following Eclipse Jdt artifacts
 || registry     || 3.3.0   ||
 || preferences  || 3.2.100 ||
 || contenttype  || 3.2.100 ||
+
 _Will other versions work (such as the latest from your own Eclipse IDE)? Probably...but we haven't confirmed this yet_
 
 === _Generate Source and/or Class Files_ ===
