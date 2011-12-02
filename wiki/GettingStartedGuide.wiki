@@ -392,6 +392,9 @@ If not using Maven, you'll need to make sure the following Eclipse Jdt artifacts
 
 _Will other versions work (such as the latest from your own Eclipse IDE)? Probably...but we haven't confirmed this yet_
 
+=== _Security Exception for Eclipse jar signing_ ===
+If you receive an exception like "'org.eclipse.core.runtime.ListenerList''s singing information doesn't match..., try moving the eclipse binaries to the front of the classpath; if you're using maven, just move the *orika-eclipse-tools* dependency before *orika-core* and you're done.
+
 === _Generate Source and/or Class Files_ ===
 When using Javassist (the default) as the compiler strategy, Orika will not generate source or class files by default. When using Eclipse Jdt, Orika will generate source but not class files by default. 
 
