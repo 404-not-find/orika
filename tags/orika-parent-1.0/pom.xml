@@ -42,7 +42,7 @@
 	</developers>
 	<scm>
 		<url>https://orika.googlecode.com/svn/tags/orika-parent-1.0</url>
-		<connection>https://orika.googlecode.com/svn/tags/orika-parent-1.0</connection>
+		<connection>scm:svn:https://orika.googlecode.com/svn/tags/orika-parent-1.0</connection>
 		<developerConnection>scm:svn:https://orika.googlecode.com/svn/tags/orika-parent-1.0</developerConnection>
 	</scm>
 
