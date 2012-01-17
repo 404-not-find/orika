@@ -6,21 +6,16 @@
 _This guide is very brief and incomplete. Feel free to fix or improve it_
 
 ==Installation==
-For maven users, the easiest way to get going is to add the following repository and dependency to your project. 
+For maven users, the easiest way to get going is to add the following dependency to your project. 
 
 _Please verify the latest version_:
 
 
 {{{
-<repository>
-   <id>orika-snapshot</id>
-   <url>https://repository-orika.forge.cloudbees.com/snapshot</url>
-</repository>
-...
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-core</artifactId>
-   <version>1.0-SNAPSHOT</version>
+   <version>1.0</version>
 </dependency> 
 }}}
 
@@ -307,7 +302,7 @@ Dto’s model :
 public class PersonFactory implements ObjectFactory<PersonDto> {
 
     @Override
-    public PersonDto create() {
+    public PersonDto create(Object source, Class destinationClass) {
         PersonDto personDto = new PersonDto();
         // set the default adress
         personDto.setAdressDto(new AdressDto("Morocco", "Casablanca"));
