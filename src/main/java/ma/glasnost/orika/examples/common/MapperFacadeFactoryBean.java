@@ -20,7 +20,7 @@ public class MapperFacadeFactoryBean implements FactoryBean<MapperFacade> {
     }
     
     public MapperFacade getObject() throws Exception {
-        MapperFactory mapperFactory = new DefaultMapperFactory();
+        MapperFactory mapperFactory = new DefaultMapperFactory.Builder().build();
         
         for (MappingConfigurer configurer : configurers) {
             configurer.configure(mapperFactory);
