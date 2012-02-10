@@ -37,7 +37,7 @@ Orika use javassist to generate byte-code dynamically. If you're downloading and
 The get an instance of MapperFacade initialise a MapperFactory:
 
 {{{
-MapperFactory factory = new DefaultMapperFactory.build();
+MapperFactory factory = new DefaultMapperFactory.Builder().build();
 factory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
   .field("product.state.type.label", "stateLabel")
   .field("product.name", "productName").toClassMap());
