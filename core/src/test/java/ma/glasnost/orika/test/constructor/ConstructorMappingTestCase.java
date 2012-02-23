@@ -216,7 +216,7 @@ public class ConstructorMappingTestCase {
 					return null;
 				}
 	        	
-	        });
+	        }); 
 
         factory.getConverterFactory().registerConverter(new DateToStringConverter(DATE_PATTERN));
         

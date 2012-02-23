@@ -22,7 +22,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ma.glasnost.orika.Converter;
 import ma.glasnost.orika.metadata.ConverterKey;
+import ma.glasnost.orika.metadata.TypeHolder;
 import ma.glasnost.orika.util.Cache;
 import ma.glasnost.orika.util.CacheLRULinkedHashMap;
 
@@ -53,7 +55,7 @@ public class DefaultConverterFactory implements ConverterFactory {
      * java.lang.Class)
      */
     @SuppressWarnings("unchecked")
-    public boolean canConvert(Class<Object> sourceClass, Class<Object> destinationClass) {
+    public boolean canConvert(TypeHolder<?> sourceClass, TypeHolder<?> destinationClass) {
         ConverterKey key = new ConverterKey(sourceClass, destinationClass);
         if (converterCache.containsKey(key)) {
             return true;
@@ -86,7 +88,7 @@ public class DefaultConverterFactory implements ConverterFactory {
      * ma.glasnost.orika.converter.ConverterFactory#getConverter(java.lang.Class
      * , java.lang.Class)
      */
-    public Converter<Object, Object> getConverter(Class<Object> sourceClass, Class<Object> destinationClass) {
+    public Converter<Object, Object> getConverter(TypeHolder<?> sourceClass, TypeHolder<?> destinationClass) {
         ConverterKey key = new ConverterKey(sourceClass, destinationClass);
         if (converterCache.containsKey(key)) {
             return converterCache.get(key);
@@ -136,4 +138,16 @@ public class DefaultConverterFactory implements ConverterFactory {
     public <S, D> void registerConverter(String converterId, Converter<S, D> converter) {
         convertersMap.put(converterId, (Converter) converter);
     }
+
+	public <S, D> void registerConverter(
+			ma.glasnost.orika.converter.Converter<S, D> converter) {
+		
+		registerConverter(new Converter.LegacyConverter<S, D>(converter));
+	}
+
+	public <S, D> void registerConverter(String converterId,
+			ma.glasnost.orika.converter.Converter<S, D> converter) {
+		
+		registerConverter(converterId, new Converter.LegacyConverter<S, D>(converter));
+	}
 }

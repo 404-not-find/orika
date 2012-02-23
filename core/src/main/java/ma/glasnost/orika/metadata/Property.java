@@ -18,6 +18,8 @@
 
 package ma.glasnost.orika.metadata;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -29,13 +31,14 @@ public class Property {
     private String name;
     private String getter;
     private String setter;
-    private Class<?> type;
+    private TypeHolder<?> type;
     private Class<?> parameterizedType;
+    private ParameterizedType genericType;
     private boolean declared;
     
     
     public Property copy() {
-    	Property copy = new Property();
+        Property copy = new Property();
         copy.declared = this.declared;
         copy.expression = this.expression;
         copy.name = this.name;
@@ -43,6 +46,7 @@ public class Property {
         copy.setter = this.setter;
         copy.type = this.type;
         copy.parameterizedType = this.parameterizedType;
+        copy.genericType = this.genericType;
         return copy;
     }
     
@@ -62,11 +66,11 @@ public class Property {
         this.name = name;
     }
     
-    public Class<?> getType() {
+    public TypeHolder<?> getType() {
         return type;
     }
     
-    public void setType(Class<?> type) {
+    public void setType(TypeHolder<?> type) {
         this.type = type;
     }
     
@@ -94,6 +98,22 @@ public class Property {
         this.parameterizedType = parameterizedType;
     }
     
+    public ParameterizedType getGenericType() {
+        return genericType;
+    }
+
+    public void setGenericType(ParameterizedType genericType) {
+        this.genericType = genericType;
+    }
+    
+    public Type getActualType() {
+        return this.genericType != null ? this.genericType : this.type;
+    }
+    
+    public Class<?> getRawType() {
+    	return getType().getRawType();
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -118,11 +138,11 @@ public class Property {
     }
     
     public boolean isPrimitive() {
-        return type.isPrimitive();
+        return type.getRawType().isPrimitive();
     }
     
     public boolean isArray() {
-        return type.isArray();
+        return type.getRawType().isArray();
     }
     
     public boolean isAssignableFrom(Property p) {
@@ -130,15 +150,15 @@ public class Property {
     }
     
     public boolean isCollection() {
-        return Collection.class.isAssignableFrom(type);
+        return Collection.class.isAssignableFrom(type.getRawType());
     }
     
     public boolean isSet() {
-        return Set.class.isAssignableFrom(type);
+        return Set.class.isAssignableFrom(type.getRawType());
     }
     
     public boolean isList() {
-        return List.class.isAssignableFrom(type);
+        return List.class.isAssignableFrom(type.getRawType());
     }
     
     public boolean hasPath() {
@@ -172,6 +192,6 @@ public class Property {
     }
 
     public boolean isEnum() {
-        return type.isEnum();
+        return type.getRawType().isEnum();
     }
 }

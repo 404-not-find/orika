@@ -18,6 +18,8 @@
 
 package ma.glasnost.orika.unenhance;
 
+import ma.glasnost.orika.metadata.TypeHolder;
+
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -36,8 +38,8 @@ public class HibernateUnenhanceStrategy implements UnenhanceStrategy {
     }
     
     @SuppressWarnings("unchecked")
-    public <T> Class<T> unenhanceClass(T object) {
+    public <T> TypeHolder<T> unenhanceClass(T object) {
         // return HibernateProxyHelper.getClassWithoutInitializingProxy(object);
-    	return Hibernate.getClass(object);
+    	return TypeHolder.valueOf(Hibernate.getClass(object));
     }
 }

@@ -24,109 +24,144 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import ma.glasnost.orika.metadata.NestedProperty;
 import ma.glasnost.orika.metadata.Property;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ma.glasnost.orika.metadata.TypeHolder;
 
 public final class PropertyUtil {
     
-    private static Logger LOG = LoggerFactory.getLogger(PropertyUtil.class);
-    
-    private static final Map<Class<?>, Map<String, Property>> PROPERTIES_CACHE = new ConcurrentHashMap<Class<?>, Map<String, Property>>();
+    private static final Map<Type, Map<String, Property>> PROPERTIES_CACHE = new ConcurrentHashMap<Type, Map<String, Property>>();
     
     private PropertyUtil() {
         
     }
-    
-    public static Map<String, Property> getProperties(Class<?> clazz) {
+   
+    /**
+     * Gets properties for a potentially parameterized type.
+     * Support for both Class and ParameterizedType inputs.
+     * 
+     * @param theType
+     * @return
+     */
+    public static Map<String, Property> getProperties(Type theType) {
+        
+        if (PROPERTIES_CACHE.containsKey(theType)) {
+            return PROPERTIES_CACHE.get(theType);
+        }
+        
         final Map<String, Property> properties = new HashMap<String, Property>();
-        if (PROPERTIES_CACHE.containsKey(clazz)) {
-            return PROPERTIES_CACHE.get(clazz);
+        TypeHolder<?> typeHolder;
+        if (theType instanceof TypeHolder) {
+            typeHolder = (TypeHolder<?>)theType;
+        } else if (theType instanceof Class) {
+            typeHolder = TypeHolder.valueOf((Class<?>)theType);
+        } else {
+            throw new IllegalArgumentException("type " + theType + " not supported.");
         }
         BeanInfo beanInfo;
         try {
-            beanInfo = Introspector.getBeanInfo(clazz);
-            for (final PropertyDescriptor pd : beanInfo.getPropertyDescriptors()) {
-                try {
-                    final Property property = new Property();
-                    property.setExpression(pd.getName());
-                    property.setName(pd.getName());
-                    if (pd.getReadMethod() != null) {
-                        property.setGetter(pd.getReadMethod().getName());
-                    }
-                    
-                    if (pd.getWriteMethod() != null) {
-                        
-                        property.setSetter(pd.getWriteMethod().getName());
-                    } else {
-                        for (Method method : clazz.getDeclaredMethods()) {
-                            if (method.getName().equals("set" + capitalize(pd.getName()))
-                                    && method.getParameterTypes().length == 1 && method.getReturnType() != Void.class) {
-                                property.setSetter(method.getName());
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (pd.getReadMethod() == null && pd.getWriteMethod() == null) {
-                        continue;
-                    }
-                    
+            LinkedList<Class<? extends Object>> types = new LinkedList<Class<? extends Object>>();
+            types.push((Class<? extends Object>)typeHolder.getRawType());
+            while(!types.isEmpty()) {
+                Class<? extends Object> type = types.pop();
+                beanInfo = Introspector.getBeanInfo(type);
+                PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
+                for (final PropertyDescriptor pd : descriptors) {
                     try {
-                        property.setType(pd.getReadMethod()
-                                .getDeclaringClass()
-                                .getDeclaredMethod(property.getGetter(), new Class[0])
-                                .getReturnType());
-                    } catch (final Exception e) {
-                        property.setType(pd.getPropertyType());
-                    }
-                    properties.put(pd.getName(), property);
-                    
-                    if (pd.getReadMethod() != null) {
-                        final Method method = pd.getReadMethod();
-                        if (property.getType() != null && Collection.class.isAssignableFrom(property.getType())) {
-                            if (method.getGenericReturnType() instanceof ParameterizedType) {
-                                property.setParameterizedType((Class<?>) ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+                        
+                        final Property property = new Property();
+                        property.setExpression(pd.getName());
+                        property.setName(pd.getName());
+                        if (pd.getReadMethod() != null) {
+                            property.setGetter(pd.getReadMethod().getName());
+                        }
+                        if (pd.getWriteMethod() != null) {
+                            property.setSetter(pd.getWriteMethod().getName());
+                        }
+                        
+                        if (pd.getReadMethod()==null && pd.getWriteMethod()==null) {
+                            continue;
+                        }
+                        
+                        Class<?> propertyType = pd.getPropertyType();
+                        Class<?> returnType = null;
+                        Type genericType = pd.getReadMethod().getGenericReturnType();
+                        try {
+                            returnType = pd.getReadMethod().getDeclaringClass()
+                                    .getDeclaredMethod(property.getGetter(), new Class[0])
+                                    .getReturnType();  
+                        } catch (final Exception e) {
+                            
+                        }
+                        
+                        if (genericType instanceof TypeVariable && typeHolder.isParameterized()) {
+                            TypeHolder<?> t = typeHolder.getTypeByVariable(((TypeVariable<?>) genericType).getName());
+                            propertyType = t.getRawType();
+                            property.setGenericType(t);
+                        } else if (propertyType!=returnType && propertyType.isAssignableFrom(returnType)) {
+                            propertyType = returnType;
+                        }
+                        property.setType(TypeHolder.valueOf(propertyType));
+                        
+                        Property existing = properties.get(pd.getName());
+                        if (existing==null || existing.getType().isAssignableFrom(propertyType)) {
+                            properties.put(pd.getName(), property);
+                        
+                            if (pd.getReadMethod() != null) {
+                                final Method method = pd.getReadMethod();
+                                if (property.getType() != null && property.isCollection()) {
+                                    if (method.getGenericReturnType() instanceof ParameterizedType) {
+                                        property.setParameterizedType((Class<?>) ((ParameterizedType) method.getGenericReturnType())
+                                                .getActualTypeArguments()[0]);
+                                    } 
+                                }
+                            } else if (pd.getWriteMethod() != null) {
+                                final Method method = pd.getWriteMethod();
+                                
+                                if (property.isCollection() && method.getGenericParameterTypes().length > 0) {
+                                    property.setParameterizedType((Class<?>) ((ParameterizedType) method.getGenericParameterTypes()[0])
+                                            .getActualTypeArguments()[0]);
+                                }
+                            } else {
+                                
                             }
                         }
-                    } else if (pd.getWriteMethod() != null) {
-                        final Method method = pd.getWriteMethod();
-                        
-                        if (Collection.class.isAssignableFrom(property.getType()) && method.getGenericParameterTypes().length > 0) {
-                            property.setParameterizedType((Class<?>) ((ParameterizedType) method.getGenericParameterTypes()[0]).getActualTypeArguments()[0]);
-                        }
-                    } else {
-                        
+                    } catch (final Throwable e) {
+                        e.printStackTrace();
                     }
-                } catch (final Throwable e) {
-                    LOG.warn("Error by parsing the property '{}' of class '{}'. This property should be mapped manually!",pd.getName(), clazz.getName());
                 }
+                if (type.getSuperclass()!=null && !Object.class.equals(type.getSuperclass())) {
+                    types.add(type.getSuperclass());
+                }
+                types.addAll(Arrays.asList(type.getInterfaces()));
             }
         } catch (final IntrospectionException e) {
-            LOG.warn("Can not introspect {}", clazz, e);
+            e.printStackTrace();
             /* Ignore */
         }
         
-        PROPERTIES_CACHE.put(clazz, Collections.unmodifiableMap(properties));
-        return properties;
+        PROPERTIES_CACHE.put(theType, Collections.unmodifiableMap(properties));
+        return properties; 
     }
     
-    private static String capitalize(String name) {
-        return name.charAt(0) + name.substring(1);
-    }
-    
-    public static NestedProperty getNestedProperty(Class<?> clazz, String p) {
-        Map<String, Property> properties = getProperties(clazz);
+
+    public static NestedProperty getNestedProperty(Type type, String p) {
+        
+        String typeName = type.toString();
+        Class<?> rawType = (Class<?>)((type instanceof ParameterizedType) ? ((ParameterizedType)type).getRawType() : type);
+        Map<String, Property> properties = getProperties(type);
         Property property = null;
         final List<Property> path = new ArrayList<Property>();
         if (p.indexOf('.') != -1) {
@@ -134,10 +169,10 @@ public final class PropertyUtil {
             int i = 0;
             while (i < ps.length) {
                 if (!properties.containsKey(ps[i])) {
-                    throw new RuntimeException(clazz.getName() + " do not contains [" + ps[i] + "] property.");
+                    throw new RuntimeException(rawType.getName() + " does not contain property [" + ps[i] + "]");
                 }
                 property = properties.get(ps[i]);
-                properties = getProperties(property.getType());
+                properties = getProperties(property.getActualType());
                 i++;
                 if (i < ps.length) {
                     path.add(property);
@@ -146,7 +181,7 @@ public final class PropertyUtil {
         }
         
         if (property == null) {
-            throw new RuntimeException(clazz.getName() + " do not contains [" + p + "] property.");
+            throw new RuntimeException(typeName + " does not contain property [" + p + "]");
         }
         
         return new NestedProperty(p, property, path.toArray(new Property[path.size()]));

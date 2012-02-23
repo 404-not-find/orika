@@ -18,21 +18,23 @@
 
 package ma.glasnost.orika.inheritance;
 
+import ma.glasnost.orika.metadata.TypeHolder;
+
 
 public final class SuperTypeResolver {
 	
 	
 	@SuppressWarnings("unchecked")
-    public static <T> Class<T> getSuperType(final Class<?> enhancedClass, final SuperTypeResolverStrategy strategy) {
+    public static <T> TypeHolder<T> getSuperType(final TypeHolder<?> enhancedClass, final SuperTypeResolverStrategy strategy) {
     	
-		Class<T> mappedClass = (Class<T>) enhancedClass;
-    	if (strategy.shouldLookupSuperType(mappedClass)) {
+		TypeHolder<T> mappedClass = (TypeHolder<T>) enhancedClass;
+    	if (strategy.shouldLookupSuperType(mappedClass.getRawType())) {
     		
-    		Class<T> mappedSuper = (Class<T>) tryFirstLookupOption(mappedClass,strategy);
+    		TypeHolder<T> mappedSuper = (TypeHolder<T>)tryFirstLookupOption(mappedClass,strategy);
     		if (mappedSuper!=null) {
     			mappedClass = mappedSuper;
     		} else {
-    			mappedSuper = (Class<T>) trySecondLookupOption(mappedClass,strategy);
+    			mappedSuper = (TypeHolder<T>) trySecondLookupOption(mappedClass,strategy);
     			if (mappedSuper!=null) {
         			mappedClass = mappedSuper;
         		}
@@ -42,7 +44,7 @@ public final class SuperTypeResolver {
     	return mappedClass;
     }
 	
-	private static Class<?> tryFirstLookupOption(final Class<?> theClass, final SuperTypeResolverStrategy strategy) {
+	private static TypeHolder<?> tryFirstLookupOption(final TypeHolder<?> theClass, final SuperTypeResolverStrategy strategy) {
 		if (strategy.shouldPreferClassOverInterface()) {
 			return lookupMappedSuperType(theClass,strategy);
 		} else {
@@ -50,7 +52,7 @@ public final class SuperTypeResolver {
 		}
 	}
 	
-	private static Class<?> trySecondLookupOption(final Class<?> theClass, final SuperTypeResolverStrategy strategy) {
+	private static TypeHolder<?> trySecondLookupOption(final TypeHolder<?> theClass, final SuperTypeResolverStrategy strategy) {
 		if (strategy.shouldPreferClassOverInterface()) {
 			return lookupMappedInterface(theClass,strategy);
 		} else {
@@ -58,9 +60,9 @@ public final class SuperTypeResolver {
 		}
 	}
 	
-	private static Class<?> lookupMappedSuperType(final Class<?> theClass, final SuperTypeResolverStrategy strategy) { 
+	private static TypeHolder<?> lookupMappedSuperType(final TypeHolder<?> theClass, final SuperTypeResolverStrategy strategy) { 
     	
-		Class<?> targetClass = theClass.getSuperclass();
+		Class<?> targetClass = theClass.getRawType().getSuperclass();
 		Class<?> mappedClass = null;
     	
     	while (mappedClass==null && targetClass!=null && !targetClass.equals(Object.class)) {
@@ -72,12 +74,12 @@ public final class SuperTypeResolver {
     		targetClass = targetClass.getSuperclass();
     	}
     	
-    	return mappedClass;
+    	return TypeHolder.valueOf(mappedClass);
     }
     
-    private static Class<?> lookupMappedInterface(final Class<?> theClass, final SuperTypeResolverStrategy strategy) {
+    private static TypeHolder<?> lookupMappedInterface(final TypeHolder<?> theClass, final SuperTypeResolverStrategy strategy) {
     	
-    	Class<?> targetClass = theClass;
+    	Class<?> targetClass = theClass.getRawType();
 		Class<?> mappedClass = null;
     	
 		while (mappedClass==null && targetClass!=null && !targetClass.equals(Object.class)) {
@@ -91,7 +93,7 @@ public final class SuperTypeResolver {
     		targetClass = targetClass.getSuperclass();
 		}
     	
-    	return mappedClass;
+    	return TypeHolder.valueOf(mappedClass);
 
     }
     

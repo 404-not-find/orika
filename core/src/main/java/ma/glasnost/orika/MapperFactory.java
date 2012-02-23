@@ -23,6 +23,7 @@ import java.util.Set;
 import ma.glasnost.orika.converter.ConverterFactory;
 import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.MapperKey;
+import ma.glasnost.orika.metadata.TypeHolder;
 
 /**
  * MapperFactory
@@ -40,11 +41,14 @@ public interface MapperFactory {
     
     <A, B> void registerClassMap(ClassMap<A, B> classMap);
     
-    <T> void registerObjectFactory(ObjectFactory<T> objectFactory, Class<T> targetClass);
+    <T> void registerObjectFactory(ObjectFactory<T> objectFactory, TypeHolder<T> targetType);
     
-    <T> ObjectFactory<T> lookupObjectFactory(Class<T> targetClass);
+    // TODO: use Type here? might allow better back-compatibility; as long
+    // as we're using the key for an identity lookup and not a hierarchical
+    // inheritance check...
+    <T> ObjectFactory<T> lookupObjectFactory(TypeHolder<T> targetClass);
     
-    <S, D> Class<? extends D> lookupConcreteDestinationClass(Class<S> sourceClass, Class<D> destinationClass, MappingContext context);
+    <S, D> TypeHolder<? extends D> lookupConcreteDestinationClass(TypeHolder<S> sourceType, TypeHolder<D> destinationType, MappingContext context);
     
     void registerMappingHint(MappingHint... hint);
     
@@ -52,7 +56,7 @@ public interface MapperFactory {
     
     <A, B> ClassMap<A, B> getClassMap(MapperKey mapperKey);
     
-    Set<Class<Object>> lookupMappedClasses(Class<Object> clazz);
+    Set<TypeHolder<? extends Object>> lookupMappedClasses(TypeHolder<?> type);
     
     MapperFacade getMapperFacade();
     

@@ -20,18 +20,19 @@ package ma.glasnost.orika.constructor;
 import java.lang.reflect.Constructor;
 
 import ma.glasnost.orika.metadata.ClassMap;
+import ma.glasnost.orika.metadata.TypeHolder;
 
 public class SimpleConstructorResolverStrategy implements ConstructorResolverStrategy {
     
     @SuppressWarnings({ "unchecked" })
-    public <T, A, B> Constructor<T> resolve(ClassMap<A, B> classMap, Class<T> sourceClass) {
-        boolean aToB = classMap.getBType().equals(sourceClass);
+    public <T, A, B> Constructor<T> resolve(ClassMap<A, B> classMap, TypeHolder<T> sourceType) {
+        boolean aToB = classMap.getBType().equals(sourceType);
         // String[] argumentNames = aToB ? classMap.getConstructorB() :
         // classMap.getConstructorA();
-        Class<?> targetClass = aToB ? classMap.getBType() : classMap.getAType();
+        TypeHolder<?> targetClass = aToB ? classMap.getBType() : classMap.getAType();
         
         // TODO to specify
-        return (Constructor<T>) targetClass.getConstructors()[0];
+        return (Constructor<T>) targetClass.getRawType().getConstructors()[0];
         
     }
 }

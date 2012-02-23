@@ -25,8 +25,8 @@ import ma.glasnost.orika.Mapper;
 
 public class ClassMap<A, B> {
     
-    private final Class<A> aType;
-    private final Class<B> bType;
+    private final TypeHolder<A> aType;
+    private final TypeHolder<B> bType;
     private final Set<FieldMap> fieldsMapping;
     private final Set<MapperKey> usedMappers;
     
@@ -35,7 +35,7 @@ public class ClassMap<A, B> {
     private final String[] constructorA;
     private final String[] constructorB;
     
-    public ClassMap(Class<A> aType, Class<B> bType, Set<FieldMap> fieldsMapping, Mapper<A, B> customizedMapper, Set<MapperKey> usedMappers,
+    public ClassMap(TypeHolder<A> aType, TypeHolder<B> bType, Set<FieldMap> fieldsMapping, Mapper<A, B> customizedMapper, Set<MapperKey> usedMappers,
             String[] constructorA, String[] constructorB) {
         this.aType = aType;
         this.bType = bType;
@@ -62,11 +62,11 @@ public class ClassMap<A, B> {
         fieldsMapping.add(fieldMap);
     }
     
-    public Class<?> getAType() {
+    public TypeHolder<?> getAType() {
         return aType;
     }
     
-    public Class<?> getBType() {
+    public TypeHolder<?> getBType() {
         return bType;
     }
     

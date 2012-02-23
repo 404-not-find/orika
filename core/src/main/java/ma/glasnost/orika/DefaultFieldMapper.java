@@ -21,26 +21,19 @@ package ma.glasnost.orika;
 import ma.glasnost.orika.metadata.TypeHolder;
 
 /**
- * Defines a contract bewteen internal parts of Orikas such as
- * <code>MapperFacade</code>, <code>MapperGenerator</code>,
- * <code>MapperFactory</code> and generated mappers.
+ * Provides a generic mapping suggestion mechanism to provide 
+ * help with guessing default mappings of fields when a straight
+ * equivalent name match is not found
  * 
- * @author S.M. El Aatifi
- * 
- * @see MapperFacade
+ * @author matt.deboer@gmail.com
  */
-public interface Mapper<A, B> {
-    
-    void mapAtoB(A a, B b, MappingContext context);
-    
-    void mapBtoA(B b, A a, MappingContext context);
-    
-    void setMapperFacade(MapperFacade mapper);
-    
-    void setUsedMappers(Mapper<Object, Object>[] mapper);
-    
-    TypeHolder<A> getAType();
-    
-    TypeHolder<B> getBType();
-    
+public interface DefaultFieldMapper {
+	
+	/**
+	 * @param sourceExpression
+	 * @return a suggested optional mapping name for the given property,
+	 * or <code>null</code> if no suggestion for the given property
+	 */
+	public String suggestMappedField(String fromProperty, TypeHolder<?> fromPropertyType);
+	
 }

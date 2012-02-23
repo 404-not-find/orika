@@ -18,13 +18,16 @@
 
 package ma.glasnost.orika;
 
+
 /**
  * Provides a generic mapping suggestion mechanism to provide 
  * help with guessing default mappings of fields when a straight
  * equivalent name match is not found
  * 
+ * @deprecated use ma.glasnost.orika.FieldSuggester instead
  * @author matt.deboer@gmail.com
  */
+@Deprecated
 public interface MappingHint {
 	
 	/**

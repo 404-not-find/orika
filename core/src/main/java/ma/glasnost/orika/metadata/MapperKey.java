@@ -18,14 +18,15 @@
 
 package ma.glasnost.orika.metadata;
 
+
 public class MapperKey {
 
-	private Class<?> aType;
-	private Class<?> bType;
+	private TypeHolder<?> aType;
+	private TypeHolder<?> bType;
 
-	public MapperKey(Class<?> aClass, Class<?> bClass) {
-		this.aType = aClass;
-		this.bType = bClass;
+	public MapperKey(TypeHolder<?> aType, TypeHolder<?> bType) {
+		this.aType = aType;
+		this.bType = bType;
 	}
 
 	@Override
@@ -44,7 +45,7 @@ public class MapperKey {
 
 	}
 
-	private boolean equals(Class<?> a, Class<?> b) {
+	private boolean equals(TypeHolder<?> a, TypeHolder<?> b) {
 		return a == null ? b == null : a.equals(b);
 	}
 
@@ -55,19 +56,19 @@ public class MapperKey {
 		return result;
 	}
 
-	public Class<?> getAType() {
+	public TypeHolder<?> getAType() {
 		return aType;
 	}
 
-	public void setAType(Class<?> aType) {
+	public void setAType(TypeHolder<?> aType) {
 		this.aType = aType;
 	}
 
-	public Class<?> getBType() {
+	public TypeHolder<?> getBType() {
 		return bType;
 	}
 
-	public void setBType(Class<?> bType) {
+	public void setBType(TypeHolder<?> bType) {
 		this.bType = bType;
 	}
 }

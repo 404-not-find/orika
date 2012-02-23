@@ -17,6 +17,7 @@
  */
 package ma.glasnost.orika.converter;
 
+
 public abstract class BidirectionConverter<S, D> extends TypeConverter<Object, Object> implements Converter<Object, Object> {
     
     public abstract D convertTo(S source, Class<D> destinationClass);

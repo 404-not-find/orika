@@ -24,13 +24,34 @@ import java.util.List;
 import ma.glasnost.orika.Mapper;
 import ma.glasnost.orika.MapperBase;
 import ma.glasnost.orika.MappingContext;
+import ma.glasnost.orika.metadata.TypeHolder;
 
 public abstract class GeneratedMapperBase extends MapperBase<Object, Object> {
 
     protected Mapper<Object, Object> customMapper;
 
     private Mapper<Object, Object>[] usedMappers;
-
+    private TypeHolder<Object> aType;
+    private TypeHolder<Object> bType;
+    
+    public TypeHolder<Object> getAType() {
+    	return aType;
+    }
+    
+    public TypeHolder<Object> getBType() {
+    	return bType;
+    }
+    
+    @SuppressWarnings("unchecked")
+	public void setAType(TypeHolder<?> aType) {
+    	this.aType = (TypeHolder<Object>)aType;
+    }
+    
+    @SuppressWarnings("unchecked")
+	public void setBType(TypeHolder<?> bType) {
+    	this.bType = (TypeHolder<Object>)bType;
+    }
+    
     public void setCustomMapper(Mapper<Object, Object> customMapper) {
         this.customMapper = customMapper;
         this.customMapper.setMapperFacade(mapperFacade);
@@ -74,7 +95,7 @@ public abstract class GeneratedMapperBase extends MapperBase<Object, Object> {
         return ts;
     }
 
-    protected static List asList(Object[] iterable) {
+    protected static List<Object> asList(Object[] iterable) {
         ArrayList<Object> ts = new ArrayList<Object>();
         for (Object i : iterable) {
             ts.add(i);

@@ -51,6 +51,7 @@ import ma.glasnost.orika.inheritance.SuperTypeResolverStrategy;
 import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.metadata.MapperKey;
+import ma.glasnost.orika.metadata.TypeHolder;
 import ma.glasnost.orika.unenhance.BaseUnenhancer;
 import ma.glasnost.orika.unenhance.HibernateUnenhanceStrategy;
 import ma.glasnost.orika.unenhance.UnenhanceStrategy;
@@ -71,9 +72,9 @@ public class DefaultMapperFactory implements MapperFactory {
     
     private final Map<MapperKey, ClassMap<Object, Object>> classMapRegistry;
     private final Map<MapperKey, GeneratedMapperBase> mappersRegistry;
-    private final ConcurrentHashMap<Class<?>, ObjectFactory<?>> objectFactoryRegistry;
-    private final Map<Class<?>, Set<Class<?>>> aToBRegistry;
-    private final Map<Class<?>, Class<?>> mappedConverters;
+    private final ConcurrentHashMap<TypeHolder<? extends Object>, ObjectFactory<? extends Object>> objectFactoryRegistry;
+    private final Map<TypeHolder<?>, Set<TypeHolder<?>>> aToBRegistry;
+    private final Map<TypeHolder<?>, TypeHolder<?>> mappedConverters;
     private final List<MappingHint> mappingHints;
     private final UnenhanceStrategy unenhanceStrategy;
     private final ConverterFactory converterFactory;
@@ -101,10 +102,10 @@ public class DefaultMapperFactory implements MapperFactory {
         this.compilerStrategy = compilerStrategy;
         this.classMapRegistry = new ConcurrentHashMap<MapperKey, ClassMap<Object, Object>>();
         this.mappersRegistry = new ConcurrentHashMap<MapperKey, GeneratedMapperBase>();
-        this.aToBRegistry = new ConcurrentHashMap<Class<?>, Set<Class<?>>>();
-        this.mappedConverters = new ConcurrentHashMap<Class<?>, Class<?>>();
+        this.aToBRegistry = new ConcurrentHashMap<TypeHolder<?>, Set<TypeHolder<?>>>();
+        this.mappedConverters = new ConcurrentHashMap<TypeHolder<?>, TypeHolder<?>>();
         this.usedMapperMetadataRegistry = new ConcurrentHashMap<MapperKey, Set<ClassMap<Object, Object>>>();
-        this.objectFactoryRegistry = new ConcurrentHashMap<Class<?>, ObjectFactory<?>>();
+        this.objectFactoryRegistry = new ConcurrentHashMap<TypeHolder<? extends Object>, ObjectFactory<? extends Object>>();
         this.mappingHints = new CopyOnWriteArrayList<MappingHint>();
         this.unenhanceStrategy = buildUnenhanceStrategy(delegateStrategy, superTypeStrategy);
         this.mapperFacade = new MapperFacadeImpl(this, unenhanceStrategy);
@@ -393,8 +394,8 @@ public class DefaultMapperFactory implements MapperFactory {
     	return mapperFacade;
     }
     
-    public <D> void registerObjectFactory(ObjectFactory<D> objectFactory, Class<D> destinationClass) {
-        objectFactoryRegistry.put(destinationClass, objectFactory);
+    public <D> void registerObjectFactory(ObjectFactory<D> objectFactory, TypeHolder<D> destinationType) {
+        objectFactoryRegistry.put(destinationType, objectFactory);
     }
     
     public void registerMappingHint(MappingHint... hints) {
@@ -402,24 +403,24 @@ public class DefaultMapperFactory implements MapperFactory {
     }
     
     @SuppressWarnings("unchecked")
-    public <T> ObjectFactory<T> lookupObjectFactory(Class<T> targetClass) {
-        if (targetClass == null) {
+    public <T> ObjectFactory<T> lookupObjectFactory(TypeHolder<T> targetType) {
+        if (targetType == null) {
             return null;
         }
         
-        ObjectFactory<T> result = (ObjectFactory<T>) objectFactoryRegistry.get(targetClass);
+        ObjectFactory<T> result = (ObjectFactory<T>) objectFactoryRegistry.get(targetType);
         if (result==null) {
         	// Check if we can use default constructor...
         	try {
-				targetClass.getConstructor(/*new Class[0]*/);
+        	    targetType.getRawType().getConstructor(/*new Class[0]*/);
 				// Mark the class with null value in the registry
 				// to avoid repeating the getConstructor call
-				objectFactoryRegistry.put(targetClass, USE_DEFAULT_CONSTRUCTOR);
+				objectFactoryRegistry.put(targetType, USE_DEFAULT_CONSTRUCTOR);
 			} catch (Exception e) {
 				// Generate an object factory
 				synchronized (objectFactoryGenerator) {
-					result = (ObjectFactory<T>) objectFactoryGenerator.build((Class<Object>)targetClass);
-					objectFactoryRegistry.put(targetClass, result);
+					result = (ObjectFactory<T>) objectFactoryGenerator.build((TypeHolder<Object>)targetType);
+					objectFactoryRegistry.put(targetType, result);
 				}
 			}
         } else if (USE_DEFAULT_CONSTRUCTOR.equals(result)) {
@@ -430,25 +431,25 @@ public class DefaultMapperFactory implements MapperFactory {
     }
     
     @SuppressWarnings("unchecked")
-    public <S, D> Class<? extends D> lookupConcreteDestinationClass(Class<S> sourceClass, Class<D> destinationClass, MappingContext context) {
-        final Class<? extends D> concreteClass = context.getConcreteClass(sourceClass, destinationClass);
+    public <S, D> TypeHolder<? extends D> lookupConcreteDestinationClass(TypeHolder<S> sourceType, TypeHolder<D> destinationType, MappingContext context) {
+        final TypeHolder<? extends D> concreteType = context.getConcreteClass(sourceType, destinationType);
         
-        if (concreteClass != null) {
-            return concreteClass;
+        if (concreteType != null) {
+            return concreteType;
         }
         
-        final Set<Class<?>> destinationSet = aToBRegistry.get(sourceClass);
+        final Set<TypeHolder<?>> destinationSet = aToBRegistry.get(sourceType);
         if (destinationSet == null || destinationSet.isEmpty()) {
             return null;
         }
         
-        for (final Class<?> clazz : destinationSet) {
-            if (destinationClass.isAssignableFrom(clazz)) {
-                return (Class<? extends D>) clazz;
+        for (final TypeHolder<?> type : destinationSet) {
+            if (destinationType.isAssignableFrom(type)) {
+                return (TypeHolder<? extends D>) type;
                 
             }
         }
-        return concreteClass;
+        return concreteType;
     }
     
     @SuppressWarnings("unchecked")
@@ -508,18 +509,18 @@ public class DefaultMapperFactory implements MapperFactory {
         
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     private <S, D> void buildObjectFactories(ClassMap<S, D> classMap) {
-        Class aType = classMap.getAType();
-        Class bType = classMap.getBType();
+        TypeHolder<?> aType = classMap.getAType();
+        TypeHolder<?> bType = classMap.getBType();
         if (classMap.getConstructorA() != null && lookupObjectFactory(aType) == null) {
             GeneratedObjectFactory objectFactory = objectFactoryGenerator.build(aType);
-            registerObjectFactory(objectFactory, aType);
+            registerObjectFactory(objectFactory, (TypeHolder<Object>)aType);
         }
         
         if (classMap.getConstructorB() != null && lookupObjectFactory(bType) == null) {
             GeneratedObjectFactory objectFactory = objectFactoryGenerator.build(bType);
-            registerObjectFactory(objectFactory, bType);
+            registerObjectFactory(objectFactory, (TypeHolder<Object>)bType);
         }
     }
     
@@ -565,10 +566,10 @@ public class DefaultMapperFactory implements MapperFactory {
         classMapRegistry.put(mapperKey, (ClassMap<Object, Object>)classMap);
     }
     
-    private <S, D> void register(Class<S> sourceClass, Class<D> destinationClass) {
-        Set<Class<?>> destinationSet = aToBRegistry.get(sourceClass);
+    private <S, D> void register(TypeHolder<S> sourceClass, TypeHolder<D> destinationClass) {
+        Set<TypeHolder<?>> destinationSet = aToBRegistry.get(sourceClass);
         if (destinationSet == null) {
-            destinationSet = new HashSet<Class<?>>();
+            destinationSet = new HashSet<TypeHolder<?>>();
             aToBRegistry.put(sourceClass, destinationSet);
         }
         destinationSet.add(destinationClass);
@@ -579,12 +580,12 @@ public class DefaultMapperFactory implements MapperFactory {
         return (ClassMap<A, B>) classMapRegistry.get(mapperKey);
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Set<Class<Object>> lookupMappedClasses(Class<Object> clazz) {
-        return (Set) aToBRegistry.get(clazz);
+    public Set<TypeHolder<? extends Object>> lookupMappedClasses(TypeHolder<?> type) {
+        return aToBRegistry.get(type);
     }
     
     public ConverterFactory getConverterFactory() {
         return converterFactory;
     }
+
 }

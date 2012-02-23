@@ -18,6 +18,8 @@
 
 package ma.glasnost.orika.metadata;
 
+import java.lang.reflect.Type;
+
 public class FieldMapBuilder<A, B> {
     
     private final ClassMapBuilder<A, B> classMapBuilder;
@@ -50,14 +52,14 @@ public class FieldMapBuilder<A, B> {
     }
     
     public FieldMapBuilder<A, B> aInverse(String aInverse) {
-        final Class<?> type = aProperty.isCollection() ? aProperty.getParameterizedType() : aProperty.getType();
+        final Type type = aProperty.isCollection() ? aProperty.getParameterizedType() : aProperty.getType();
         aInverseProperty = classMapBuilder.resolveProperty(type, aInverse);
         
         return this;
     }
     
     public FieldMapBuilder<A, B> bInverse(String bInverse) {
-        final Class<?> type = bProperty.isCollection() ? bProperty.getParameterizedType() : bProperty.getType();
+        final Type type = bProperty.isCollection() ? bProperty.getParameterizedType() : bProperty.getType();
         bInverseProperty = classMapBuilder.resolveProperty(type, bInverse);
         
         return this;

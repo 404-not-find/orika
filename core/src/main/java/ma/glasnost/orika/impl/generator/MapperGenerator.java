@@ -31,10 +31,10 @@ import java.util.Collection;
 import java.util.Set;
 
 import javassist.CannotCompileException;
+import ma.glasnost.orika.Converter;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingContext;
 import ma.glasnost.orika.MappingException;
-import ma.glasnost.orika.converter.Converter;
 import ma.glasnost.orika.converter.ConverterFactory;
 import ma.glasnost.orika.impl.GeneratedMapperBase;
 import ma.glasnost.orika.impl.generator.CompilerStrategy.SourceCodeGenerationException;
@@ -61,18 +61,22 @@ public final class MapperGenerator {
     public GeneratedMapperBase build(ClassMap<?, ?> classMap) {
         
         try {
-            compilerStrategy.assureTypeIsAccessible(classMap.getAType());
-            compilerStrategy.assureTypeIsAccessible(classMap.getBType());
+            compilerStrategy.assureTypeIsAccessible(classMap.getAType().getRawType());
+            compilerStrategy.assureTypeIsAccessible(classMap.getBType().getRawType());
             
             final GeneratedSourceCode mapperCode = new GeneratedSourceCode(classMap.getMapperClassName(), GeneratedMapperBase.class,
                     compilerStrategy);
             
-            addGetTypeMethod(mapperCode, "getAType", classMap.getAType());
-            addGetTypeMethod(mapperCode, "getBType", classMap.getBType());
+            //addGetTypeMethod(mapperCode, "getAType", classMap.getAType().getRawType());
+            //addGetTypeMethod(mapperCode, "getBType", classMap.getBType().getRawType());
             addMapMethod(mapperCode, true, classMap);
             addMapMethod(mapperCode, false, classMap);
             
-            return mapperCode.getInstance();
+            GeneratedMapperBase instance = mapperCode.getInstance();
+            instance.setAType(classMap.getAType());
+            instance.setBType(classMap.getBType());
+            
+            return instance;
             
         } catch (final Exception e) {
             throw new MappingException(e);
@@ -88,11 +92,11 @@ public final class MapperGenerator {
         
         Class<?> sourceClass, destinationClass;
         if (aToB) {
-            sourceClass = classMap.getAType();
-            destinationClass = classMap.getBType();
+            sourceClass = classMap.getAType().getRawType();
+            destinationClass = classMap.getBType().getRawType();
         } else {
-            sourceClass = classMap.getBType();
-            destinationClass = classMap.getAType();
+            sourceClass = classMap.getBType().getRawType();
+            destinationClass = classMap.getAType().getRawType();
         }
         out.assertType("a", sourceClass);
         out.assertType("b", destinationClass);
@@ -149,15 +153,15 @@ public final class MapperGenerator {
     private void generateFieldMapCode(CodeSourceBuilder code, FieldMap fieldMap, Class<?> destinationClass) throws Exception {
         final Property sp = fieldMap.getSource(), dp = fieldMap.getDestination();
         
-        if (sp.getGetter() == null || ((dp.getSetter() == null) && !Collection.class.isAssignableFrom(dp.getType()))) {
+        if (sp.getGetter() == null || ((dp.getSetter() == null) && !Collection.class.isAssignableFrom(dp.getRawType()))) {
             return;
         }
         
         // Make sure the source and destination types are accessible to the
         // builder
         
-        compilerStrategy.assureTypeIsAccessible(sp.getType());
-        compilerStrategy.assureTypeIsAccessible(dp.getType());
+        compilerStrategy.assureTypeIsAccessible(sp.getRawType());
+        compilerStrategy.assureTypeIsAccessible(dp.getRawType());
         
         try {
             
@@ -217,15 +221,14 @@ public final class MapperGenerator {
         }
     }
     
-    @SuppressWarnings("unchecked")
     private Converter<Object, Object> getConverter(FieldMap fieldMap) {
         Converter<Object, Object> converter = null;
         ConverterFactory converterFactory = mapperFactory.getConverterFactory();
         if (fieldMap.getConverterId() != null) {
             converter = converterFactory.getConverter(fieldMap.getConverterId());
         } else {
-            converter = converterFactory.getConverter((Class<Object>) fieldMap.getSource().getType(),
-                    (Class<Object>) fieldMap.getDestination().getType());
+            converter = converterFactory.getConverter(fieldMap.getSource().getType(),
+                     fieldMap.getDestination().getType());
         }
         return converter;
     }

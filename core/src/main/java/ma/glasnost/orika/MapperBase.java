@@ -18,6 +18,8 @@
 
 package ma.glasnost.orika;
 
+import ma.glasnost.orika.metadata.TypeHolder;
+
 /**
  * Abstract super-class for all generated mappers and user custom mappers.
  * 
@@ -45,12 +47,12 @@ public abstract class MapperBase<A, B> implements Mapper<A, B> {
         this.mapperFacade = mapper;
     }
     
-    public Class<A> getAType() {
-        throw throwShouldNotCalledCustomMapper();
+    public TypeHolder<A> getAType() {
+    	throw throwShouldNotCalledCustomMapper();
     }
     
-    public Class<B> getBType() {
-        throw throwShouldNotCalledCustomMapper();
+    public TypeHolder<B> getBType() {
+    	throw throwShouldNotCalledCustomMapper();
     }
     
     public void setUsedMappers(Mapper<Object, Object>[] mapper) {
