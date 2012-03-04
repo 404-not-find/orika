@@ -24,11 +24,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -38,11 +36,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import ma.glasnost.orika.metadata.NestedProperty;
 import ma.glasnost.orika.metadata.Property;
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 public final class PropertyUtil {
     
-    private static final Map<Type, Map<String, Property>> PROPERTIES_CACHE = new ConcurrentHashMap<Type, Map<String, Property>>();
+    private static final Map<java.lang.reflect.Type, Map<String, Property>> PROPERTIES_CACHE = new ConcurrentHashMap<java.lang.reflect.Type, Map<String, Property>>();
     
     private PropertyUtil() {
         
@@ -55,18 +53,18 @@ public final class PropertyUtil {
      * @param theType
      * @return
      */
-    public static Map<String, Property> getProperties(Type theType) {
+    public static Map<String, Property> getProperties(java.lang.reflect.Type theType) {
         
         if (PROPERTIES_CACHE.containsKey(theType)) {
             return PROPERTIES_CACHE.get(theType);
         }
         
         final Map<String, Property> properties = new HashMap<String, Property>();
-        TypeHolder<?> typeHolder;
-        if (theType instanceof TypeHolder) {
-            typeHolder = (TypeHolder<?>)theType;
+        Type<?> typeHolder;
+        if (theType instanceof Type) {
+        	typeHolder = (Type<?>)theType;
         } else if (theType instanceof Class) {
-            typeHolder = TypeHolder.valueOf((Class<?>)theType);
+        	typeHolder = Type.valueOf((Class<?>)theType);
         } else {
             throw new IllegalArgumentException("type " + theType + " not supported.");
         }
@@ -95,9 +93,9 @@ public final class PropertyUtil {
                             continue;
                         }
                         
-                        Class<?> propertyType = pd.getPropertyType();
+                        Class<?> rawType = pd.getPropertyType();
                         Class<?> returnType = null;
-                        Type genericType = pd.getReadMethod().getGenericReturnType();
+                        java.lang.reflect.Type genericType = pd.getReadMethod().getGenericReturnType();
                         try {
                             returnType = pd.getReadMethod().getDeclaringClass()
                                     .getDeclaredMethod(property.getGetter(), new Class[0])
@@ -107,16 +105,26 @@ public final class PropertyUtil {
                         }
                         
                         if (genericType instanceof TypeVariable && typeHolder.isParameterized()) {
-                            TypeHolder<?> t = typeHolder.getTypeByVariable(((TypeVariable<?>) genericType).getName());
-                            propertyType = t.getRawType();
-                            property.setGenericType(t);
-                        } else if (propertyType!=returnType && propertyType.isAssignableFrom(returnType)) {
-                            propertyType = returnType;
+                            java.lang.reflect.Type t = typeHolder.getTypeByVariable((TypeVariable<?>) genericType);
+                            if (t instanceof Type) {
+                            	property.setType((Type<?>)t);
+                            } else if (t instanceof ParameterizedType) {
+                            	property.setType(Type.valueOf((ParameterizedType)t));
+                            } else {
+                            	property.setType(Type.valueOf((Object.class)));
+                            	//throw new IllegalStateException("unresolved property type");
+                            }
+                        } else if (rawType!=returnType && rawType.isAssignableFrom(returnType)) {
+                        	property.setType(Type.valueOf(returnType));
+                        } else if (genericType instanceof ParameterizedType) {
+                        	 property.setType(Type.valueOf((ParameterizedType)genericType));
+                        } else {
+                        	 property.setType(Type.valueOf(rawType));
                         }
-                        property.setType(TypeHolder.valueOf(propertyType));
+                       
                         
                         Property existing = properties.get(pd.getName());
-                        if (existing==null || existing.getType().isAssignableFrom(propertyType)) {
+                        if (existing==null || existing.getType().isAssignableFrom(rawType)) {
                             properties.put(pd.getName(), property);
                         
                             if (pd.getReadMethod() != null) {
@@ -157,7 +165,7 @@ public final class PropertyUtil {
     }
     
 
-    public static NestedProperty getNestedProperty(Type type, String p) {
+    public static NestedProperty getNestedProperty(java.lang.reflect.Type type, String p) {
         
         String typeName = type.toString();
         Class<?> rawType = (Class<?>)((type instanceof ParameterizedType) ? ((ParameterizedType)type).getRawType() : type);
@@ -172,7 +180,7 @@ public final class PropertyUtil {
                     throw new RuntimeException(rawType.getName() + " does not contain property [" + ps[i] + "]");
                 }
                 property = properties.get(ps[i]);
-                properties = getProperties(property.getActualType());
+                properties = getProperties(property.getType());
                 i++;
                 if (i < ps.length) {
                     path.add(property);

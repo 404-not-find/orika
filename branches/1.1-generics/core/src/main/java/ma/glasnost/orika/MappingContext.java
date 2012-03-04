@@ -21,46 +21,46 @@ package ma.glasnost.orika;
 import java.util.HashMap;
 import java.util.Map;
 
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 public class MappingContext {
     
-    private final Map<TypeHolder<?>, TypeHolder<?>> mapping;
+    private final Map<Type<?>, Type<?>> mapping;
     private final Map<Object, Object> cache;
     
     public MappingContext() {
-        mapping = new HashMap<TypeHolder<?>, TypeHolder<?>>();
+        mapping = new HashMap<Type<?>, Type<?>>();
         cache = new HashMap<Object, Object>();
     }
     
     @SuppressWarnings("unchecked")
-    public <S, D> TypeHolder<? extends D> getConcreteClass(TypeHolder<S> sourceType, TypeHolder<D> destinationType) {
+    public <S, D> Type<? extends D> getConcreteClass(Type<S> sourceType, Type<D> destinationType) {
         
-        final TypeHolder<?> type = mapping.get(sourceType);
+        final Type<?> type = mapping.get(sourceType);
         if (type != null && destinationType.isAssignableFrom(type)) {
-            return (TypeHolder<? extends D>) type;
+            return (Type<? extends D>) type;
         }
         return null;
     }
     
-    public void registerConcreteClass(TypeHolder<?> subjectClass, TypeHolder<?> concreteClass) {
+    public void registerConcreteClass(Type<?> subjectClass, Type<?> concreteClass) {
         mapping.put(subjectClass, concreteClass);
     }
     
     public <S, D> void cacheMappedObject(S source, D destination) {
-        cache.put(hashMappedObject(source, TypeHolder.typeOf(destination)), destination);
+        cache.put(hashMappedObject(source, Type.typeOf(destination)), destination);
     }
     
-    public <S, D> boolean isAlreadyMapped(S source, TypeHolder<D> destinationClass) {
+    public <S, D> boolean isAlreadyMapped(S source, Type<D> destinationClass) {
         return cache.containsKey(hashMappedObject(source, destinationClass));
     } 
     
     @SuppressWarnings("unchecked")
-	public <D> D getMappedObject(Object source, TypeHolder<?> destinationClass) {
+	public <D> D getMappedObject(Object source, Type<?> destinationClass) {
         return (D) cache.get(hashMappedObject(source, destinationClass));
     }
     
-    private static Integer hashMappedObject(Object source, TypeHolder<?> destinationClass) {
-        return System.identityHashCode(source) * 31 + System.identityHashCode(destinationClass);
+    private static Integer hashMappedObject(Object source, Type<?> destinationType) {
+        return System.identityHashCode(source) * 31 + destinationType.hashCode();
     }
 }

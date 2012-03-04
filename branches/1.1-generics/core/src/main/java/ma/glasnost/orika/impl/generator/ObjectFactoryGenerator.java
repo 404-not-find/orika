@@ -20,7 +20,7 @@ import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.FieldMap;
 import ma.glasnost.orika.metadata.MapperKey;
 import ma.glasnost.orika.metadata.Property;
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class ObjectFactoryGenerator {
         this.constructorResolverStrategy = constructorResolverStrategy;
     }
     
-    public GeneratedObjectFactory build(TypeHolder<?> type) {
+    public GeneratedObjectFactory build(Type<?> type) {
         
         final String className = type.getSimpleName() + "ObjectFactory" + 
         	System.identityHashCode(type) + nameSuffix;
@@ -71,15 +71,15 @@ public class ObjectFactoryGenerator {
         } 
     }
     
-    private void addCreateMethod(GeneratedSourceCode context, TypeHolder<?> clazz) throws CannotCompileException {
+    private void addCreateMethod(GeneratedSourceCode context, Type<?> clazz) throws CannotCompileException {
         final CodeSourceBuilder out = new CodeSourceBuilder(1);
         out.append("public Object create(Object s, " + MappingContext.class.getCanonicalName() + " mappingContext) {");
         out.append("if(s == null) throw new %s(\"source object must be not null\");", IllegalArgumentException.class.getCanonicalName());
         
-        Set<TypeHolder<? extends Object>> sourceClasses = mapperFactory.lookupMappedClasses(clazz);
+        Set<Type<? extends Object>> sourceClasses = mapperFactory.lookupMappedClasses(clazz);
         
         if (sourceClasses != null && !sourceClasses.isEmpty()) {
-            for (TypeHolder<? extends Object> sourceType : sourceClasses) {
+            for (Type<? extends Object> sourceType : sourceClasses) {
                 addSourceClassConstructor(out, clazz, sourceType);
             }
         }
@@ -90,7 +90,7 @@ public class ObjectFactoryGenerator {
         context.addMethod(out.toString());
     }
     
-    private void addSourceClassConstructor(CodeSourceBuilder out, TypeHolder<?> type, TypeHolder<?> sourceClass) {
+    private void addSourceClassConstructor(CodeSourceBuilder out, Type<?> type, Type<?> sourceClass) {
         List<FieldMap> properties = new ArrayList<FieldMap>();
         ClassMap<Object, Object> classMap = mapperFactory.getClassMap(new MapperKey(type,sourceClass)); 
         if (classMap==null) {
@@ -114,7 +114,7 @@ public class ObjectFactoryGenerator {
                     	// destination property should be compared against
                     	// the constructor argument 
                     	fieldMap = fieldMap.copy();
-                    	fieldMap.getDestination().setType(TypeHolder.valueOf(constructorArguments[argIndex]));
+                    	fieldMap.getDestination().setType(Type.valueOf(constructorArguments[argIndex]));
                     	properties.add(fieldMap);
                         break;
                     }
@@ -184,7 +184,7 @@ public class ObjectFactoryGenerator {
     
     private boolean generateConverterCode(final CodeSourceBuilder code, String var, FieldMap fieldMap) {
         Property sp = fieldMap.getSource(), dp = fieldMap.getDestination();
-        final TypeHolder<?> destinationClass = dp.getType();
+        final Type<?> destinationClass = dp.getType();
         
         Converter<Object, Object> converter = null;
         ConverterFactory converterFactory = mapperFactory.getConverterFactory();

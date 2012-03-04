@@ -32,7 +32,7 @@ public class PropertiesTestCase {
 
 		NestedProperty p = PropertyUtil.getNestedProperty(Line.class, np);
 
-		Assert.assertEquals(Integer.TYPE, p.getType());
+		Assert.assertEquals(Integer.TYPE, p.getRawType());
 	}
 
 	public static class Point {

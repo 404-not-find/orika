@@ -18,7 +18,7 @@
 
 package ma.glasnost.orika;
 
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 /**
  * Provides a generic mapping suggestion mechanism to provide 
@@ -34,6 +34,6 @@ public interface DefaultFieldMapper {
 	 * @return a suggested optional mapping name for the given property,
 	 * or <code>null</code> if no suggestion for the given property
 	 */
-	public String suggestMappedField(String fromProperty, TypeHolder<?> fromPropertyType);
+	public String suggestMappedField(String fromProperty, Type<?> fromPropertyType);
 	
 }

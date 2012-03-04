@@ -17,13 +17,13 @@
  */
 package ma.glasnost.orika;
 
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 public interface Converter<S, D> {
     
-    boolean canConvert(TypeHolder<?> sourceClass, TypeHolder<?> destinationType);
+    boolean canConvert(Type<?> sourceClass, Type<?> destinationType);
     
-    D convert(S source, TypeHolder<? extends D> destinationType);
+    D convert(S source, Type<? extends D> destinationType);
     
     public static class LegacyConverter<S,D> implements Converter<S, D> {
 
@@ -34,14 +34,14 @@ public interface Converter<S, D> {
     	}
     	
 		@SuppressWarnings("unchecked")
-		public boolean canConvert(TypeHolder<?> sourceClass,
-				TypeHolder<?> destinationType) {
+		public boolean canConvert(Type<?> sourceClass,
+				Type<?> destinationType) {
 			
 			return delegate.canConvert((Class<S>)sourceClass.getRawType(), 
 					(Class<D>)destinationType.getRawType());
 		}
 
-		public D convert(S source, TypeHolder<? extends D> destinationType) {
+		public D convert(S source, Type<? extends D> destinationType) {
 			
 			return delegate.convert(source, destinationType.getRawType());
 		}

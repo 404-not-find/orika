@@ -51,7 +51,7 @@ import ma.glasnost.orika.inheritance.SuperTypeResolverStrategy;
 import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.metadata.MapperKey;
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 import ma.glasnost.orika.unenhance.BaseUnenhancer;
 import ma.glasnost.orika.unenhance.HibernateUnenhanceStrategy;
 import ma.glasnost.orika.unenhance.UnenhanceStrategy;
@@ -72,24 +72,23 @@ public class DefaultMapperFactory implements MapperFactory {
     
     private final Map<MapperKey, ClassMap<Object, Object>> classMapRegistry;
     private final Map<MapperKey, GeneratedMapperBase> mappersRegistry;
-    private final ConcurrentHashMap<TypeHolder<? extends Object>, ObjectFactory<? extends Object>> objectFactoryRegistry;
-    private final Map<TypeHolder<?>, Set<TypeHolder<?>>> aToBRegistry;
-    private final Map<TypeHolder<?>, TypeHolder<?>> mappedConverters;
+    private final ConcurrentHashMap<Type<? extends Object>, ObjectFactory<? extends Object>> objectFactoryRegistry;
+    private final Map<Type<?>, Set<Type<?>>> aToBRegistry;
+    private final Map<Type<?>, Type<?>> mappedConverters;
     private final List<MappingHint> mappingHints;
     private final UnenhanceStrategy unenhanceStrategy;
     private final ConverterFactory converterFactory;
     private final CompilerStrategy compilerStrategy;
     private volatile boolean isBuilt = false;
     
-    
     /**
      * Place-holder object factory used to represent the default constructor in
      * registry lookup; prevents repeated lookup of constructor
      */
     private static final ObjectFactory<Object> USE_DEFAULT_CONSTRUCTOR = new ObjectFactory<Object>() {
-		public Object create(Object source, MappingContext context) {
-			return null;
-		}
+        public Object create(Object source, MappingContext context) {
+            return null;
+        }
     };
     
     private final Map<MapperKey, Set<ClassMap<Object, Object>>> usedMapperMetadataRegistry;
@@ -98,14 +97,14 @@ public class DefaultMapperFactory implements MapperFactory {
             SuperTypeResolverStrategy superTypeStrategy, ConstructorResolverStrategy constructorResolverStrategy,
             ConverterFactory converterFactory, CompilerStrategy compilerStrategy) {
         
-	this.converterFactory = converterFactory;
+        this.converterFactory = converterFactory;
         this.compilerStrategy = compilerStrategy;
         this.classMapRegistry = new ConcurrentHashMap<MapperKey, ClassMap<Object, Object>>();
         this.mappersRegistry = new ConcurrentHashMap<MapperKey, GeneratedMapperBase>();
-        this.aToBRegistry = new ConcurrentHashMap<TypeHolder<?>, Set<TypeHolder<?>>>();
-        this.mappedConverters = new ConcurrentHashMap<TypeHolder<?>, TypeHolder<?>>();
+        this.aToBRegistry = new ConcurrentHashMap<Type<?>, Set<Type<?>>>();
+        this.mappedConverters = new ConcurrentHashMap<Type<?>, Type<?>>();
         this.usedMapperMetadataRegistry = new ConcurrentHashMap<MapperKey, Set<ClassMap<Object, Object>>>();
-        this.objectFactoryRegistry = new ConcurrentHashMap<TypeHolder<? extends Object>, ObjectFactory<? extends Object>>();
+        this.objectFactoryRegistry = new ConcurrentHashMap<Type<? extends Object>, ObjectFactory<? extends Object>>();
         this.mappingHints = new CopyOnWriteArrayList<MappingHint>();
         this.unenhanceStrategy = buildUnenhanceStrategy(delegateStrategy, superTypeStrategy);
         this.mapperFacade = new MapperFacadeImpl(this, unenhanceStrategy);
@@ -121,160 +120,160 @@ public class DefaultMapperFactory implements MapperFactory {
     }
     
     /**
-     * Use this builder to generate instances of DefaultMapperFactory
-     * with the desired customizations.<br><br>
+     * Use this builder to generate instances of DefaultMapperFactory with the
+     * desired customizations.<br>
+     * <br>
      * 
-     * For example, an instance with no customizations could be generated with the following code:
+     * For example, an instance with no customizations could be generated with
+     * the following code:
+     * 
      * <pre>
-     * {@code
-     * 		MapperFactory factory = new DefaultMapperFactory.Builder().build();
+     * {
+     *     &#064;code
+     *     MapperFactory factory = new DefaultMapperFactory.Builder().build();
      * }
      * </pre>
      * 
      * @author matt.deboer@gmail.com
      */
     public static final class Builder {
-    	private UnenhanceStrategy unenhanceStrategy;
-    	private SuperTypeResolverStrategy superTypeStrategy;
-    	private ConstructorResolverStrategy constructorResolverStrategy;
-    	private CompilerStrategy compilerStrategy;
-    	private Set<ClassMap<?, ?>> classMaps;
-    	private ConverterFactory converterFactory;
-    	
-    	public Builder classMaps(Set<ClassMap<?, ?>> classMaps) {
-    		this.classMaps = classMaps;
-    		return this;
-    	}
-    	
-    	public Builder unenhanceStrategy(UnenhanceStrategy unenhanceStrategy) {
-    		this.unenhanceStrategy = unenhanceStrategy;
-    		return this;
-    	}
-    	
-    	public Builder superTypeResolverStrategy(SuperTypeResolverStrategy superTypeStrategy) {
-    		this.superTypeStrategy = superTypeStrategy;
-    		return this;
-    	}
-    	
-    	public Builder constructorResolverStrategy(ConstructorResolverStrategy constructorResolverStrategy) {
-    		this.constructorResolverStrategy = constructorResolverStrategy;
-    		return this;
-    	}
-    	
-    	public Builder converterFactory(ConverterFactory converterFactory) {
-    	    this.converterFactory = converterFactory;
-    	    return this;
-    	}
-    	
-    	public Builder compilerStrategy(CompilerStrategy compilerStrategy) {
-    		this.compilerStrategy = compilerStrategy;
-    		return this;
-    	}
-    	
-    	public DefaultMapperFactory build() {
-    		
-    		if (converterFactory==null) {
-    		    converterFactory = getDefaultConverterFactory();
-    		}
-    		if (constructorResolverStrategy == null) {
-    		    constructorResolverStrategy = getDefaultConstructorResolverStrategy(); 
-    		}
-    		if (compilerStrategy==null) {
-    			compilerStrategy = getDefaultCompilerStrategy();
-    		}
-    		
-    		return new DefaultMapperFactory(
-    			classMaps,
-    			unenhanceStrategy,
-    			superTypeStrategy,
-    			constructorResolverStrategy,
-    			converterFactory,
-    			compilerStrategy);
-    	}
-    	
+        private UnenhanceStrategy unenhanceStrategy;
+        private SuperTypeResolverStrategy superTypeStrategy;
+        private ConstructorResolverStrategy constructorResolverStrategy;
+        private CompilerStrategy compilerStrategy;
+        private Set<ClassMap<?, ?>> classMaps;
+        private ConverterFactory converterFactory;
+        
+        public Builder classMaps(Set<ClassMap<?, ?>> classMaps) {
+            this.classMaps = classMaps;
+            return this;
+        }
+        
+        public Builder unenhanceStrategy(UnenhanceStrategy unenhanceStrategy) {
+            this.unenhanceStrategy = unenhanceStrategy;
+            return this;
+        }
+        
+        public Builder superTypeResolverStrategy(SuperTypeResolverStrategy superTypeStrategy) {
+            this.superTypeStrategy = superTypeStrategy;
+            return this;
+        }
+        
+        public Builder constructorResolverStrategy(ConstructorResolverStrategy constructorResolverStrategy) {
+            this.constructorResolverStrategy = constructorResolverStrategy;
+            return this;
+        }
+        
+        public Builder converterFactory(ConverterFactory converterFactory) {
+            this.converterFactory = converterFactory;
+            return this;
+        }
+        
+        public Builder compilerStrategy(CompilerStrategy compilerStrategy) {
+            this.compilerStrategy = compilerStrategy;
+            return this;
+        }
+        
+        public DefaultMapperFactory build() {
+            
+            if (converterFactory == null) {
+                converterFactory = getDefaultConverterFactory();
+            }
+            if (constructorResolverStrategy == null) {
+                constructorResolverStrategy = getDefaultConstructorResolverStrategy();
+            }
+            if (compilerStrategy == null) {
+                compilerStrategy = getDefaultCompilerStrategy();
+            }
+            
+            return new DefaultMapperFactory(classMaps, unenhanceStrategy, superTypeStrategy, constructorResolverStrategy, converterFactory,
+                    compilerStrategy);
+        }
+        
     }
     
     /**
-     * Provides a default compiler strategy, favoring a type specified in 
-     * the appropriate system property if found.
-     * 
-     * @return 
-     */
-	private static CompilerStrategy getDefaultCompilerStrategy() {
-		CompilerStrategy compilerStrategy = null;
-		String strategy = System.getProperty(OrikaSystemProperties.COMPILER_STRATEGY);
-		if (strategy != null) {
-			// User may specify the compiler strategy using a system property
-			try {
-				@SuppressWarnings("unchecked")
-				Class<? extends CompilerStrategy> strategyType = 
-						(Class<? extends CompilerStrategy>) Class.forName(strategy, true, Thread.currentThread().getContextClassLoader());
-				compilerStrategy = strategyType.newInstance();
-
-			} catch (Exception e) {
-				throw new IllegalArgumentException(
-						"compiler strategy specified was invalid", e);
-			}
-
-		} else {
-			compilerStrategy = new JavassistCompilerStrategy();
-		}
-		return compilerStrategy;
-	}
-    
-    /**
-     * Provides a default constructor resolver strategy, favoring a type specified in 
-     * the appropriate system property if found.
+     * Provides a default compiler strategy, favoring a type specified in the
+     * appropriate system property if found.
      * 
      * @return
      */
-	private static ConverterFactory getDefaultConverterFactory() {
-		ConverterFactory converterFactory = null;
-		String strategy = System
-				.getProperty(OrikaSystemProperties.CONVERTER_FACTORY);
-		if (strategy != null) {
-
-			try {
-				@SuppressWarnings("unchecked")
-				Class<? extends ConverterFactory> strategyType = (Class<? extends ConverterFactory>) Class.forName(strategy, true, Thread.currentThread().getContextClassLoader());
-				converterFactory = strategyType.newInstance();
-
-			} catch (Exception e) {
-				throw new IllegalArgumentException("converter factory specified was invalid", e);
-			}
-
-		} else {
-			converterFactory = new DefaultConverterFactory();
-		}
-		return converterFactory;
-	}
+    private static CompilerStrategy getDefaultCompilerStrategy() {
+        CompilerStrategy compilerStrategy = null;
+        String strategy = System.getProperty(OrikaSystemProperties.COMPILER_STRATEGY);
+        if (strategy != null) {
+            // User may specify the compiler strategy using a system property
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends CompilerStrategy> strategyType = (Class<? extends CompilerStrategy>) Class.forName(strategy, true,
+                        Thread.currentThread().getContextClassLoader());
+                compilerStrategy = strategyType.newInstance();
+                
+            } catch (Exception e) {
+                throw new IllegalArgumentException("compiler strategy specified was invalid", e);
+            }
+            
+        } else {
+            compilerStrategy = new JavassistCompilerStrategy();
+        }
+        return compilerStrategy;
+    }
     
     /**
-     * Provides a default constructor resolver strategy, favoring a type specified in 
-     * the appropriate system property if found.
+     * Provides a default constructor resolver strategy, favoring a type
+     * specified in the appropriate system property if found.
      * 
      * @return
      */
-	private static ConstructorResolverStrategy getDefaultConstructorResolverStrategy() {
-		ConstructorResolverStrategy constructorResolverStrategy = null;
-		String strategy = System.getProperty(OrikaSystemProperties.CONSTRUCTOR_RESOLVER_STRATEGY);
-		if (strategy != null) {
-
-			try {
-				@SuppressWarnings("unchecked")
-				Class<? extends ConstructorResolverStrategy> strategyType = (Class<? extends ConstructorResolverStrategy>) Class.forName(strategy, true, Thread.currentThread().getContextClassLoader());
-				constructorResolverStrategy = strategyType.newInstance();
-
-			} catch (Exception e) {
-				throw new IllegalArgumentException("constructor resolver strategy specified was invalid",e);
-			}
-
-		} else {
-			constructorResolverStrategy = new SimpleConstructorResolverStrategy();
-			//constructorResolverStrategy = new BestFitConstructorResolverStrategy();
-		}
-		return constructorResolverStrategy;
-	}
+    private static ConverterFactory getDefaultConverterFactory() {
+        ConverterFactory converterFactory = null;
+        String strategy = System.getProperty(OrikaSystemProperties.CONVERTER_FACTORY);
+        if (strategy != null) {
+            
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends ConverterFactory> strategyType = (Class<? extends ConverterFactory>) Class.forName(strategy, true,
+                        Thread.currentThread().getContextClassLoader());
+                converterFactory = strategyType.newInstance();
+                
+            } catch (Exception e) {
+                throw new IllegalArgumentException("converter factory specified was invalid", e);
+            }
+            
+        } else {
+            converterFactory = new DefaultConverterFactory();
+        }
+        return converterFactory;
+    }
+    
+    /**
+     * Provides a default constructor resolver strategy, favoring a type
+     * specified in the appropriate system property if found.
+     * 
+     * @return
+     */
+    private static ConstructorResolverStrategy getDefaultConstructorResolverStrategy() {
+        ConstructorResolverStrategy constructorResolverStrategy = null;
+        String strategy = System.getProperty(OrikaSystemProperties.CONSTRUCTOR_RESOLVER_STRATEGY);
+        if (strategy != null) {
+            
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends ConstructorResolverStrategy> strategyType = (Class<? extends ConstructorResolverStrategy>) Class.forName(
+                        strategy, true, Thread.currentThread().getContextClassLoader());
+                constructorResolverStrategy = strategyType.newInstance();
+                
+            } catch (Exception e) {
+                throw new IllegalArgumentException("constructor resolver strategy specified was invalid", e);
+            }
+            
+        } else {
+            constructorResolverStrategy = new SimpleConstructorResolverStrategy();
+            // constructorResolverStrategy = new
+            // BestFitConstructorResolverStrategy();
+        }
+        return constructorResolverStrategy;
+    }
     
     /**
      * Generates the UnenhanceStrategy to be used for this MapperFactory,
@@ -318,53 +317,52 @@ public class DefaultMapperFactory implements MapperFactory {
             final SuperTypeResolverStrategy registeredMappersStrategy = new DefaultSuperTypeResolverStrategy() {
                 
                 @Override
-                public boolean isAcceptable(Class<?> proposedClass) {
-                    return aToBRegistry.containsKey(proposedClass) || mappedConverters.containsKey(proposedClass);
+                public boolean isAcceptable(Type<?> type) {
+                    return aToBRegistry.containsKey(type) || mappedConverters.containsKey(type);
                 }
             };
             
             unenhancer.addSuperTypeResolverStrategy(registeredMappersStrategy);
         }
         
-	/*
-	 * This strategy produces super-types whenever the proposed class type
-	 * is not accessible to the compilerStrategy and/or the current thread
-	 * context class-loader; it is added last as a fail-safe in case a
-	 * suggested type cannot be used. It is automatically included, as
-	 * there's no case when skipping it would be desired....
-	 */
-	final SuperTypeResolverStrategy inaccessibleTypeStrategy = new DefaultSuperTypeResolverStrategy() {
-
-	    /**
-	     * Tests whether the specified type is accessible to both the
-	     * current thread's class-loader, and also to the compilerStrategy.
-	     * 
-	     * @param type
-	     * @return
-	     */
-	    public boolean isTypeAccessible(Class<?> type) {
-
-		try {
-		    Class<?> loadedType = Thread.currentThread().getContextClassLoader().loadClass(type.getName());
-		    if (!type.equals(loadedType)) {
-			return false;
-		    }
-		    compilerStrategy.assureTypeIsAccessible(type);
-		    return true;
-		} catch (ClassNotFoundException e) {
-		    return false;
-		} catch (SourceCodeGenerationException e) {
-		    return false;
-		}
-	    }
-
-	    @Override
-	    public boolean isAcceptable(Class<?> proposedClass) {
-		return isTypeAccessible(proposedClass)
-			&& !java.lang.reflect.Proxy.class.equals(proposedClass);
-	    }
-
-	};
+        /*
+         * This strategy produces super-types whenever the proposed class type
+         * is not accessible to the compilerStrategy and/or the current thread
+         * context class-loader; it is added last as a fail-safe in case a
+         * suggested type cannot be used. It is automatically included, as
+         * there's no case when skipping it would be desired....
+         */
+        final SuperTypeResolverStrategy inaccessibleTypeStrategy = new DefaultSuperTypeResolverStrategy() {
+            
+            /**
+             * Tests whether the specified type is accessible to both the
+             * current thread's class-loader, and also to the compilerStrategy.
+             * 
+             * @param type
+             * @return
+             */
+            public boolean isTypeAccessible(Type<?> type) {
+                
+                try {
+                    Class<?> loadedType = Thread.currentThread().getContextClassLoader().loadClass(type.getName());
+                    if (!type.getRawType().equals(loadedType)) {
+                        return false;
+                    }
+                    compilerStrategy.assureTypeIsAccessible(type.getRawType());
+                    return true;
+                } catch (ClassNotFoundException e) {
+                    return false;
+                } catch (SourceCodeGenerationException e) {
+                    return false;
+                }
+            }
+            
+            @Override
+            public boolean isAcceptable(Type<?> type) {
+                return isTypeAccessible(type) && !java.lang.reflect.Proxy.class.equals(type.getRawType());
+            }
+            
+        };
         
         unenhancer.addSuperTypeResolverStrategy(inaccessibleTypeStrategy);
         
@@ -377,24 +375,25 @@ public class DefaultMapperFactory implements MapperFactory {
             final ClassMap<?, ?> classMap = ClassMapBuilder.map(mapperKey.getAType(), mapperKey.getBType())
                     .byDefault(this.mappingHints.toArray(new MappingHint[0]))
                     .toClassMap();
-            buildObjectFactories(classMap);
             buildMapper(classMap);
+            buildObjectFactories(classMap);
+            initializeUsedMappers(classMap);
         }
         return mappersRegistry.get(mapperKey);
     }
     
     public MapperFacade getMapperFacade() {
         if (!isBuilt) {
-        	synchronized(mapperFacade) {
-        		if (!isBuilt) {
-        			build();
-        		}
-        	}
+            synchronized (mapperFacade) {
+                if (!isBuilt) {
+                    build();
+                }
+            }
         }
-    	return mapperFacade;
+        return mapperFacade;
     }
     
-    public <D> void registerObjectFactory(ObjectFactory<D> objectFactory, TypeHolder<D> destinationType) {
+    public <D> void registerObjectFactory(ObjectFactory<D> objectFactory, Type<D> destinationType) {
         objectFactoryRegistry.put(destinationType, objectFactory);
     }
     
@@ -403,49 +402,49 @@ public class DefaultMapperFactory implements MapperFactory {
     }
     
     @SuppressWarnings("unchecked")
-    public <T> ObjectFactory<T> lookupObjectFactory(TypeHolder<T> targetType) {
+    public <T> ObjectFactory<T> lookupObjectFactory(Type<T> targetType) {
         if (targetType == null) {
             return null;
         }
         
         ObjectFactory<T> result = (ObjectFactory<T>) objectFactoryRegistry.get(targetType);
-        if (result==null) {
-        	// Check if we can use default constructor...
-        	try {
-        	    targetType.getRawType().getConstructor(/*new Class[0]*/);
-				// Mark the class with null value in the registry
-				// to avoid repeating the getConstructor call
-				objectFactoryRegistry.put(targetType, USE_DEFAULT_CONSTRUCTOR);
-			} catch (Exception e) {
-				// Generate an object factory
-				synchronized (objectFactoryGenerator) {
-					result = (ObjectFactory<T>) objectFactoryGenerator.build((TypeHolder<Object>)targetType);
-					objectFactoryRegistry.put(targetType, result);
-				}
-			}
+        if (result == null) {
+            // Check if we can use default constructor...
+            try {
+                targetType.getRawType().getConstructor(/* new Class[0] */);
+                // Mark the class with null value in the registry
+                // to avoid repeating the getConstructor call
+                objectFactoryRegistry.put(targetType, USE_DEFAULT_CONSTRUCTOR);
+            } catch (Exception e) {
+                // Generate an object factory
+                synchronized (objectFactoryGenerator) {
+                    result = (ObjectFactory<T>) objectFactoryGenerator.build((Type<Object>) targetType);
+                    objectFactoryRegistry.put(targetType, result);
+                }
+            }
         } else if (USE_DEFAULT_CONSTRUCTOR.equals(result)) {
-        	result = null;
+            result = null;
         }
         
         return result;
     }
     
     @SuppressWarnings("unchecked")
-    public <S, D> TypeHolder<? extends D> lookupConcreteDestinationClass(TypeHolder<S> sourceType, TypeHolder<D> destinationType, MappingContext context) {
-        final TypeHolder<? extends D> concreteType = context.getConcreteClass(sourceType, destinationType);
+    public <S, D> Type<? extends D> lookupConcreteDestinationClass(Type<S> sourceType, Type<D> destinationType, MappingContext context) {
+        final Type<? extends D> concreteType = context.getConcreteClass(sourceType, destinationType);
         
         if (concreteType != null) {
             return concreteType;
         }
         
-        final Set<TypeHolder<?>> destinationSet = aToBRegistry.get(sourceType);
+        final Set<Type<?>> destinationSet = aToBRegistry.get(sourceType);
         if (destinationSet == null || destinationSet.isEmpty()) {
             return null;
         }
         
-        for (final TypeHolder<?> type : destinationSet) {
+        for (final Type<?> type : destinationSet) {
             if (destinationType.isAssignableFrom(type)) {
-                return (TypeHolder<? extends D>) type;
+                return (Type<? extends D>) type;
                 
             }
         }
@@ -459,10 +458,10 @@ public class DefaultMapperFactory implements MapperFactory {
     
     public void build() {
         
-    	isBuilt = true;
-    	
+        isBuilt = true;
+        
         buildClassMapRegistry();
- 
+        
         for (final ClassMap<?, ?> classMap : classMapRegistry.values()) {
             buildMapper(classMap);
         }
@@ -511,16 +510,16 @@ public class DefaultMapperFactory implements MapperFactory {
     
     @SuppressWarnings({ "unchecked" })
     private <S, D> void buildObjectFactories(ClassMap<S, D> classMap) {
-        TypeHolder<?> aType = classMap.getAType();
-        TypeHolder<?> bType = classMap.getBType();
+        Type<?> aType = classMap.getAType();
+        Type<?> bType = classMap.getBType();
         if (classMap.getConstructorA() != null && lookupObjectFactory(aType) == null) {
             GeneratedObjectFactory objectFactory = objectFactoryGenerator.build(aType);
-            registerObjectFactory(objectFactory, (TypeHolder<Object>)aType);
+            registerObjectFactory(objectFactory, (Type<Object>) aType);
         }
         
         if (classMap.getConstructorB() != null && lookupObjectFactory(bType) == null) {
             GeneratedObjectFactory objectFactory = objectFactoryGenerator.build(bType);
-            registerObjectFactory(objectFactory, (TypeHolder<Object>)bType);
+            registerObjectFactory(objectFactory, (Type<Object>) bType);
         }
     }
     
@@ -551,7 +550,7 @@ public class DefaultMapperFactory implements MapperFactory {
     }
     
     @SuppressWarnings("unchecked")
-	private void buildMapper(ClassMap<?, ?> classMap) {
+    private void buildMapper(ClassMap<?, ?> classMap) {
         register(classMap.getAType(), classMap.getBType());
         register(classMap.getBType(), classMap.getAType());
         
@@ -563,13 +562,13 @@ public class DefaultMapperFactory implements MapperFactory {
             mapper.setCustomMapper(customizedMapper);
         }
         mappersRegistry.put(mapperKey, mapper);
-        classMapRegistry.put(mapperKey, (ClassMap<Object, Object>)classMap);
+        classMapRegistry.put(mapperKey, (ClassMap<Object, Object>) classMap);
     }
     
-    private <S, D> void register(TypeHolder<S> sourceClass, TypeHolder<D> destinationClass) {
-        Set<TypeHolder<?>> destinationSet = aToBRegistry.get(sourceClass);
+    private <S, D> void register(Type<S> sourceClass, Type<D> destinationClass) {
+        Set<Type<?>> destinationSet = aToBRegistry.get(sourceClass);
         if (destinationSet == null) {
-            destinationSet = new HashSet<TypeHolder<?>>();
+            destinationSet = new HashSet<Type<?>>();
             aToBRegistry.put(sourceClass, destinationSet);
         }
         destinationSet.add(destinationClass);
@@ -580,12 +579,12 @@ public class DefaultMapperFactory implements MapperFactory {
         return (ClassMap<A, B>) classMapRegistry.get(mapperKey);
     }
     
-    public Set<TypeHolder<? extends Object>> lookupMappedClasses(TypeHolder<?> type) {
+    public Set<Type<? extends Object>> lookupMappedClasses(Type<?> type) {
         return aToBRegistry.get(type);
     }
     
     public ConverterFactory getConverterFactory() {
         return converterFactory;
     }
-
+    
 }
