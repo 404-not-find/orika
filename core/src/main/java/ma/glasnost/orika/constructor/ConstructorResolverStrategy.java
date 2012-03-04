@@ -20,9 +20,9 @@ package ma.glasnost.orika.constructor;
 import java.lang.reflect.Constructor;
 
 import ma.glasnost.orika.metadata.ClassMap;
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 public interface ConstructorResolverStrategy {
     
-    <T, A, B> Constructor<T> resolve(ClassMap<A, B> classMap, TypeHolder<T> sourceType);
+    <T, A, B> Constructor<T> resolve(ClassMap<A, B> classMap, Type<T> sourceType);
 }

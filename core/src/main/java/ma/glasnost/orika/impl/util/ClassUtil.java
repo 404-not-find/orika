@@ -19,14 +19,13 @@
 package ma.glasnost.orika.impl.util;
 
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 public final class ClassUtil {
     
@@ -56,7 +55,7 @@ public final class ClassUtil {
         return IMMUTABLES_TYPES.contains(clazz) || clazz.isEnum();
     }
     
-    public static boolean isImmutable(TypeHolder<?> type) {
+    public static boolean isImmutable(Type<?> type) {
         return isImmutable(type.getRawType());
     }
     /**
@@ -75,18 +74,8 @@ public final class ClassUtil {
      * @param type
      * @return true if the passed type is not abstract and not an interface; false otherwise.
      */
-    public static boolean isConcrete(TypeHolder<?> type) {
+    public static boolean isConcrete(Type<?> type) {
     	return isConcrete(type.getRawType());
-    }
-    
-    /**
-     * Verifies whether a given type is non-abstract and not an interface.
-     * 
-     * @param type
-     * @return true if the passed type is not abstract and not an interface; false otherwise.
-     */
-    public static boolean isConcrete(Type type) {
-        return (type instanceof Class) && isConcrete((Class<?>)type);
     }
     
     /**

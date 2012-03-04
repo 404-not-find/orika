@@ -18,7 +18,7 @@
 
 package ma.glasnost.orika;
 
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 /**
  * Defines a contract bewteen internal parts of Orikas such as
@@ -39,8 +39,8 @@ public interface Mapper<A, B> {
     
     void setUsedMappers(Mapper<Object, Object>[] mapper);
     
-    TypeHolder<A> getAType();
+    Type<A> getAType();
     
-    TypeHolder<B> getBType();
+    Type<B> getBType();
     
 }

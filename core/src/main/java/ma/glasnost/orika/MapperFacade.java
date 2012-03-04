@@ -21,7 +21,7 @@ package ma.glasnost.orika;
 import java.util.List;
 import java.util.Set;
 
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 /**
  * The main runtime interface between a Java application and Orika. This is the
@@ -63,6 +63,10 @@ public interface MapperFacade {
     
     <S, D> void map(S sourceObject, D destinationObject, MappingContext context);
     
+    <S, D> void map(S sourceObject, D destinationObject, Type<S> sourceType, Type<D> destinationType);   
+
+    <S, D> void map(S sourceObject, D destinationObject, Type<S> sourceType, Type<D> destinationType, MappingContext context);   
+    
     <S, D> Set<D> mapAsSet(Iterable<S> source, Class<D> destinationClass);
     
     <S, D> Set<D> mapAsSet(Iterable<S> source, Class<D> destinationClass, MappingContext context);
@@ -90,35 +94,35 @@ public interface MapperFacade {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // New method sigantures to support generics mapping
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    <S, D> D map(S sourceObject, TypeHolder<D> destinationType);
+    <S, D> D map(S sourceObject, Type<S> sourceType, Type<D> destinationType);
     
-    <S, D> D map(S sourceObject, TypeHolder<D> destinationType, MappingContext context);
+    <S, D> D map(S sourceObject, Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    <S, D> Set<D> mapAsSet(Iterable<S> source, TypeHolder<D> destinationType);
+    <S, D> Set<D> mapAsSet(Iterable<S> source, Type<S> sourceType, Type<D> destinationType);
     
-    <S, D> Set<D> mapAsSet(Iterable<S> source, TypeHolder<D> destinationType, MappingContext context);
+    <S, D> Set<D> mapAsSet(Iterable<S> source, Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    <S, D> Set<D> mapAsSet(S[] source, TypeHolder<D> destinationType);
+    <S, D> Set<D> mapAsSet(S[] source, Type<S> sourceType, Type<D> destinationType);
     
-    <S, D> Set<D> mapAsSet(S[] source, TypeHolder<D> destinationType, MappingContext context);
+    <S, D> Set<D> mapAsSet(S[] source, Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    <S, D> List<D> mapAsList(Iterable<S> source, TypeHolder<D> destinationType);
+    <S, D> List<D> mapAsList(Iterable<S> source, Type<S> sourceType, Type<D> destinationType);
     
-    <S, D> List<D> mapAsList(Iterable<S> source, TypeHolder<D> destinationType, MappingContext context);
+    <S, D> List<D> mapAsList(Iterable<S> source, Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    <S, D> List<D> mapAsList(S[] source, TypeHolder<D> destinationType);
+    <S, D> List<D> mapAsList(S[] source, Type<S> sourceType, Type<D> destinationType);
     
-    <S, D> List<D> mapAsList(S[] source, TypeHolder<D> destinationType, MappingContext context);
+    <S, D> List<D> mapAsList(S[] source, Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    <S, D> D[] mapAsArray(D[] destination, Iterable<S> source, TypeHolder<D> destinationType);
+    <S, D> D[] mapAsArray(D[] destination, Iterable<S> source, Type<S> sourceType, Type<D> destinationType);
     
-    <S, D> D[] mapAsArray(D[] destination, S[] source, TypeHolder<D> destinationType);
+    <S, D> D[] mapAsArray(D[] destination, S[] source, Type<S> sourceType, Type<D> destinationType);
     
-    <S, D> D[] mapAsArray(D[] destination, Iterable<S> source, TypeHolder<D> destinationType, MappingContext context);
+    <S, D> D[] mapAsArray(D[] destination, Iterable<S> source, Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    <S, D> D[] mapAsArray(D[] destination, S[] source, TypeHolder<D> destinationType, MappingContext context);
+    <S, D> D[] mapAsArray(D[] destination, S[] source, Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    <S, D> D convert(S source, TypeHolder<D> destinationType, String converterId);
+    <S, D> D convert(S source, Type<S> sourceType, Type<D> destinationType, String converterId);
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     
@@ -133,6 +137,6 @@ public interface MapperFacade {
      * @return new instance of <code>destinationClass</code>
      */
     // TODO Utilité d'avoir cette méthode publique?
-    <S, D> D newObject(S source, TypeHolder<? extends D> destinationClass, MappingContext context);
+    <S, D> D newObject(S source, Type<? extends D> destinationClass, MappingContext context);
     
 }

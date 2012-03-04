@@ -25,7 +25,7 @@ import java.util.Set;
 import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.Property;
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
  
 public class CodeSourceBuilder {
     
@@ -434,7 +434,7 @@ public class CodeSourceBuilder {
             append(destinationBase.toString()).append(".").append(p.getSetter()).append("((").append(p.getType().getCanonicalName());
             //append(")mapperFacade.newObject(").append("source, ").append(p.getType().getCanonicalName()).append(".class, mappingContext));");
             append(")mapperFacade.newObject(source, %s.valueOf(%s.class), mappingContext));",
-            		TypeHolder.class.getCanonicalName(), p.getType().getCanonicalName());
+            		Type.class.getCanonicalName(), p.getType().getCanonicalName());
             
             
             destinationBase.append(".").append(p.getGetter()).append("()");
@@ -442,7 +442,7 @@ public class CodeSourceBuilder {
         return this;
     }
     
-    public CodeSourceBuilder ifSourceInstanceOf(TypeHolder<?> sourceClass) {
+    public CodeSourceBuilder ifSourceInstanceOf(Type<?> sourceClass) {
         append("if(s instanceof %s)", sourceClass.getCanonicalName());
         return this;
     }

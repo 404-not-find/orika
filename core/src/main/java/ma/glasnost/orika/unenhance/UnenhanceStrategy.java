@@ -18,7 +18,7 @@
 
 package ma.glasnost.orika.unenhance;
 
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 /**
  * Defines a strategy to unenhance an object specifically a proxy one like those of
@@ -52,5 +52,5 @@ public interface UnenhanceStrategy {
 	 * @param object
 	 * @return
 	 */
-	public <T> TypeHolder<T> unenhanceClass(T object);
+	public <T> Type<T> unenhanceClass(T object);
 }

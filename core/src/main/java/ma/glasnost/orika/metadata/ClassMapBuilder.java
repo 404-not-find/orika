@@ -18,8 +18,6 @@
 
 package ma.glasnost.orika.metadata;
 
-import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -36,15 +34,15 @@ public final class ClassMapBuilder<A, B> {
     private final Map<String, Property> bProperties;
     private final Set<String> propertiesCacheA;
     private final Set<String> propertiesCacheB;
-    final private TypeHolder<A> aType;
-    final private TypeHolder<B> bType;
+    final private Type<A> aType;
+    final private Type<B> bType;
     final private Set<FieldMap> fieldsMapping;
     final private Set<MapperKey> usedMappers;
     private Mapper<A, B> customizedMapper;
     private String[] constructorA;
     private String[] constructorB;
     
-    private ClassMapBuilder(TypeHolder<A> aType, TypeHolder<B> bType) {
+    private ClassMapBuilder(Type<A> aType, Type<B> bType) {
         
         if (aType == null) {
             throw new MappingException("[aType] is required");
@@ -96,9 +94,9 @@ public final class ClassMapBuilder<A, B> {
     public <X,Y> ClassMapBuilder<A, B> use(Class<?> aParentClass, Class<?> bParentClass) {
         
     	@SuppressWarnings("unchecked")
-		TypeHolder<Object> aParentType = TypeHolder.valueOf((Class<Object>)aParentClass);
+		Type<Object> aParentType = Type.valueOf((Class<Object>)aParentClass);
         @SuppressWarnings("unchecked")
-		TypeHolder<Object> bParentType = TypeHolder.valueOf((Class<Object>)bParentClass);
+		Type<Object> bParentType = Type.valueOf((Class<Object>)bParentClass);
     	
     	if (aType.isAssignableFrom(aParentType)) {
             throw new MappingException(aType.getSimpleName() + " is not a subclass of " + aParentClass.getSimpleName());
@@ -186,22 +184,22 @@ public final class ClassMapBuilder<A, B> {
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Class<A> aType, Class<B> bType) {
-        return new ClassMapBuilder<A, B>(TypeHolder.<A>valueOf(aType), TypeHolder.<B>valueOf(bType));
+        return new ClassMapBuilder<A, B>(Type.<A>valueOf(aType), Type.<B>valueOf(bType));
     }
     
-    public static <A, B> ClassMapBuilder<A, B> map(TypeHolder<A> aType, TypeHolder<B> bType) {
+    public static <A, B> ClassMapBuilder<A, B> map(Type<A> aType, Type<B> bType) {
         return new ClassMapBuilder<A, B>(aType, bType);
     }
     
-    public static <A, B> ClassMapBuilder<A, B> map(Class<A> aType, TypeHolder<B> bType) {
-        return new ClassMapBuilder<A, B>(TypeHolder.<A>valueOf(aType), bType);
+    public static <A, B> ClassMapBuilder<A, B> map(Class<A> aType, Type<B> bType) {
+        return new ClassMapBuilder<A, B>(Type.<A>valueOf(aType), bType);
     }
     
-    public static <A, B> ClassMapBuilder<A, B> map(TypeHolder<A> aType, Class<B> bType) {
-        return new ClassMapBuilder<A, B>(aType, TypeHolder.<B>valueOf(bType));
+    public static <A, B> ClassMapBuilder<A, B> map(Type<A> aType, Class<B> bType) {
+        return new ClassMapBuilder<A, B>(aType, Type.<B>valueOf(bType));
     }
     
-    Property resolveProperty(Type type, String expr) {
+    Property resolveProperty(java.lang.reflect.Type type, String expr) {
         Property property;
         if (PropertyUtil.isExpression(expr)) {
             property = PropertyUtil.getNestedProperty(type, expr);

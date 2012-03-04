@@ -18,7 +18,7 @@
 package ma.glasnost.orika.converter;
 
 import ma.glasnost.orika.Converter;
-import ma.glasnost.orika.metadata.TypeHolder;
+import ma.glasnost.orika.metadata.Type;
 
 public interface ConverterFactory {
     
@@ -30,7 +30,7 @@ public interface ConverterFactory {
      * @param destinationClass
      * @return converter
      */
-    Converter<Object, Object> getConverter(TypeHolder<?> sourceClass, TypeHolder<?> destinationClass);
+    Converter<Object, Object> getConverter(Type<?> sourceClass, Type<?> destinationClass);
     
     /**
      * Lookup a converter by id
@@ -87,6 +87,6 @@ public interface ConverterFactory {
      * @param destinationClass
      * @return true / false
      */
-    boolean canConvert(TypeHolder<?> sourceClass, TypeHolder<?> destinationClass);
+    boolean canConvert(Type<?> sourceClass, Type<?> destinationClass);
     
 }

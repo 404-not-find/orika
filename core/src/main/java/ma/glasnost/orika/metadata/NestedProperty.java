@@ -28,7 +28,6 @@ public class NestedProperty extends Property {
         this.setGetter(property.getGetter());
         this.setSetter(property.getSetter());
         this.setParameterizedType(property.getParameterizedType());
-        this.setGenericType(property.getGenericType());
         this.setName(property.getName());
         this.path = path;
     }
