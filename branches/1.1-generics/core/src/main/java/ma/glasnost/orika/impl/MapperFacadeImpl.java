@@ -35,6 +35,7 @@ import ma.glasnost.orika.converter.ConverterFactory;
 import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.MapperKey;
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
 import ma.glasnost.orika.unenhance.UnenhanceStrategy;
 
 public class MapperFacadeImpl implements MapperFacade {
@@ -71,10 +72,10 @@ public class MapperFacadeImpl implements MapperFacade {
         	if (ClassUtil.isConcrete(sourceType)) {
         		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, sourceType);
         	} else {
-        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, Type.typeOf(unenhancedSourceObject, sourceType));
+        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, TypeFactory.typeOf(unenhancedSourceObject, sourceType));
         	}
         } else {
-        	resolvedSourceType = unenhanceStrategy.unenhanceType(sourceObject, Type.typeOf(unenhancedSourceObject));
+        	resolvedSourceType = unenhanceStrategy.unenhanceType(sourceObject, TypeFactory.typeOf(unenhancedSourceObject));
         }
         
         // XXX when it's immutable it's ok to copy by ref
@@ -121,8 +122,8 @@ public class MapperFacadeImpl implements MapperFacade {
         final S unenhancedSourceObject = unenhanceStrategy.unenhanceObject(sourceObject);
         final D unenhancedDestinationObject = unenhanceStrategy.unenhanceObject(destinationObject);
         
-        final Type<S> theSourceType = sourceType !=null ? sourceType : Type.typeOf(unenhancedSourceObject);
-        final Type<D> theDestinationType = destinationType != null ? destinationType : Type.typeOf(unenhancedDestinationObject);
+        final Type<S> theSourceType = sourceType !=null ? sourceType : TypeFactory.typeOf(unenhancedSourceObject);
+        final Type<D> theDestinationType = destinationType != null ? destinationType : TypeFactory.typeOf(unenhancedDestinationObject);
         
         final Mapper<Object, Object> mapper = prepareMapper(sourceType,destinationType);
         mapDeclaredProperties(unenhancedSourceObject, unenhancedDestinationObject, theSourceType, theDestinationType, context, mapper);
@@ -290,74 +291,74 @@ public class MapperFacadeImpl implements MapperFacade {
     }
 
 	public <S, D> D map(S sourceObject, Class<D> destinationClass) {
-		return map(sourceObject, Type.typeOf(sourceObject), Type.valueOf(destinationClass));
+		return map(sourceObject, TypeFactory.typeOf(sourceObject), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> D map(S sourceObject, Class<D> destinationClass,
 			MappingContext context) {
-		return map(sourceObject, Type.typeOf(sourceObject), Type.valueOf(destinationClass), context);
+		return map(sourceObject, TypeFactory.typeOf(sourceObject), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> Set<D> mapAsSet(Iterable<S> source, Class<D> destinationClass) {
-		return mapAsSet(source, Type.componentTypeOf(source), Type.valueOf(destinationClass));
+		return mapAsSet(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> Set<D> mapAsSet(Iterable<S> source,
 			Class<D> destinationClass, MappingContext context) {
-		return mapAsSet(source, Type.componentTypeOf(source), Type.valueOf(destinationClass), context);
+		return mapAsSet(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> Set<D> mapAsSet(S[] source, Class<D> destinationClass) {
-		return mapAsSet(source, Type.componentTypeOf(source), Type.valueOf(destinationClass));
+		return mapAsSet(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> Set<D> mapAsSet(S[] source, Class<D> destinationClass,
 			MappingContext context) {
-		return mapAsSet(source, Type.componentTypeOf(source), Type.valueOf(destinationClass), context);
+		return mapAsSet(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> List<D> mapAsList(Iterable<S> source,
 			Class<D> destinationClass) {
-		return mapAsList(source, Type.componentTypeOf(source), Type.valueOf(destinationClass));
+		return mapAsList(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> List<D> mapAsList(Iterable<S> source,
 			Class<D> destinationClass, MappingContext context) {
-		return mapAsList(source, Type.componentTypeOf(source), Type.valueOf(destinationClass), context);
+		return mapAsList(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> List<D> mapAsList(S[] source, Class<D> destinationClass) {
-		return mapAsList(source, Type.componentTypeOf(source), Type.valueOf(destinationClass));
+		return mapAsList(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> List<D> mapAsList(S[] source, Class<D> destinationClass,
 			MappingContext context) {
-		return mapAsList(source, Type.componentTypeOf(source), Type.valueOf(destinationClass), context);
+		return mapAsList(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> D[] mapAsArray(D[] destination, Iterable<S> source,
 			Class<D> destinationClass) {
-		return mapAsArray(destination, source, Type.componentTypeOf(source), Type.valueOf(destinationClass));
+		return mapAsArray(destination, source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> D[] mapAsArray(D[] destination, S[] source,
 			Class<D> destinationClass) {
-		return mapAsArray(destination, source, Type.componentTypeOf(source), Type.valueOf(destinationClass));
+		return mapAsArray(destination, source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> D[] mapAsArray(D[] destination, Iterable<S> source,
 			Class<D> destinationClass, MappingContext context) {
-		return mapAsArray(destination, source, Type.componentTypeOf(source), Type.valueOf(destinationClass), context);
+		return mapAsArray(destination, source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> D[] mapAsArray(D[] destination, S[] source,
 			Class<D> destinationClass, MappingContext context) {
-		return mapAsArray(destination, source, Type.componentTypeOf(source), Type.valueOf(destinationClass), context);
+		return mapAsArray(destination, source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> D convert(S source, Class<D> destinationClass,
 			String converterId) {
-		return convert(source, Type.typeOf(source), Type.valueOf(destinationClass), converterId);
+		return convert(source, TypeFactory.typeOf(source), TypeFactory.valueOf(destinationClass), converterId);
 	}
 
 }

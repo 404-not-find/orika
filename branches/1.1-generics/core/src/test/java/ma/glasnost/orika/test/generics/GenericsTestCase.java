@@ -19,7 +19,10 @@
 package ma.glasnost.orika.test.generics;
 
 import java.io.Serializable;
+import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
+import java.util.Map;
 
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
@@ -30,6 +33,8 @@ import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.metadata.Property;
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeBuilder;
+import ma.glasnost.orika.metadata.TypeFactory;
 import ma.glasnost.orika.test.MappingUtil;
 
 import org.junit.Assert;
@@ -64,28 +69,35 @@ public class GenericsTestCase {
         Assert.assertEquals(Long.valueOf(42L), clone.getId());
     }
     
-    // @Test
-    public void testGenericsWithNestedTypes() {
-        MapperFactory factory = MappingUtil.getMapperFactory();
-        // factory.registerClassMap(EntityGeneric.class)
+    @Test
+    public void testGenericsWithNestedParameterizedTypes() {
+        MappingUtil.useEclipseJdt();
+    	
+    	
+    	MapperFactory factory = MappingUtil.getMapperFactory(); 
         
-        ClassMap<?, ?> classMap = ClassMapBuilder.map(EntityGeneric.class, EntityLong.class).field("id.key", "id").toClassMap();
-        factory.registerClassMap(classMap);
-        // Generics Problem 2: multiple class mappings registered
+        try {
+	        ClassMapBuilder.map(EntityGeneric.class, EntityLong.class).field("id.key", "id").toClassMap();
+	        Assert.fail("should throw exception for unresolvable nested property");
+        } catch (Exception e) {
+        	Assert.assertTrue(e.getLocalizedMessage().contains("could not resolve nested property [id.key]"));
+        }
         
-        MapperFacade mapperFacade = MappingUtil.getMapperFactory().getMapperFacade();
+        // If we explicitly declare the generic type for the source object,
+        // we can successfully register the class map
+        Type<EntityGeneric<NestedKey<Long>>> sourceType = new TypeBuilder<EntityGeneric<NestedKey<Long>>>(){}.build();
+        factory.registerClassMap(
+	        ClassMapBuilder.map(sourceType, EntityLong.class).field("id.key", "id").toClassMap());
+        
+        MapperFacade mapperFacade = factory.getMapperFacade();
         
         EntityGeneric<NestedKey<Long>> sourceObject = new EntityGeneric<NestedKey<Long>>();
-        EntityGeneric<Long> other = new EntityGeneric<Long>();
-        java.lang.reflect.Type t = sourceObject.getClass().getGenericSuperclass();
-        java.lang.reflect.Type[] interfaces = sourceObject.getClass().getGenericInterfaces();
-        java.lang.reflect.Type[] typeParams = sourceObject.getClass().getTypeParameters();
-        java.lang.reflect.Type[] parentParams = null;
-        if (t instanceof ParameterizedType) {
-            parentParams = ((ParameterizedType) t).getActualTypeArguments();
-        }
-        sourceObject.getId().setKey(42L);
-        EntityLong clone = mapperFacade.map(sourceObject, EntityLong.class);
+   
+        NestedKey<Long> key = new NestedKey<Long>();
+        key.setKey(42L);
+        sourceObject.setId(key);
+        
+        EntityLong clone = mapperFacade.map(sourceObject, sourceType, TypeFactory.valueOf(EntityLong.class));
         
         Assert.assertEquals(Long.valueOf(42L), clone.getId());
     }
@@ -93,9 +105,15 @@ public class GenericsTestCase {
     @Test
     public void testParameterizedPropertyUtil() {
         
-        Type<?> t = new Type<TestEntry<Holder<Long>,Holder<String>>>(){};
+        Type<?> t = new TypeBuilder<TestEntry<Holder<Long>,Holder<String>>>(){}.build();
         
         Property p = PropertyUtil.getNestedProperty(t, "key.contents");
+        Assert.assertEquals(p.getType().getRawType(),Long.class);
+        Assert.assertEquals(p.getType(), TypeFactory.valueOf(Long.class));
+         
+        Map<String,Property> properties = PropertyUtil.getProperties(t);
+        Assert.assertTrue(properties.containsKey("key"));
+        Assert.assertEquals(properties.get("key").getType(), new TypeBuilder<Holder<Long>>(){}.build());
     }
     
     @Test
@@ -103,8 +121,10 @@ public class GenericsTestCase {
         
         MappingUtil.useEclipseJdt();
     	
-        Type<TestEntry<Holder<Long>, Holder<String>>> fromType = new Type<TestEntry<Holder<Long>, Holder<String>>>(){};
-        Type<OtherTestEntry<Container<String>, Container<String>>> toType = new Type<OtherTestEntry<Container<String>, Container<String>>>(){};
+        Type<TestEntry<Holder<Long>, Holder<String>>> fromType = 
+        		new TypeBuilder<TestEntry<Holder<Long>, Holder<String>>>(){}.build();
+        Type<OtherTestEntry<Container<String>, Container<String>>> toType = 
+        		new TypeBuilder<OtherTestEntry<Container<String>, Container<String>>>(){}.build();
      
         MapperFactory factory = MappingUtil.getMapperFactory();
         
@@ -115,15 +135,14 @@ public class GenericsTestCase {
         fromObject.getValue().setContents("What is the meaning of life?");
         
         factory.registerClassMap(
-                ClassMapBuilder.map(new Type<Holder<String>>(){}, new Type<Container<String>>(){})
+                ClassMapBuilder.map(new TypeBuilder<Holder<String>>(){}.build(), new TypeBuilder<Container<String>>(){}.build())
                     .field("contents", "contained").byDefault().toClassMap());
         factory.registerClassMap(
-                ClassMapBuilder.map(new Type<Holder<Long>>(){}, new Type<Container<String>>(){})
+                ClassMapBuilder.map(new TypeBuilder<Holder<Long>>(){}.build(), new TypeBuilder<Container<String>>(){}.build())
                     .field("contents", "contained").byDefault().toClassMap());
         
         MapperFacade mapper = factory.getMapperFacade(); 
-        // TODO: need to override the map method to allow a Type<?> to be
-        // passed as the toType...
+        
         OtherTestEntry<Container<String>, Container<String>> result = mapper.map(fromObject, fromType, toType);
         
         Assert.assertNotNull(result);

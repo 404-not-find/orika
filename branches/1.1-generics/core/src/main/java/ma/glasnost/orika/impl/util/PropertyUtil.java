@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import ma.glasnost.orika.metadata.NestedProperty;
 import ma.glasnost.orika.metadata.Property;
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
 
 public final class PropertyUtil {
     
@@ -64,7 +65,7 @@ public final class PropertyUtil {
         if (theType instanceof Type) {
         	typeHolder = (Type<?>)theType;
         } else if (theType instanceof Class) {
-        	typeHolder = Type.valueOf((Class<?>)theType);
+        	typeHolder = TypeFactory.valueOf((Class<?>)theType);
         } else {
             throw new IllegalArgumentException("type " + theType + " not supported.");
         }
@@ -109,17 +110,17 @@ public final class PropertyUtil {
                             if (t instanceof Type) {
                             	property.setType((Type<?>)t);
                             } else if (t instanceof ParameterizedType) {
-                            	property.setType(Type.valueOf((ParameterizedType)t));
+                            	property.setType(TypeFactory.valueOf((ParameterizedType)t));
                             } else {
-                            	property.setType(Type.valueOf((Object.class)));
+                            	property.setType(TypeFactory.valueOf((Object.class)));
                             	//throw new IllegalStateException("unresolved property type");
                             }
                         } else if (rawType!=returnType && rawType.isAssignableFrom(returnType)) {
-                        	property.setType(Type.valueOf(returnType));
+                        	property.setType(TypeFactory.valueOf(returnType));
                         } else if (genericType instanceof ParameterizedType) {
-                        	 property.setType(Type.valueOf((ParameterizedType)genericType));
+                        	 property.setType(TypeFactory.valueOf((ParameterizedType)genericType));
                         } else {
-                        	 property.setType(Type.valueOf(rawType));
+                        	 property.setType(TypeFactory.valueOf(rawType));
                         }
                        
                         
@@ -166,7 +167,7 @@ public final class PropertyUtil {
     public static NestedProperty getNestedProperty(java.lang.reflect.Type type, String p) {
         
         String typeName = type.toString();
-        Class<?> rawType = (Class<?>)((type instanceof ParameterizedType) ? ((ParameterizedType)type).getRawType() : type);
+        //Class<?> rawType = (Class<?>)((type instanceof ParameterizedType) ? ((ParameterizedType)type).getRawType() : type);
         Map<String, Property> properties = getProperties(type);
         Property property = null;
         final List<Property> path = new ArrayList<Property>();
@@ -175,7 +176,8 @@ public final class PropertyUtil {
             int i = 0;
             while (i < ps.length) {
                 if (!properties.containsKey(ps[i])) {
-                    throw new RuntimeException(rawType.getName() + " does not contain property [" + ps[i] + "]");
+                    throw new RuntimeException("could not resolve nested property [" + p + "] on " + type + 
+                    		", because " + property.getType() + " does not contain property [" + ps[i] + "]");
                 }
                 property = properties.get(ps[i]);
                 properties = getProperties(property.getType());
@@ -200,15 +202,15 @@ public final class PropertyUtil {
     private static void resolvePropertyFromType(Property property, java.lang.reflect.Type t) {
     	final Type<?> elementType;
         if (t instanceof ParameterizedType) {
-        	elementType = Type.valueOf((ParameterizedType)t);
+        	elementType = TypeFactory.valueOf((ParameterizedType)t);
         } else if (t instanceof Class) {
-        	elementType = Type.valueOf((Class<?>)t);
+        	elementType = TypeFactory.valueOf((Class<?>)t);
             //property.setParameterizedType(Type.valueOf((Class<?>)t));
         } else {
             throw new IllegalArgumentException("Unsupported collection nested type " + t);
         }
-        if (Type.valueOf(Object.class).equals(property.getElementType())) {
-        	property.setType(Type.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType}));
+        if (TypeFactory.valueOf(Object.class).equals(property.getElementType())) {
+        	property.setType(TypeFactory.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType}));
         }
     }
 }

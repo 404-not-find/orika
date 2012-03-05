@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
 
 public class MappingContext {
     
@@ -48,7 +49,7 @@ public class MappingContext {
     }
     
     public <S, D> void cacheMappedObject(S source, D destination) {
-        cache.put(hashMappedObject(source, Type.typeOf(destination)), destination);
+        cache.put(hashMappedObject(source, TypeFactory.typeOf(destination)), destination);
     }
     
     public <S, D> boolean isAlreadyMapped(S source, Type<D> destinationClass) {

@@ -94,9 +94,9 @@ public final class ClassMapBuilder<A, B> {
     public <X,Y> ClassMapBuilder<A, B> use(Class<?> aParentClass, Class<?> bParentClass) {
         
     	@SuppressWarnings("unchecked")
-		Type<Object> aParentType = Type.valueOf((Class<Object>)aParentClass);
+		Type<Object> aParentType = TypeFactory.valueOf((Class<Object>)aParentClass);
         @SuppressWarnings("unchecked")
-		Type<Object> bParentType = Type.valueOf((Class<Object>)bParentClass);
+		Type<Object> bParentType = TypeFactory.valueOf((Class<Object>)bParentClass);
     	
     	if (aType.isAssignableFrom(aParentType)) {
             throw new MappingException(aType.getSimpleName() + " is not a subclass of " + aParentClass.getSimpleName());
@@ -184,7 +184,7 @@ public final class ClassMapBuilder<A, B> {
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Class<A> aType, Class<B> bType) {
-        return new ClassMapBuilder<A, B>(Type.<A>valueOf(aType), Type.<B>valueOf(bType));
+        return new ClassMapBuilder<A, B>(TypeFactory.<A>valueOf(aType), TypeFactory.<B>valueOf(bType));
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Type<A> aType, Type<B> bType) {
@@ -192,11 +192,11 @@ public final class ClassMapBuilder<A, B> {
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Class<A> aType, Type<B> bType) {
-        return new ClassMapBuilder<A, B>(Type.<A>valueOf(aType), bType);
+        return new ClassMapBuilder<A, B>(TypeFactory.<A>valueOf(aType), bType);
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Type<A> aType, Class<B> bType) {
-        return new ClassMapBuilder<A, B>(aType, Type.<B>valueOf(bType));
+        return new ClassMapBuilder<A, B>(aType, TypeFactory.<B>valueOf(bType));
     }
     
     Property resolveProperty(java.lang.reflect.Type type, String expr) {
