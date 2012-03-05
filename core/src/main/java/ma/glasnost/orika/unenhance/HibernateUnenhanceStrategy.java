@@ -19,6 +19,7 @@
 package ma.glasnost.orika.unenhance;
 
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
 
 import org.hibernate.Hibernate;
 import org.hibernate.proxy.HibernateProxy;
@@ -40,6 +41,6 @@ public class HibernateUnenhanceStrategy implements UnenhanceStrategy {
     @SuppressWarnings("unchecked")
     public <T> Type<T> unenhanceType(T object, Type<T> type) {
         // return HibernateProxyHelper.getClassWithoutInitializingProxy(object);
-    	return Type.valueOf(Hibernate.getClass(object), type);
+    	return TypeFactory.valueOf(Hibernate.getClass(object), type);
     }
 }

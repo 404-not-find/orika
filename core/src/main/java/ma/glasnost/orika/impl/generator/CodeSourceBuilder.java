@@ -19,15 +19,14 @@
 package ma.glasnost.orika.impl.generator;
 
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.Property;
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
  
 public class CodeSourceBuilder {
     
@@ -528,7 +527,7 @@ public class CodeSourceBuilder {
     
     public CodeSourceBuilder assignObjectVar(String var, Property sp, Class<?> targetClass) {
         String sourceType = getUsedType(sp);
-        String targetType = getUsedType(Type.valueOf(targetClass));
+        String targetType = getUsedType(TypeFactory.valueOf(targetClass));
         append("%s = (%s) mapperFacade.map(%s, %s, %s);", var, targetClass.getCanonicalName(), getGetter(sp, "source"),
                 sourceType, targetType);
         return this;
@@ -561,7 +560,7 @@ public class CodeSourceBuilder {
         final String getSizeCode = sp.getRawType().isArray() ? "length" : "size()";
         final String castSource = sp.getRawType().isArray() ? "Object[]" : "";
         final String sourceType = getUsedComponentType(sp);
-        final String targetType = getUsedType(Type.valueOf(targetClass));
+        final String targetType = getUsedType(TypeFactory.valueOf(targetClass));
         
         append("%s[] %s = new %s[%s.%s];", targetClass, var, targetClass.getCanonicalName(), getter, getSizeCode).append(
                 "mapperFacade.mapAsArray((Object[])%s, (%s)%s, %s, %s, mappingContext);", var, castSource, getter,

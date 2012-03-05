@@ -94,13 +94,12 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
-
-
+ 
         <dependency>
-            <groupId>com.googlecode.gentyref</groupId>
-            <artifactId>gentyref</artifactId>
-            <version>1.1.0</version>
+            <groupId>org.codehaus.jsr166-mirror</groupId>
+            <artifactId>extra166y</artifactId>
         </dependency>
+        
     </dependencies>
 
 </project>

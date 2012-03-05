@@ -21,6 +21,7 @@ import ma.glasnost.orika.metadata.FieldMap;
 import ma.glasnost.orika.metadata.MapperKey;
 import ma.glasnost.orika.metadata.Property;
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +118,7 @@ public class ObjectFactoryGenerator {
                     	// destination property should be compared against
                     	// the constructor argument 
                     	fieldMap = fieldMap.copy();
-                    	fieldMap.getDestination().setType(Type.valueOf(constructorArguments[argIndex]));
+                    	fieldMap.getDestination().setType(TypeFactory.valueOf(constructorArguments[argIndex]));
                     	properties.add(fieldMap);
                         break;
                     }

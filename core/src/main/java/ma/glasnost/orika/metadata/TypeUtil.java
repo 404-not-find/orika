@@ -23,7 +23,7 @@ public class TypeUtil {
                 if (resolvedVariable!=null) {
                     actualTypeArguments[i] = resolvedVariable;
                 } else {
-                    actualTypeArguments[i] = Type.valueOf(Object.class);
+                    actualTypeArguments[i] = TypeFactory.valueOf(Object.class);
                 }
             }
         }   
