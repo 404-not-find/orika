@@ -66,7 +66,16 @@ public class MapperFacadeImpl implements MapperFacade {
         }
         
         final S unenhancedSourceObject = unenhanceStrategy.unenhanceObject(sourceObject);
-        Type<S> resolvedSourceType = sourceType!=null ? sourceType: unenhanceStrategy.unenhanceClass(unenhancedSourceObject);
+        final Type<S> resolvedSourceType;
+        if (sourceType!=null) {
+        	if (ClassUtil.isConcrete(sourceType)) {
+        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, sourceType);
+        	} else {
+        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, Type.typeOf(unenhancedSourceObject, sourceType));
+        	}
+        } else {
+        	resolvedSourceType = unenhanceStrategy.unenhanceType(sourceObject, Type.typeOf(unenhancedSourceObject));
+        }
         
         // XXX when it's immutable it's ok to copy by ref
         if (ClassUtil.isImmutable(resolvedSourceType) && (resolvedSourceType.equals(destinationType) || resolvedSourceType.getRawType().equals(ClassUtil.getWrapperType(destinationType.getRawType())))) {
@@ -81,7 +90,7 @@ public class MapperFacadeImpl implements MapperFacade {
             return convert(unenhancedSourceObject, sourceType, destinationType, null);
         }
         
-        Type<? extends D> concreteDestinationClass = mapperFactory.lookupConcreteDestinationClass(resolvedSourceType, destinationType, context);
+        Type<? extends D> concreteDestinationClass = mapperFactory.lookupConcreteDestinationType(resolvedSourceType, destinationType, context);
         if (concreteDestinationClass == null) {
             if (!ClassUtil.isConcrete(destinationType)) {
                 throw new MappingException("No concrete class mapping defined for source class " + resolvedSourceType.getName());
@@ -176,7 +185,7 @@ public class MapperFacadeImpl implements MapperFacade {
         
         int i = 0;
         for (final S s : source) {
-            destination[i++] = map(s, sourceType, destinationType);
+            destination[i++] = map(s, sourceType, destinationType, context);
         }
         return destination;
     }
@@ -200,7 +209,7 @@ public class MapperFacadeImpl implements MapperFacade {
     public <S, D> Set<D> mapAsSet(S[] source, Type<S> sourceType, Type<D> destinationType, MappingContext context) {
         final Set<D> destination = new HashSet<D>(source.length);
         for (final S s : source) {
-            destination.add(map(s, sourceType, destinationType));
+            destination.add(map(s, sourceType, destinationType, context));
         }
         return destination;
     }
@@ -264,7 +273,7 @@ public class MapperFacadeImpl implements MapperFacade {
     
     @SuppressWarnings("unchecked")
     public <S, D> D convert(S source, Type<S> sourceType, Type<D> destinationType, String converterId) {
-        final Type<? extends Object> sourceClass = unenhanceStrategy.unenhanceClass(source);
+        final Type<? extends Object> sourceClass = unenhanceStrategy.unenhanceType(source, sourceType);
         Converter<S, D> converter;
         ConverterFactory converterFactory = mapperFactory.getConverterFactory();
         if (converterId == null) {

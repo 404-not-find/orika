@@ -38,6 +38,7 @@ import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.converter.ConverterFactory;
 import ma.glasnost.orika.impl.GeneratedMapperBase;
 import ma.glasnost.orika.impl.generator.CompilerStrategy.SourceCodeGenerationException;
+import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.FieldMap;
 import ma.glasnost.orika.metadata.MapperKey;
@@ -52,10 +53,12 @@ public final class MapperGenerator {
     
     private final MapperFactory mapperFactory;
     private final CompilerStrategy compilerStrategy;
+    private final UsedTypesContext usedTypes;
     
     public MapperGenerator(MapperFactory mapperFactory, CompilerStrategy compilerStrategy) {
         this.mapperFactory = mapperFactory;
         this.compilerStrategy = compilerStrategy;
+        this.usedTypes = new UsedTypesContext();
     }
     
     public GeneratedMapperBase build(ClassMap<?, ?> classMap) {
@@ -67,14 +70,13 @@ public final class MapperGenerator {
             final GeneratedSourceCode mapperCode = new GeneratedSourceCode(classMap.getMapperClassName(), GeneratedMapperBase.class,
                     compilerStrategy);
             
-            //addGetTypeMethod(mapperCode, "getAType", classMap.getAType().getRawType());
-            //addGetTypeMethod(mapperCode, "getBType", classMap.getBType().getRawType());
             addMapMethod(mapperCode, true, classMap);
             addMapMethod(mapperCode, false, classMap);
             
             GeneratedMapperBase instance = mapperCode.getInstance();
             instance.setAType(classMap.getAType());
             instance.setBType(classMap.getBType());
+            instance.setUsedTypes(usedTypes.getUsedTypesArray());
             
             return instance;
             
@@ -84,7 +86,8 @@ public final class MapperGenerator {
     }
     
     private void addMapMethod(GeneratedSourceCode context, boolean aToB, ClassMap<?, ?> classMap) throws CannotCompileException {
-        final CodeSourceBuilder out = new CodeSourceBuilder(2);
+        
+        final CodeSourceBuilder out = new CodeSourceBuilder(2, usedTypes);
         final String mapMethod = "map" + (aToB ? "AtoB" : "BtoA");
         out.append("\tpublic void ")
                 .append(mapMethod)
@@ -233,17 +236,4 @@ public final class MapperGenerator {
         return converter;
     }
     
-    private void addGetTypeMethod(GeneratedSourceCode mapperCode, String methodName, Class<?> value) throws SourceCodeGenerationException {
-        compilerStrategy.assureTypeIsAccessible(value);
-        
-        final StringBuilder output = new StringBuilder();
-        output.append("\n")
-                .append("\tpublic java.lang.Class ")
-                .append(methodName)
-                .append("() { \n\t\treturn ")
-                .append(value.getCanonicalName())
-                .append(".class; \n\t}");
-        
-        mapperCode.addMethod(output.toString());
-    }
 }

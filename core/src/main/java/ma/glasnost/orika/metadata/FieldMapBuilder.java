@@ -52,14 +52,14 @@ public class FieldMapBuilder<A, B> {
     }
     
     public FieldMapBuilder<A, B> aInverse(String aInverse) {
-        final Type type = aProperty.isCollection() ? aProperty.getParameterizedType() : aProperty.getType();
+        final Type type = aProperty.isCollection() ? /*aProperty.getType().getActualTypeArguments()[0]*/aProperty.getElementType() : aProperty.getType();
         aInverseProperty = classMapBuilder.resolveProperty(type, aInverse);
         
         return this;
     }
     
     public FieldMapBuilder<A, B> bInverse(String bInverse) {
-        final Type type = bProperty.isCollection() ? bProperty.getParameterizedType() : bProperty.getType();
+        final Type type = bProperty.isCollection() ? /*bProperty.getType().getActualTypeArguments()[0]*/bProperty.getElementType() : bProperty.getType();
         bInverseProperty = classMapBuilder.resolveProperty(type, bInverse);
         
         return this;

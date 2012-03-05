@@ -46,9 +46,13 @@ public class MapperKey {
 	}
 
 	private boolean equals(Type<?> a, Type<?> b) {
-		return a == null ? b == null : a.equals(b);
+		return a == null ? b == null : a.isEqualTo(b);
 	}
 
+	public String toString() {
+	    return "{[A]"+aType+",[B]"+bType+"}";
+	}
+	
 	@Override
 	public int hashCode() {
 		int result = aType != null ? aType.hashCode() : 0;

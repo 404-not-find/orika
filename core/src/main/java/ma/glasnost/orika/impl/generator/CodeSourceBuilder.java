@@ -19,7 +19,9 @@
 package ma.glasnost.orika.impl.generator;
 
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import ma.glasnost.orika.MappingException;
@@ -31,10 +33,13 @@ public class CodeSourceBuilder {
     
     private final StringBuilder out = new StringBuilder();
     private int currentIndent = 1;
+    private UsedTypesContext usedTypes;
     
-    public CodeSourceBuilder(int indent) {
+    public CodeSourceBuilder(int indent, UsedTypesContext usedTypes) {
         this.currentIndent = indent;
+        this.usedTypes = usedTypes;
     }
+    
     
     public CodeSourceBuilder assertType(String var, Class<?> clazz) {
         newLine();
@@ -54,6 +59,7 @@ public class CodeSourceBuilder {
         converterId = getConverterId(converterId);
         return newLine().ifSourceNotNull(source)
                 .then()
+                // Need to convert to use new Types-based method
                 .append("%s((%s)mapperFacade.convert(%s, %s.class, %s));", typeCastSetter, destinationClass.getCanonicalName(),
                         typeCastGetter, destinationClass.getCanonicalName(), converterId)       
                         
@@ -109,9 +115,25 @@ public class CodeSourceBuilder {
     
     }  
     
+    private String getUsedType(Type<?> type) {
+        int index = usedTypes.getUsedTypeIndex(type);
+        return "usedTypes["+index+"]";
+    }
+    
+    private String getUsedType(Property prop) {
+        return getUsedType(prop.getType());
+    }
+    
+    private String getUsedComponentType(Property prop) {
+        return getUsedType(prop.getType().getComponentType());
+    }
+    
+    private String getUsedElementType(Property prop) {
+        return getUsedType(prop.getElementType());
+    }
     
     public CodeSourceBuilder setCollection(Property dp, Property sp, Property ip, Class<?> dc) {
-        final Class<?> destinationElementClass = dp.getParameterizedType();
+        final Class<?> destinationElementClass = dp.getElementType().getRawType();
         
         if (destinationElementClass == null) {
             throw new MappingException("cannot determine runtime type of destination collection " + dc.getName() + "." + dp.getName());
@@ -130,6 +152,8 @@ public class CodeSourceBuilder {
         final String sourceGetter = getGetter(sp, "source");
         final String destinationGetter = getGetter(dp, "destination");
         final String destinationSetter = getSetter(dp, "destination");
+        final String sourceType = getUsedElementType(sp);
+        final String destinationType = getUsedElementType(dp);
         
         boolean destinationHasSetter = false;
         try {
@@ -149,8 +173,8 @@ public class CodeSourceBuilder {
         ifSourceNotNull(sp).then();
         
         newLine().append("%s.clear();", destinationGetter);
-        newLine().append("%s.addAll(mapperFacade.mapAs%s(%s, %s.class, mappingContext));", destinationGetter,
-                destinationCollection, sourceGetter, destinationElementClass.getCanonicalName());
+        newLine().append("%s.addAll(mapperFacade.mapAs%s(%s, %s, %s, mappingContext));", destinationGetter,
+                destinationCollection, sourceGetter, sourceType, destinationType);
         if (ip != null) {
             final String ipGetter = getGetter(ip, "orikaCollectionItem");
             final String ipSetter = getSetter(ip, "orikaCollectionItem");
@@ -158,8 +182,8 @@ public class CodeSourceBuilder {
             if (ip.isCollection()) {
                 newLine().append("for (java.util.Iterator orikaIterator = %s.iterator(); orikaIterator.hasNext();) ",
                         destinationGetter);
-                begin().append("%s orikaCollectionItem = (%s) orikaIterator.next();", dp.getParameterizedType().getCanonicalName(),
-                        dp.getParameterizedType().getCanonicalName());
+                begin().append("%s orikaCollectionItem = (%s) orikaIterator.next();", dp.getElementType().getCanonicalName(),
+                        dp.getElementType().getCanonicalName());
                 newLine().append("if (%s == null) ", ipGetter);
                 begin();
                 if (ip.isSet()) { 
@@ -179,8 +203,8 @@ public class CodeSourceBuilder {
             } else {
                 newLine().append("for (java.util.Iterator orikaIterator = %s.iterator(); orikaIterator.hasNext();)",
                         destinationGetter);
-                begin().append("%s orikaCollectionItem = (%s) orikaIterator.next();", dp.getParameterizedType().getCanonicalName(),
-                        dp.getParameterizedType().getCanonicalName());
+                begin().append("%s orikaCollectionItem = (%s) orikaIterator.next();", dp.getElementType().getCanonicalName(),
+                        dp.getElementType().getCanonicalName());
                 newLine().append("%s(destination);", ipSetter);
                 end();
             }
@@ -309,6 +333,8 @@ public class CodeSourceBuilder {
         final String paramType = dp.getRawType().getComponentType().getCanonicalName();
         final String getter = getGetter(sp, "source");
         final String setter = getSetter(dp, "destination");
+        final String sourceType = getUsedComponentType(sp);
+        final String destinationType = getUsedComponentType(dp);
         
         ifSourceNotNull(sp).then();
         
@@ -319,8 +345,8 @@ public class CodeSourceBuilder {
             append("mapArray(%s,%s(%s), %s.class, mappingContext);", dp.getName(), convertArrayToList,
                          getter, paramType);
         } else {
-            append("mapperFacade.mapAsArray(%s, %s(%s), %s.class, mappingContext);", dp.getName(),
-                    convertArrayToList, getter, paramType);
+            append("mapperFacade.mapAsArray(%s, %s(%s), %s, %s, mappingContext);", dp.getName(),
+                    convertArrayToList, getter, sourceType, destinationType);
         }
         newLine().append("%s(%s);", setter, dp.getName());
         
@@ -349,14 +375,16 @@ public class CodeSourceBuilder {
         final String spGetter = getGetter(sp, "source");
         final String spSetter = getSetter(dp, "destination");
         final String dpGetter = getGetter(dp, "destination");
+        final String sourceType = getUsedType(sp);
+        final String destinationType = getUsedType(dp);
         
         ifSourceNotNull(sp).then();
         
         newLine().append("if (%s == null) ", dpGetter);
-        begin().append("%s((%s)mapperFacade.map(%s, %s.class, mappingContext));", spSetter,
-                dp.getType().getCanonicalName(), spGetter, dp.getType().getCanonicalName());
+        begin().append("%s((%s)mapperFacade.map(%s, %s, %s, mappingContext));", spSetter,
+                dp.getType().getCanonicalName(), spGetter, sourceType, destinationType);
         elze();
-        append("mapperFacade.map(%s, %s, mappingContext);", spGetter, dpGetter);
+        append("mapperFacade.map(%s, %s, %s, %s, mappingContext);", spGetter, dpGetter, sourceType, destinationType);
         end();
         if (ip != null) {
             final String ipSetter = getSetter(ip, dpGetter);
@@ -425,6 +453,7 @@ public class CodeSourceBuilder {
         
         for (final Property p : property.getPath()) {
             final int modifier = p.getRawType().getModifiers();
+            final String propertyType = getUsedType(p);
             if (Modifier.isAbstract(modifier) || Modifier.isInterface(modifier)) {
                 throw new MappingException("Abstract types are unsupported for nested properties. \n" + property.toString());
             }
@@ -432,9 +461,8 @@ public class CodeSourceBuilder {
             append("if(").append(destinationBase.toString()).append(".").append(p.getGetter()).append("() == null) ");
             newLine();
             append(destinationBase.toString()).append(".").append(p.getSetter()).append("((").append(p.getType().getCanonicalName());
-            //append(")mapperFacade.newObject(").append("source, ").append(p.getType().getCanonicalName()).append(".class, mappingContext));");
-            append(")mapperFacade.newObject(source, %s.valueOf(%s.class), mappingContext));",
-            		Type.class.getCanonicalName(), p.getType().getCanonicalName());
+            append(")mapperFacade.newObject(source, %s, mappingContext));",
+            		propertyType, p.getType().getCanonicalName());
             
             
             destinationBase.append(".").append(p.getGetter()).append("()");
@@ -499,27 +527,32 @@ public class CodeSourceBuilder {
     }
     
     public CodeSourceBuilder assignObjectVar(String var, Property sp, Class<?> targetClass) {
-        append("%s = (%s) mapperFacade.map(%s, %s.class);", var, targetClass.getCanonicalName(), getGetter(sp, "source"),
-                targetClass.getCanonicalName());
+        String sourceType = getUsedType(sp);
+        String targetType = getUsedType(Type.valueOf(targetClass));
+        append("%s = (%s) mapperFacade.map(%s, %s, %s);", var, targetClass.getCanonicalName(), getGetter(sp, "source"),
+                sourceType, targetType);
         return this;
     }
     
     public CodeSourceBuilder assignCollectionVar(String var, Property sp, Property dp) {
-        final Class<?> destinationElementClass = dp.getParameterizedType();
+        //final Class<?> destinationElementClass = dp.getParameterizedType().getRawType();
         String destinationCollection = "List";
-        String newStatement = "new java.util.ArrayList()";
-        if (List.class.isAssignableFrom(dp.getRawType())) {
+        //String newStatement = "new java.util.ArrayList()";
+        String sourceType = getUsedElementType(sp);
+        String destinationType = getUsedElementType(dp);
+        
+        if (dp.isList()) {
             destinationCollection = "List";
-            newStatement = "new java.util.ArrayList()";
-        } else if (Set.class.isAssignableFrom(dp.getRawType())) {
+            //newStatement = "new java.util.ArrayList()";
+        } else if (dp.isSet()) {
             destinationCollection = "Set";
-            newStatement = "new java.util.HashSet()";
+            //newStatement = "new java.util.HashSet()";
         }
         
         final String sourceGetter = getGetter(sp, "source");
         
-        append("%s = mapperFacade.mapAs%s(%s, %s.class, mappingContext);", var, 
-                destinationCollection, sourceGetter, destinationElementClass.getCanonicalName());
+        append("%s = mapperFacade.mapAs%s(%s, %s, %s, mappingContext);", var, 
+                destinationCollection, sourceGetter, sourceType, destinationType);
         return this;
     }
     
@@ -527,9 +560,12 @@ public class CodeSourceBuilder {
         String getter = getGetter(sp, "source");
         final String getSizeCode = sp.getRawType().isArray() ? "length" : "size()";
         final String castSource = sp.getRawType().isArray() ? "Object[]" : "";
+        final String sourceType = getUsedComponentType(sp);
+        final String targetType = getUsedType(Type.valueOf(targetClass));
+        
         append("%s[] %s = new %s[%s.%s];", targetClass, var, targetClass.getCanonicalName(), getter, getSizeCode).append(
-                "mapperFacade.mapAsArray((Object[])%s, (%s)%s, %s.class, mappingContext);", var, castSource, getter,
-                targetClass.getCanonicalName());
+                "mapperFacade.mapAsArray((Object[])%s, (%s)%s, %s, %s, mappingContext);", var, castSource, getter,
+                sourceType, targetType);
         return this;
     }
     

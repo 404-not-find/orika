@@ -126,8 +126,9 @@ public abstract class Type<T> implements ParameterizedType {
     	return type;
     }
     
-    public static <T> Type<T> valueOf(final ParameterizedType type) {
-    	return valueOf(type, null);
+    @SuppressWarnings("unchecked")
+	public static <T> Type<T> valueOf(final ParameterizedType type) {
+    	return valueOf((Class<? extends T>)type.getRawType(), type.getActualTypeArguments());
     }
     
     @SuppressWarnings("unchecked")
@@ -142,9 +143,27 @@ public abstract class Type<T> implements ParameterizedType {
     	}
     }
     
+    public static <T> Type<T> valueOf(final Class<T> type, final Type<?> referenceType) {
+    	if (type==null) {
+    		return null;
+    	} else {
+    		if (type.getTypeParameters()!=null && type.getTypeParameters().length > 0) {
+    			java.lang.reflect.Type[] actualTypeArguments = TypeUtil.resolveActualTypeArguments(type.getTypeParameters(), referenceType);
+    			return valueOf(type, actualTypeArguments);	
+    		} else {
+    			return valueOf(type);
+    		}
+    	}
+    }
+    
     @SuppressWarnings("unchecked")
     public static <T> Type<T> typeOf(final T object) {
         return valueOf((Class<T>)object.getClass());
+    }
+    
+    @SuppressWarnings("unchecked")
+	public static <T> Type<T> typeOf(final T object, Type<?> referenceType) {
+    	return valueOf((Class<T>)object.getClass(), referenceType);
     }
     
     @SuppressWarnings("unchecked")
@@ -169,6 +188,7 @@ public abstract class Type<T> implements ParameterizedType {
     private Map<TypeVariable<?>, java.lang.reflect.Type> typesByVariable;
     private Type<?> superType;
     private Type<?>[] interfaces;
+    private Type<?> componentType;
     
 
     @SuppressWarnings("unchecked")
@@ -293,6 +313,13 @@ public abstract class Type<T> implements ParameterizedType {
         return rawType;
     }
     
+    public Type<?> getComponentType() {
+        if (componentType == null) {
+            componentType = rawType.isArray() ? Type.valueOf(rawType.getComponentType()) : Type.valueOf(rawType);
+        }
+        return componentType;
+    }
+    
     public java.lang.reflect.Type getOwnerType() {
     	throw new UnsupportedOperationException();
     }
@@ -377,12 +404,12 @@ public abstract class Type<T> implements ParameterizedType {
     	StringBuilder stringValue = new StringBuilder();
     	stringValue.append(rawType.getSimpleName());
     	if (actualTypeArguments.length > 0) {
-    		stringValue.append("< ");
+    		stringValue.append("<");
     		for (java.lang.reflect.Type arg: actualTypeArguments) {
     			stringValue.append(""+arg + ", ");
     		}
     		stringValue.setLength(stringValue.length()-2);
-    		stringValue.append(" >");
+    		stringValue.append(">");
     	}
     	
     	return stringValue.toString();
@@ -395,6 +422,32 @@ public abstract class Type<T> implements ParameterizedType {
         result = prime * result + Arrays.hashCode(actualTypeArguments);
         result = prime * result + ((rawType == null) ? 0 : rawType.hashCode());
         return result;
+    }
+    
+    /**
+     * Equals comparison when the other type is known to be an instance of Type
+     * 
+     * @param other
+     * @return
+     */
+    public boolean isEqualTo(Type<?> other) {
+        if (this == other)
+            return true;
+        if (other == null)
+            return false;
+        
+        if (!Arrays.equals(actualTypeArguments, other.actualTypeArguments)) {
+            return false;
+        }
+        
+        if (rawType == null) {
+            if (other.rawType != null) {
+                return false;
+            }
+        } else if (!rawType.equals(other.rawType)) {
+            return false;
+        }
+        return true;
     }
     
     @Override

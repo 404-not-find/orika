@@ -66,8 +66,8 @@ public abstract class GeneratedMapperBase extends MapperBase<Object, Object> {
         this.usedMappers = usedMappers;
     }
 
-    public void setUsedTypes(Type<Object>[] usedTypes) {
-        this.usedTypes = usedTypes;
+    public void setUsedTypes(Type<Object>[] types) {
+        this.usedTypes = types;
     }
     
     @Override

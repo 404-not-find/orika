@@ -19,12 +19,18 @@
 package ma.glasnost.orika.test;
 
 import ma.glasnost.orika.MapperFactory;
+import ma.glasnost.orika.OrikaSystemProperties;
 import ma.glasnost.orika.impl.DefaultMapperFactory;
+import ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy;
 
 public abstract class MappingUtil {
     
     public static MapperFactory getMapperFactory() {
         
         return new DefaultMapperFactory.Builder().build();
+    }
+    
+    public static void useEclipseJdt() {
+        System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY, EclipseJdtCompilerStrategy.class.getCanonicalName());
     }
 }

@@ -30,7 +30,7 @@ public class Property {
     private String getter;
     private String setter;
     private Type<?> type;
-    private Class<?> parameterizedType;
+    private Type<?> elementType;
     private boolean declared;
     
     
@@ -42,7 +42,7 @@ public class Property {
         copy.getter = this.getter;
         copy.setter = this.setter;
         copy.type = this.type;
-        copy.parameterizedType = this.parameterizedType;
+        copy.elementType = this.elementType;
         return copy;
     }
     
@@ -68,6 +68,7 @@ public class Property {
     
     public void setType(Type<?> type) {
         this.type = type;
+        this.elementType = null;
     }
     
     public String getGetter() {
@@ -86,13 +87,16 @@ public class Property {
         this.setter = setter;
     }
     
-    public Class<?> getParameterizedType() {
-        return parameterizedType;
+    public Type<?> getElementType() {
+        if (elementType==null && type.getActualTypeArguments().length>0) {
+            elementType = (Type<?>)type.getActualTypeArguments()[0];
+        }
+        return elementType;
     }
     
-    public void setParameterizedType(Class<?> parameterizedType) {
-        this.parameterizedType = parameterizedType;
-    }
+//    public void setParameterizedType(Type<?> parameterizedType) {
+//        this.parameterizedType = parameterizedType;
+//    }
     
     public Class<?> getRawType() {
     	return getType().getRawType();
@@ -172,7 +176,7 @@ public class Property {
     
     @Override
     public String toString() {
-        return expression + "(" + type.getName() + ")";
+        return expression + "(" + type + ")";
     }
 
     public boolean isEnum() {
