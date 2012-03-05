@@ -40,6 +40,7 @@ public class ObjectFactoryGenerator {
     private final Paranamer paranamer;
     private final CompilerStrategy compilerStrategy;
     private final String nameSuffix;
+    private final UsedTypesContext usedTypes ;
     
     public ObjectFactoryGenerator(MapperFactory mapperFactory, ConstructorResolverStrategy constructorResolverStrategy,
     		CompilerStrategy compilerStrategy) {
@@ -48,6 +49,7 @@ public class ObjectFactoryGenerator {
         this.nameSuffix = Integer.toHexString(System.identityHashCode(compilerStrategy));
         this.paranamer = new CachingParanamer(new AdaptiveParanamer(new BytecodeReadingParanamer(), new AnnotationParanamer()));
         this.constructorResolverStrategy = constructorResolverStrategy;
+        this.usedTypes = new UsedTypesContext();
     }
     
     public GeneratedObjectFactory build(Type<?> type) {
@@ -63,6 +65,7 @@ public class ObjectFactoryGenerator {
             
             GeneratedObjectFactory objectFactory = (GeneratedObjectFactory) factoryCode.getInstance();
             objectFactory.setMapperFacade(mapperFactory.getMapperFacade());
+            objectFactory.setUsedTypes(usedTypes.getUsedTypesArray());
             
             return objectFactory;
             
@@ -72,7 +75,7 @@ public class ObjectFactoryGenerator {
     }
     
     private void addCreateMethod(GeneratedSourceCode context, Type<?> clazz) throws CannotCompileException {
-        final CodeSourceBuilder out = new CodeSourceBuilder(1);
+        final CodeSourceBuilder out = new CodeSourceBuilder(1, usedTypes);
         out.append("public Object create(Object s, " + MappingContext.class.getCanonicalName() + " mappingContext) {");
         out.append("if(s == null) throw new %s(\"source object must be not null\");", IllegalArgumentException.class.getCanonicalName());
         

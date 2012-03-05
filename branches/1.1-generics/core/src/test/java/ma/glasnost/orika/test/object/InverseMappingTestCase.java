@@ -62,6 +62,9 @@ public class InverseMappingTestCase {
     
     @Test
     public void testInverseOneToManyMapping() {
+    	
+    	MappingUtil.useEclipseJdt();
+    	
         MapperFactory mapperFactory = MappingUtil.getMapperFactory();
         
         ClassMapBuilder<PublisherDTO, Publisher> classMapBuilder = ClassMapBuilder.map(PublisherDTO.class, Publisher.class);

@@ -6,9 +6,15 @@ import java.lang.reflect.TypeVariable;
 public class TypeUtil {
     
     static java.lang.reflect.Type[] resolveActualTypeArguments(ParameterizedType type, Type<?> reference) {
-        java.lang.reflect.Type[] actualTypeArguments = type.getActualTypeArguments().clone(); 
+          
+        return resolveActualTypeArguments(type.getActualTypeArguments(), reference);
+    }
+    
+    static java.lang.reflect.Type[] resolveActualTypeArguments(java.lang.reflect.Type[] typeArguments, Type<?> reference) {
+    	
+		java.lang.reflect.Type[] actualTypeArguments = new java.lang.reflect.Type[typeArguments.length];
         for (int i=0, len=actualTypeArguments.length; i < len; ++i) {
-            java.lang.reflect.Type typeArg = actualTypeArguments[i];
+            java.lang.reflect.Type typeArg = typeArguments[i];
             if (typeArg instanceof TypeVariable) {
                 java.lang.reflect.Type resolvedVariable = null;
                 if (reference!=null) {
@@ -22,5 +28,6 @@ public class TypeUtil {
             }
         }   
         return actualTypeArguments;
+	
     }
 }

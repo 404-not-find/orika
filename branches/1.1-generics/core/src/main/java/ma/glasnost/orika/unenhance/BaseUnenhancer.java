@@ -69,14 +69,14 @@ public class BaseUnenhancer implements UnenhanceStrategy {
     }
     
     @SuppressWarnings("unchecked")
-    public <T> Type<T> unenhanceClass(T object) {
+    public <T> Type<T> unenhanceType(T object, Type<T> type) {
         
-    	Type<T> unenhancedClass = Type.typeOf(object);
+    	Type<T> unenhancedClass = type;
     	for(UnenhanceStrategy strategy: unenhanceStrategyChain) {
-    		Type<T> delegateUnenhanced = strategy.unenhanceClass(object);
+    		Type<T> delegateUnenhanced = strategy.unenhanceType(object, type);
     		// Accept the first delegate strategy result which produces 
     		// something different than the object's getClass method
-    		if (delegateUnenhanced!=null && !unenhancedClass.equals(delegateUnenhanced)) {
+    		if (delegateUnenhanced!=null && !unenhancedClass.isEqualTo(delegateUnenhanced)) {
     			unenhancedClass = delegateUnenhanced;
     			break;
     		}

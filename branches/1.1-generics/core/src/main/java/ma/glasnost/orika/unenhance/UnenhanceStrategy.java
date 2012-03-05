@@ -45,12 +45,12 @@ public interface UnenhanceStrategy {
 	public <T> T unenhanceObject(T object);
 
 	/**
-	 * Should return the un-enhanced class to be used when determining attribute mapping information
-	 * for the class.
+	 * Should return the un-enhanced type to be used when determining attribute mapping information
+	 * for the type.
 	 * 
 	 * @param <T>
-	 * @param object
+	 * @param type
 	 * @return
 	 */
-	public <T> Type<T> unenhanceClass(T object);
+	public <T> Type<T> unenhanceType(T object, Type<T> type);
 }

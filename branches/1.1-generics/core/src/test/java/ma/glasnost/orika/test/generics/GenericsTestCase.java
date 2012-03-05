@@ -101,15 +101,12 @@ public class GenericsTestCase {
     @Test
     public void testMappingParameterizedTypes() {
         
-        System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY, EclipseJdtCompilerStrategy.class.getCanonicalName());
-    
+        MappingUtil.useEclipseJdt();
+    	
         Type<TestEntry<Holder<Long>, Holder<String>>> fromType = new Type<TestEntry<Holder<Long>, Holder<String>>>(){};
         Type<OtherTestEntry<Container<String>, Container<String>>> toType = new Type<OtherTestEntry<Container<String>, Container<String>>>(){};
      
-        //ClassMap<?, ?> classMap = ClassMapBuilder.map(fromType, toType).byDefault().toClassMap();
-        
         MapperFactory factory = MappingUtil.getMapperFactory();
-        MapperFacade mapper = factory.getMapperFacade();
         
         TestEntry<Holder<Long>, Holder<String>> fromObject = new TestEntry<Holder<Long>, Holder<String>>();
         fromObject.setKey(new Holder<Long>());
@@ -117,12 +114,20 @@ public class GenericsTestCase {
         fromObject.setValue(new Holder<String>());
         fromObject.getValue().setContents("What is the meaning of life?");
         
+        factory.registerClassMap(
+                ClassMapBuilder.map(new Type<Holder<String>>(){}, new Type<Container<String>>(){})
+                    .field("contents", "contained").byDefault().toClassMap());
+        factory.registerClassMap(
+                ClassMapBuilder.map(new Type<Holder<Long>>(){}, new Type<Container<String>>(){})
+                    .field("contents", "contained").byDefault().toClassMap());
+        
+        MapperFacade mapper = factory.getMapperFacade(); 
         // TODO: need to override the map method to allow a Type<?> to be
         // passed as the toType...
         OtherTestEntry<Container<String>, Container<String>> result = mapper.map(fromObject, fromType, toType);
         
         Assert.assertNotNull(result);
-        Assert.assertEquals(fromObject.getKey().getContents(),result.getKey().getContained());
+        Assert.assertEquals(""+fromObject.getKey().getContents(),result.getKey().getContained());
         Assert.assertEquals(fromObject.getValue().getContents(),result.getValue().getContained());
     }
     

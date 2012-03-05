@@ -240,6 +240,8 @@ public class ConstructorMappingTestCase {
     @Test
     public void testBaseCaseWithCollectionTypes() {
     	
+        MappingUtil.useEclipseJdt();
+        
     	List<Book> books = new ArrayList<Book>(4);
     	
     	Author author1 = new AuthorImpl("Author #1");

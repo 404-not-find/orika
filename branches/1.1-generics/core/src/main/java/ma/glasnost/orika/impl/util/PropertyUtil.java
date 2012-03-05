@@ -126,21 +126,19 @@ public final class PropertyUtil {
                         Property existing = properties.get(pd.getName());
                         if (existing==null || existing.getType().isAssignableFrom(rawType)) {
                             properties.put(pd.getName(), property);
-                        
                             if (pd.getReadMethod() != null) {
                                 final Method method = pd.getReadMethod();
                                 if (property.getType() != null && property.isCollection()) {
                                     if (method.getGenericReturnType() instanceof ParameterizedType) {
-                                        property.setParameterizedType((Class<?>) ((ParameterizedType) method.getGenericReturnType())
-                                                .getActualTypeArguments()[0]);
+                                        java.lang.reflect.Type t = ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0];
+                                        resolvePropertyFromType(property, t);
                                     } 
                                 }
                             } else if (pd.getWriteMethod() != null) {
                                 final Method method = pd.getWriteMethod();
-                                
                                 if (property.isCollection() && method.getGenericParameterTypes().length > 0) {
-                                    property.setParameterizedType((Class<?>) ((ParameterizedType) method.getGenericParameterTypes()[0])
-                                            .getActualTypeArguments()[0]);
+                                    java.lang.reflect.Type t = ((ParameterizedType) method.getGenericParameterTypes()[0]).getActualTypeArguments()[0];
+                                    resolvePropertyFromType(property, t);
                                 }
                             } else {
                                 
@@ -197,5 +195,20 @@ public final class PropertyUtil {
     
     public static boolean isExpression(String a) {
         return a.indexOf('.') != -1;
+    }
+    
+    private static void resolvePropertyFromType(Property property, java.lang.reflect.Type t) {
+    	final Type<?> elementType;
+        if (t instanceof ParameterizedType) {
+        	elementType = Type.valueOf((ParameterizedType)t);
+        } else if (t instanceof Class) {
+        	elementType = Type.valueOf((Class<?>)t);
+            //property.setParameterizedType(Type.valueOf((Class<?>)t));
+        } else {
+            throw new IllegalArgumentException("Unsupported collection nested type " + t);
+        }
+        if (Type.valueOf(Object.class).equals(property.getElementType())) {
+        	property.setType(Type.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType}));
+        }
     }
 }

@@ -46,6 +46,7 @@ import ma.glasnost.orika.impl.generator.CompilerStrategy.SourceCodeGenerationExc
 import ma.glasnost.orika.impl.generator.JavassistCompilerStrategy;
 import ma.glasnost.orika.impl.generator.MapperGenerator;
 import ma.glasnost.orika.impl.generator.ObjectFactoryGenerator;
+import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.inheritance.DefaultSuperTypeResolverStrategy;
 import ma.glasnost.orika.inheritance.SuperTypeResolverStrategy;
 import ma.glasnost.orika.metadata.ClassMap;
@@ -375,8 +376,8 @@ public class DefaultMapperFactory implements MapperFactory {
             final ClassMap<?, ?> classMap = ClassMapBuilder.map(mapperKey.getAType(), mapperKey.getBType())
                     .byDefault(this.mappingHints.toArray(new MappingHint[0]))
                     .toClassMap();
-            buildMapper(classMap);
             buildObjectFactories(classMap);
+            buildMapper(classMap);
             initializeUsedMappers(classMap);
         }
         return mappersRegistry.get(mapperKey);
@@ -398,6 +399,7 @@ public class DefaultMapperFactory implements MapperFactory {
     }
     
     public void registerMappingHint(MappingHint... hints) {
+    	// TODO: change to use new DefaultFieldMapping...
         this.mappingHints.addAll(Arrays.asList(hints));
     }
     
@@ -430,24 +432,24 @@ public class DefaultMapperFactory implements MapperFactory {
     }
     
     @SuppressWarnings("unchecked")
-    public <S, D> Type<? extends D> lookupConcreteDestinationClass(Type<S> sourceType, Type<D> destinationType, MappingContext context) {
+    public <S, D> Type<? extends D> lookupConcreteDestinationType(Type<S> sourceType, Type<D> destinationType, MappingContext context) {
         final Type<? extends D> concreteType = context.getConcreteClass(sourceType, destinationType);
         
         if (concreteType != null) {
             return concreteType;
         }
         
-        final Set<Type<?>> destinationSet = aToBRegistry.get(sourceType);
+        Set<Type<?>> destinationSet = aToBRegistry.get(sourceType);
         if (destinationSet == null || destinationSet.isEmpty()) {
             return null;
         }
         
         for (final Type<?> type : destinationSet) {
-            if (destinationType.isAssignableFrom(type)) {
+            if (destinationType.isAssignableFrom(type) && ClassUtil.isConcrete(type)) {
                 return (Type<? extends D>) type;
-                
             }
-        }
+        } 
+        
         return concreteType;
     }
     

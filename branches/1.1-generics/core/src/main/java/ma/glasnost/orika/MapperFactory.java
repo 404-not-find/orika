@@ -48,7 +48,7 @@ public interface MapperFactory {
     // inheritance check...
     <T> ObjectFactory<T> lookupObjectFactory(Type<T> targetClass);
     
-    <S, D> Type<? extends D> lookupConcreteDestinationClass(Type<S> sourceType, Type<D> destinationType, MappingContext context);
+    <S, D> Type<? extends D> lookupConcreteDestinationType(Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
     void registerMappingHint(MappingHint... hint);
     
