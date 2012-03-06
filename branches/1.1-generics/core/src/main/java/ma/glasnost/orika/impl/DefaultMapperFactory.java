@@ -36,14 +36,10 @@ import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingContext;
 import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.ObjectFactory;
-import ma.glasnost.orika.OrikaSystemProperties;
 import ma.glasnost.orika.constructor.ConstructorResolverStrategy;
-import ma.glasnost.orika.constructor.SimpleConstructorResolverStrategy;
 import ma.glasnost.orika.converter.ConverterFactory;
-import ma.glasnost.orika.converter.DefaultConverterFactory;
 import ma.glasnost.orika.impl.generator.CompilerStrategy;
 import ma.glasnost.orika.impl.generator.CompilerStrategy.SourceCodeGenerationException;
-import ma.glasnost.orika.impl.generator.JavassistCompilerStrategy;
 import ma.glasnost.orika.impl.generator.MapperGenerator;
 import ma.glasnost.orika.impl.generator.ObjectFactoryGenerator;
 import ma.glasnost.orika.impl.util.ClassUtil;
@@ -178,13 +174,13 @@ public class DefaultMapperFactory implements MapperFactory {
         public DefaultMapperFactory build() {
             
             if (converterFactory == null) {
-                converterFactory = getDefaultConverterFactory();
+                converterFactory = UtilityResolver.getDefaultConverterFactory();
             }
             if (constructorResolverStrategy == null) {
-                constructorResolverStrategy = getDefaultConstructorResolverStrategy();
+                constructorResolverStrategy = UtilityResolver.getDefaultConstructorResolverStrategy();
             }
             if (compilerStrategy == null) {
-                compilerStrategy = getDefaultCompilerStrategy();
+                compilerStrategy = UtilityResolver.getDefaultCompilerStrategy();
             }
             
             return new DefaultMapperFactory(classMaps, unenhanceStrategy, superTypeStrategy, constructorResolverStrategy, converterFactory,
@@ -192,89 +188,7 @@ public class DefaultMapperFactory implements MapperFactory {
         }
         
     }
-    
-    /**
-     * Provides a default compiler strategy, favoring a type specified in the
-     * appropriate system property if found.
-     * 
-     * @return
-     */
-    private static CompilerStrategy getDefaultCompilerStrategy() {
-        CompilerStrategy compilerStrategy = null;
-        String strategy = System.getProperty(OrikaSystemProperties.COMPILER_STRATEGY);
-        if (strategy != null) {
-            // User may specify the compiler strategy using a system property
-            try {
-                @SuppressWarnings("unchecked")
-                Class<? extends CompilerStrategy> strategyType = (Class<? extends CompilerStrategy>) Class.forName(strategy, true,
-                        Thread.currentThread().getContextClassLoader());
-                compilerStrategy = strategyType.newInstance();
-                
-            } catch (Exception e) {
-                throw new IllegalArgumentException("compiler strategy specified was invalid", e);
-            }
-            
-        } else {
-            compilerStrategy = new JavassistCompilerStrategy();
-        }
-        return compilerStrategy;
-    }
-    
-    /**
-     * Provides a default constructor resolver strategy, favoring a type
-     * specified in the appropriate system property if found.
-     * 
-     * @return
-     */
-    private static ConverterFactory getDefaultConverterFactory() {
-        ConverterFactory converterFactory = null;
-        String strategy = System.getProperty(OrikaSystemProperties.CONVERTER_FACTORY);
-        if (strategy != null) {
-            
-            try {
-                @SuppressWarnings("unchecked")
-                Class<? extends ConverterFactory> strategyType = (Class<? extends ConverterFactory>) Class.forName(strategy, true,
-                        Thread.currentThread().getContextClassLoader());
-                converterFactory = strategyType.newInstance();
-                
-            } catch (Exception e) {
-                throw new IllegalArgumentException("converter factory specified was invalid", e);
-            }
-            
-        } else {
-            converterFactory = new DefaultConverterFactory();
-        }
-        return converterFactory;
-    }
-    
-    /**
-     * Provides a default constructor resolver strategy, favoring a type
-     * specified in the appropriate system property if found.
-     * 
-     * @return
-     */
-    private static ConstructorResolverStrategy getDefaultConstructorResolverStrategy() {
-        ConstructorResolverStrategy constructorResolverStrategy = null;
-        String strategy = System.getProperty(OrikaSystemProperties.CONSTRUCTOR_RESOLVER_STRATEGY);
-        if (strategy != null) {
-            
-            try {
-                @SuppressWarnings("unchecked")
-                Class<? extends ConstructorResolverStrategy> strategyType = (Class<? extends ConstructorResolverStrategy>) Class.forName(
-                        strategy, true, Thread.currentThread().getContextClassLoader());
-                constructorResolverStrategy = strategyType.newInstance();
-                
-            } catch (Exception e) {
-                throw new IllegalArgumentException("constructor resolver strategy specified was invalid", e);
-            }
-            
-        } else {
-            constructorResolverStrategy = new SimpleConstructorResolverStrategy();
-            // constructorResolverStrategy = new
-            // BestFitConstructorResolverStrategy();
-        }
-        return constructorResolverStrategy;
-    }
+ 
     
     /**
      * Generates the UnenhanceStrategy to be used for this MapperFactory,

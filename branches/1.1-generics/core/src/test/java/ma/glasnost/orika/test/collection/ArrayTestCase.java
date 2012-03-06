@@ -28,8 +28,6 @@ public class ArrayTestCase {
 	@Test
 	public void testMappingArrayOfString() {
 
-	    MappingUtil.useEclipseJdt();
-	    
 		Product p = new Product();
 		p.setTags(new String[] { "music", "sport" });
 

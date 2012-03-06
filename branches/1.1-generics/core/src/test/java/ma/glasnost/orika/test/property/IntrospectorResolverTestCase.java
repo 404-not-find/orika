@@ -16,21 +16,24 @@
  * limitations under the License.
  */
 
-package ma.glasnost.orika.test.util;
+package ma.glasnost.orika.test.property;
 
 import junit.framework.Assert;
 import ma.glasnost.orika.metadata.NestedProperty;
-import ma.glasnost.orika.property.PropertyResolver;
+import ma.glasnost.orika.property.IntrospectorPropertyResolver;
+import ma.glasnost.orika.property.PropertyResolverStrategy;
 
 import org.junit.Test;
 
-public class PropertiesTestCase {
+public class IntrospectorResolverTestCase {
 
+    private PropertyResolverStrategy propertyResolver = new IntrospectorPropertyResolver();
+    
 	@Test
 	public void testNestedProperty() {
 		String np = "start.x";
 
-		NestedProperty p = PropertyResolver.getInstance().getNestedProperty(Line.class, np);
+		NestedProperty p = propertyResolver.getNestedProperty(Line.class, np);
 
 		Assert.assertEquals(Integer.TYPE, p.getRawType());
 	}

@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import ma.glasnost.orika.OrikaSystemProperties;
-import ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy;
 import ma.glasnost.orika.test.MappingUtil;
 
 import org.junit.Assert;
@@ -45,9 +43,6 @@ public class CollectionTestCase {
 
 	@Test
 	public void testStringToStringWithGetterOnlyCollection() {
-	    
-	    System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY, EclipseJdtCompilerStrategy.class.getCanonicalName());
-	    
 		D source = new D();
 		source.setTags(Arrays.asList("soa", "java", "rest"));
 

@@ -8,7 +8,6 @@ import java.util.List;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingHint;
-import ma.glasnost.orika.metadata.TypeFactory;
 import ma.glasnost.orika.test.MappingUtil;
 import ma.glasnost.orika.test.unenhance.SuperTypeTestCaseClasses.Author;
 import ma.glasnost.orika.test.unenhance.SuperTypeTestCaseClasses.Book;
@@ -219,7 +218,7 @@ public class ClassLoaderLeakageTestCase {
 
 		// Test the target group
 		Assert.assertNull(childLoaderRef.get());
-
+		
 	}
 	
 	
