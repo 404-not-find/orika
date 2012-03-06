@@ -25,7 +25,6 @@ import java.util.Set;
 import ma.glasnost.orika.DefaultFieldMapper;
 import ma.glasnost.orika.Mapper;
 import ma.glasnost.orika.MappingException;
-import ma.glasnost.orika.MappingHint;
 import ma.glasnost.orika.impl.util.PropertyUtil;
 
 public final class ClassMapBuilder<A, B> {
@@ -143,8 +142,8 @@ public final class ClassMapBuilder<A, B> {
      * @return
      */
     @Deprecated
-    public ClassMapBuilder<A, B> byDefault(MappingHint hint0) {
-    	return byDefault(new MappingHint[]{hint0});
+    public ClassMapBuilder<A, B> byDefault(ma.glasnost.orika.MappingHint hint0) {
+    	return byDefault(new ma.glasnost.orika.MappingHint[]{hint0});
     }
     
     /**
@@ -155,8 +154,8 @@ public final class ClassMapBuilder<A, B> {
      * @return
      */
     @Deprecated
-    public ClassMapBuilder<A, B> byDefault(MappingHint hint0, MappingHint... mappingHints) {
-    	MappingHint[] hints = new MappingHint[mappingHints.length+1];
+    public ClassMapBuilder<A, B> byDefault(ma.glasnost.orika.MappingHint hint0, ma.glasnost.orika.MappingHint... mappingHints) {
+        ma.glasnost.orika.MappingHint[] hints = new ma.glasnost.orika.MappingHint[mappingHints.length+1];
     	hints[0] = hint0;
     	if (mappingHints.length>0) {
     		System.arraycopy(mappingHints, 0, hints, 1, mappingHints.length);
@@ -171,7 +170,7 @@ public final class ClassMapBuilder<A, B> {
      * @return
      */
     @Deprecated
-    public ClassMapBuilder<A, B> byDefault(MappingHint[] mappingHints) {
+    public ClassMapBuilder<A, B> byDefault(ma.glasnost.orika.MappingHint[] mappingHints) {
         
     	
     	for (final String propertyName : aProperties.keySet()) {
@@ -182,7 +181,7 @@ public final class ClassMapBuilder<A, B> {
                     }
                 } else {
                     Property prop = aProperties.get(propertyName);
-                    for (MappingHint hint : mappingHints) {
+                    for (ma.glasnost.orika.MappingHint hint : mappingHints) {
                         String suggestion = hint.suggestMappedField(propertyName, prop.getType().getRawType());
                         if (suggestion != null && bProperties.containsKey(suggestion)) {
                             if (!propertiesCacheB.contains(suggestion)) {
