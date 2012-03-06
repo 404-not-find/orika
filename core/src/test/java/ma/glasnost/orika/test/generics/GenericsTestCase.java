@@ -23,12 +23,12 @@ import java.util.Map;
 
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
-import ma.glasnost.orika.impl.util.PropertyUtil;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.metadata.Property;
 import ma.glasnost.orika.metadata.Type;
 import ma.glasnost.orika.metadata.TypeBuilder;
 import ma.glasnost.orika.metadata.TypeFactory;
+import ma.glasnost.orika.property.PropertyResolver;
 import ma.glasnost.orika.test.MappingUtil;
 
 import org.junit.Assert;
@@ -71,6 +71,10 @@ public class GenericsTestCase {
     	MapperFactory factory = MappingUtil.getMapperFactory(); 
         
         try {
+            /*
+             * Note that the normal lookup of nested property doesn't work, since EntityGeneric doesn't
+             * have actualized type arguments
+             */
 	        ClassMapBuilder.map(EntityGeneric.class, EntityLong.class).field("id.key", "id").toClassMap();
 	        Assert.fail("should throw exception for unresolvable nested property");
         } catch (Exception e) {
@@ -101,11 +105,11 @@ public class GenericsTestCase {
         
         Type<?> t = new TypeBuilder<TestEntry<Holder<Long>,Holder<String>>>(){}.build();
         
-        Property p = PropertyUtil.getNestedProperty(t, "key.contents");
+        Property p = PropertyResolver.getInstance().getNestedProperty(t, "key.contents");
         Assert.assertEquals(p.getType().getRawType(),Long.class);
         Assert.assertEquals(p.getType(), TypeFactory.valueOf(Long.class));
          
-        Map<String,Property> properties = PropertyUtil.getProperties(t);
+        Map<String,Property> properties = PropertyResolver.getInstance().getProperties(t);
         Assert.assertTrue(properties.containsKey("key"));
         Assert.assertEquals(properties.get("key").getType(), new TypeBuilder<Holder<Long>>(){}.build());
     }
@@ -145,7 +149,8 @@ public class GenericsTestCase {
     }
     
     /**
-     * This test confirms that multiple mappings
+     * This test confirms that multiple mappings using different parameterizations of
+     * the same raw class type do not overwrite each other or cause conflicts
      */
     @Test
     public void testMultipleMappingsForParameterizedTypes() {

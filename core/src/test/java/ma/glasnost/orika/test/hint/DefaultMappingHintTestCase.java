@@ -22,7 +22,6 @@ import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingHint;
 import ma.glasnost.orika.OrikaSystemProperties;
-import ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.test.MappingUtil;
 import ma.glasnost.orika.test.unenhance.SuperTypeTestCaseClasses.Author;
@@ -97,9 +96,6 @@ public class DefaultMappingHintTestCase {
     @Test
     public void testMappingByDefaultWithHint() throws Exception {
         
-    	System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY, 
-    			EclipseJdtCompilerStrategy.class.getCanonicalName());
-    	
         MappingHint myHint =
         /**
          * This sample hint converts "myProperty" to "property", and vis-versa.

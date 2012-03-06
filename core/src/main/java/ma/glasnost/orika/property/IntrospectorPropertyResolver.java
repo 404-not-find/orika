@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package ma.glasnost.orika.impl.util;
+package ma.glasnost.orika.property;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -40,37 +40,28 @@ import ma.glasnost.orika.metadata.Type;
 import ma.glasnost.orika.metadata.TypeFactory;
 
 /**
+ * IntrospectionPropertyResolver leverages JavaBeans introspector to resolve
+ * properties for provided types.<br>
  * 
- * @deprecated use {@link ma.glasnost.orika.property.PropertyResolver} instead
+ * @author 
+ *
  */
-@Deprecated
-public final class PropertyUtil {
+public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
+
+    private final Map<java.lang.reflect.Type, Map<String, Property>> propertiesCache = new ConcurrentHashMap<java.lang.reflect.Type, Map<String, Property>>();
     
-    private static final Map<java.lang.reflect.Type, Map<String, Property>> PROPERTIES_CACHE = new ConcurrentHashMap<java.lang.reflect.Type, Map<String, Property>>();
-    
-    private PropertyUtil() {
+    public Map<String, Property> getProperties(java.lang.reflect.Type theType) {
         
-    }
-   
-    /**
-     * Gets properties for a potentially parameterized type.
-     * Support for both Class and ParameterizedType inputs.
-     * 
-     * @param theType
-     * @return
-     */
-    public static Map<String, Property> getProperties(java.lang.reflect.Type theType) {
-        
-        if (PROPERTIES_CACHE.containsKey(theType)) {
-            return PROPERTIES_CACHE.get(theType);
+        if (propertiesCache.containsKey(theType)) {
+            return propertiesCache.get(theType);
         }
         
         final Map<String, Property> properties = new HashMap<String, Property>();
         Type<?> typeHolder;
         if (theType instanceof Type) {
-        	typeHolder = (Type<?>)theType;
+            typeHolder = (Type<?>)theType;
         } else if (theType instanceof Class) {
-        	typeHolder = TypeFactory.valueOf((Class<?>)theType);
+            typeHolder = TypeFactory.valueOf((Class<?>)theType);
         } else {
             throw new IllegalArgumentException("type " + theType + " not supported.");
         }
@@ -113,19 +104,18 @@ public final class PropertyUtil {
                         if (genericType instanceof TypeVariable && typeHolder.isParameterized()) {
                             java.lang.reflect.Type t = typeHolder.getTypeByVariable((TypeVariable<?>) genericType);
                             if (t instanceof Type) {
-                            	property.setType((Type<?>)t);
+                                property.setType((Type<?>)t);
                             } else if (t instanceof ParameterizedType) {
-                            	property.setType(TypeFactory.valueOf((ParameterizedType)t));
+                                property.setType(TypeFactory.valueOf((ParameterizedType)t));
                             } else {
-                            	property.setType(TypeFactory.valueOf((Object.class)));
-                            	//throw new IllegalStateException("unresolved property type");
+                                property.setType(TypeFactory.valueOf((Object.class)));
                             }
                         } else if (rawType!=returnType && rawType.isAssignableFrom(returnType)) {
-                        	property.setType(TypeFactory.valueOf(returnType));
+                            property.setType(TypeFactory.valueOf(returnType));
                         } else if (genericType instanceof ParameterizedType) {
-                        	 property.setType(TypeFactory.valueOf((ParameterizedType)genericType));
+                             property.setType(TypeFactory.valueOf((ParameterizedType)genericType));
                         } else {
-                        	 property.setType(TypeFactory.valueOf(rawType));
+                             property.setType(TypeFactory.valueOf(rawType));
                         }
                        
                         
@@ -164,12 +154,11 @@ public final class PropertyUtil {
             /* Ignore */
         }
         
-        PROPERTIES_CACHE.put(theType, Collections.unmodifiableMap(properties));
+        propertiesCache.put(theType, Collections.unmodifiableMap(properties));
         return properties; 
     }
-    
 
-    public static NestedProperty getNestedProperty(java.lang.reflect.Type type, String p) {
+    public NestedProperty getNestedProperty(java.lang.reflect.Type type, String p) {
         
         String typeName = type.toString();
         //Class<?> rawType = (Class<?>)((type instanceof ParameterizedType) ? ((ParameterizedType)type).getRawType() : type);
@@ -182,7 +171,7 @@ public final class PropertyUtil {
             while (i < ps.length) {
                 if (!properties.containsKey(ps[i])) {
                     throw new RuntimeException("could not resolve nested property [" + p + "] on " + type + 
-                    		", because " + property.getType() + " does not contain property [" + ps[i] + "]");
+                            ", because " + property.getType() + " does not contain property [" + ps[i] + "]");
                 }
                 property = properties.get(ps[i]);
                 properties = getProperties(property.getType());
@@ -200,22 +189,18 @@ public final class PropertyUtil {
         return new NestedProperty(p, property, path.toArray(new Property[path.size()]));
     }
     
-    public static boolean isExpression(String a) {
-        return a.indexOf('.') != -1;
-    }
-    
-    private static void resolvePropertyFromType(Property property, java.lang.reflect.Type t) {
-    	final Type<?> elementType;
+    private void resolvePropertyFromType(Property property, java.lang.reflect.Type t) {
+        final Type<?> elementType;
         if (t instanceof ParameterizedType) {
-        	elementType = TypeFactory.valueOf((ParameterizedType)t);
+            elementType = TypeFactory.valueOf((ParameterizedType)t);
         } else if (t instanceof Class) {
-        	elementType = TypeFactory.valueOf((Class<?>)t);
+            elementType = TypeFactory.valueOf((Class<?>)t);
             //property.setParameterizedType(Type.valueOf((Class<?>)t));
         } else {
             throw new IllegalArgumentException("Unsupported collection nested type " + t);
         }
         if (TypeFactory.valueOf(Object.class).equals(property.getElementType())) {
-        	property.setType(TypeFactory.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType}));
+            property.setType(TypeFactory.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType}));
         }
     }
 }
