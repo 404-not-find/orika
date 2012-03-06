@@ -76,7 +76,7 @@ public class BaseUnenhancer implements UnenhanceStrategy {
     		Type<T> delegateUnenhanced = strategy.unenhanceType(object, type);
     		// Accept the first delegate strategy result which produces 
     		// something different than the object's getClass method
-    		if (delegateUnenhanced!=null && !unenhancedClass.isEqualTo(delegateUnenhanced)) {
+    		if (delegateUnenhanced!=null && !unenhancedClass.equals(delegateUnenhanced)) {
     			unenhancedClass = delegateUnenhanced;
     			break;
     		}

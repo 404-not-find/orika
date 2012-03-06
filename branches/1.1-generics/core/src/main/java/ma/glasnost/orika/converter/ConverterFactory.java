@@ -52,7 +52,9 @@ public interface ConverterFactory {
      * 
      * @param converterId
      * @param converter
+     * @deprecated use {@link #registerConverter(Converter)} instead
      */
+    @Deprecated
     <S, D> void registerConverter(ma.glasnost.orika.converter.Converter<S, D> converter);
     
     /**
@@ -60,6 +62,7 @@ public interface ConverterFactory {
      * 
      * @param converterId
      * @param converter
+     * 
      */
     <S, D> void registerConverter(String converterId, Converter<S, D> converter);
     
@@ -68,7 +71,9 @@ public interface ConverterFactory {
      * 
      * @param converterId
      * @param converter
+     * @deprecated use {@link #registerConverter(String, Converter)} instead
      */
+    @Deprecated
     <S, D> void registerConverter(String converterId, ma.glasnost.orika.converter.Converter<S, D> converter);
     
     /**

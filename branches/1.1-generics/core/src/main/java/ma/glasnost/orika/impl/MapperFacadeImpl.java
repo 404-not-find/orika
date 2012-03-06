@@ -72,7 +72,7 @@ public class MapperFacadeImpl implements MapperFacade {
         	if (ClassUtil.isConcrete(sourceType)) {
         		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, sourceType);
         	} else {
-        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, TypeFactory.typeOf(unenhancedSourceObject, sourceType));
+        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, TypeFactory.resolveTypeOf(unenhancedSourceObject, sourceType));
         	}
         } else {
         	resolvedSourceType = unenhanceStrategy.unenhanceType(sourceObject, TypeFactory.typeOf(unenhancedSourceObject));
@@ -300,12 +300,12 @@ public class MapperFacadeImpl implements MapperFacade {
 	}
 
 	public <S, D> Set<D> mapAsSet(Iterable<S> source, Class<D> destinationClass) {
-		return mapAsSet(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
+		return mapAsSet(source, TypeFactory.elementTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> Set<D> mapAsSet(Iterable<S> source,
 			Class<D> destinationClass, MappingContext context) {
-		return mapAsSet(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
+		return mapAsSet(source, TypeFactory.elementTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> Set<D> mapAsSet(S[] source, Class<D> destinationClass) {
@@ -319,12 +319,12 @@ public class MapperFacadeImpl implements MapperFacade {
 
 	public <S, D> List<D> mapAsList(Iterable<S> source,
 			Class<D> destinationClass) {
-		return mapAsList(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
+		return mapAsList(source, TypeFactory.elementTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> List<D> mapAsList(Iterable<S> source,
 			Class<D> destinationClass, MappingContext context) {
-		return mapAsList(source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
+		return mapAsList(source, TypeFactory.elementTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> List<D> mapAsList(S[] source, Class<D> destinationClass) {
@@ -338,7 +338,7 @@ public class MapperFacadeImpl implements MapperFacade {
 
 	public <S, D> D[] mapAsArray(D[] destination, Iterable<S> source,
 			Class<D> destinationClass) {
-		return mapAsArray(destination, source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass));
+		return mapAsArray(destination, source, TypeFactory.elementTypeOf(source), TypeFactory.valueOf(destinationClass));
 	}
 
 	public <S, D> D[] mapAsArray(D[] destination, S[] source,
@@ -348,7 +348,7 @@ public class MapperFacadeImpl implements MapperFacade {
 
 	public <S, D> D[] mapAsArray(D[] destination, Iterable<S> source,
 			Class<D> destinationClass, MappingContext context) {
-		return mapAsArray(destination, source, TypeFactory.componentTypeOf(source), TypeFactory.valueOf(destinationClass), context);
+		return mapAsArray(destination, source, TypeFactory.elementTypeOf(source), TypeFactory.valueOf(destinationClass), context);
 	}
 
 	public <S, D> D[] mapAsArray(D[] destination, S[] source,

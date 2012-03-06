@@ -46,7 +46,7 @@ public class MapperKey {
 	}
 
 	private boolean equals(Type<?> a, Type<?> b) {
-		return a == null ? b == null : a.isEqualTo(b);
+		return a == null ? b == null : a.equals(b);
 	}
 
 	public String toString() {

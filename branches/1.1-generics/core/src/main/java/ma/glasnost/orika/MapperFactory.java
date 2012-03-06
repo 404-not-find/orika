@@ -43,14 +43,14 @@ public interface MapperFactory {
     
     <T> void registerObjectFactory(ObjectFactory<T> objectFactory, Type<T> targetType);
     
-    // TODO: use Type here? might allow better back-compatibility; as long
-    // as we're using the key for an identity lookup and not a hierarchical
-    // inheritance check...
-    <T> ObjectFactory<T> lookupObjectFactory(Type<T> targetClass);
+    <T> ObjectFactory<T> lookupObjectFactory(Type<T> targetType);
     
     <S, D> Type<? extends D> lookupConcreteDestinationType(Type<S> sourceType, Type<D> destinationType, MappingContext context);
     
-    void registerMappingHint(MappingHint... hint);
+    @Deprecated
+    void registerMappingHint(MappingHint... hints);
+    
+    void registerDefaultFieldMapper(DefaultFieldMapper...fieldDefaults);
     
     Set<ClassMap<Object, Object>> lookupUsedClassMap(MapperKey mapperKey);
     

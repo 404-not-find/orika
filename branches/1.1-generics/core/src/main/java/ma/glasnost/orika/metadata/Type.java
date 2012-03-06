@@ -4,10 +4,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import ma.glasnost.orika.impl.util.ClassUtil;
+import ma.glasnost.orika.metadata.TypeFactory.TypeKey;
 
 /**
  * Type is an implementation of ParameterizedType which may be
@@ -16,7 +16,10 @@ import ma.glasnost.orika.impl.util.ClassUtil;
  * represented by the generic template parameters in a given class.<br><br>
  * 
  * Such details are not normally available at runtime using a Class instance
- * due to type-erasure.
+ * due to type-erasure.<br><br>
+ * 
+ * Type essentially provides a runtime token to represent a ParameterizedType
+ * with fully-resolve actual type arguments; it will contain 
  * 
  * @author matt.deboer@gmail.com
  *
@@ -32,50 +35,24 @@ public final class Type<T> implements ParameterizedType {
     private Type<?> superType;
     private Type<?>[] interfaces;
     private Type<?> componentType;
+    private final TypeKey key;
 
+    /**
+     * @param rawType
+     * @param actualTypeArguments
+     */
     @SuppressWarnings("unchecked")
-    public Type(Class<?> rawType, java.lang.reflect.Type... actualTypeArguments) {
+    Type(TypeKey key, Class<?> rawType, Map<TypeVariable<?>, java.lang.reflect.Type> typesByVariable, Type<?>... actualTypeArguments) {
+        this.key = key;
         this.rawType = (Class<T>)rawType;
-        this.actualTypeArguments = new Type<?>[rawType.getTypeParameters().length];
+        this.actualTypeArguments = actualTypeArguments;
+        this.typesByVariable = typesByVariable;
         this.isParameterized = rawType.getTypeParameters().length > 0;
-        
-        if (isParameterized) {
-            resolveTypeArguments(actualTypeArguments);
-        }
     }
     
-    
-    @SuppressWarnings("unchecked")
-    private void resolveTypeArguments(java.lang.reflect.Type[] actualTypeArguments) {
-        this.typesByVariable = new HashMap<TypeVariable<?>, java.lang.reflect.Type>(this.actualTypeArguments.length);
-        TypeVariable<?>[] typeVariables = this.rawType.getTypeParameters();
-        if (actualTypeArguments.length == 0) {
-            for (TypeVariable<?> typeVariable: typeVariables) {
-                this.typesByVariable.put(typeVariable, typeVariable);
-            }
-        } else if (actualTypeArguments.length < this.actualTypeArguments.length) {
-            throw new IllegalArgumentException("Must provide all type-arguments or none");
-        } else {
-        
-            for (int i=0, len=actualTypeArguments.length; i < len; ++i) {
-                java.lang.reflect.Type t = actualTypeArguments[i];
-                if (t instanceof Type) {
-                	// Unused
-                	//((Type<?>) t).setOwnerType(this);
-                } else if (t instanceof Class) {
-                    t = TypeFactory.valueOf((Class<Object>) t);
-                } else if (t instanceof ParameterizedType){
-                    t = TypeFactory.valueOf((ParameterizedType)t);
-                } else {
-                	// LOG.warn("Resolving unspecified template variable '" + t + "' to Object");
-                    t = TypeFactory.valueOf(Object.class);
-                }
-                this.actualTypeArguments[i] = (Type<?>)t;
-                typesByVariable.put(typeVariables[i], t);
-            }
-        }
-    }
-    
+    /**
+     * @return true if the given type is parameterized by nested types
+     */
     public boolean isParameterized() {
         return isParameterized;
     }
@@ -83,7 +60,7 @@ public final class Type<T> implements ParameterizedType {
     private Type<?> resolveGenericAncestor(java.lang.reflect.Type ancestor) {
     	Type<?> resolvedType = null;
 		if (ancestor instanceof ParameterizedType) {
-			resolvedType = TypeFactory.valueOf((ParameterizedType)ancestor, this);
+			resolvedType = TypeFactory.resolveValueOf((ParameterizedType)ancestor, this);
 		} else if (ancestor instanceof Class) {
 			resolvedType = TypeFactory.valueOf((Class<?>)ancestor);
 		} else {
@@ -93,6 +70,16 @@ public final class Type<T> implements ParameterizedType {
 		return resolvedType;
     }
     
+    /**
+     * Get the nested Type of the specified index.
+     * 
+     * @param index
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+	public <X> Type<X> getNestedType(int index) {
+    	return (Type<X>)((index > -1 && actualTypeArguments.length > index) ? actualTypeArguments[index] : null);
+    }
     
     /**
      * @return the direct super-type of this type, with type arguments resolved with 
@@ -175,6 +162,12 @@ public final class Type<T> implements ParameterizedType {
         return this.rawType.getCanonicalName();
     }
     
+    /**
+     * Test whether this type is assignable from the other type.
+     * 
+     * @param other
+     * @return
+     */
     public boolean isAssignableFrom(Type<?> other) {
         if (other==null) {
             return false;
@@ -200,6 +193,14 @@ public final class Type<T> implements ParameterizedType {
         
     }
     
+    /**
+     * Test whether this type is assignable from the other Class;
+     * returns true if this type is not parameterized and
+     * the raw type is assignable.
+     * 
+     * @param other
+     * @return
+     */
     public boolean isAssignableFrom(Class<?> other) {
     	if (other==null) {
             return false;
@@ -208,14 +209,6 @@ public final class Type<T> implements ParameterizedType {
             return false;
         }
         return this.getRawType().isAssignableFrom(other);
-    }
-    
-    public boolean isResolved() {
-    	return true;
-    }
-    
-    public boolean isImmutable() {
-    	return ClassUtil.isImmutable(getRawType());
     }
     
     public boolean isEnum() {
@@ -258,32 +251,6 @@ public final class Type<T> implements ParameterizedType {
         return result;
     }
     
-    /**
-     * Equals comparison when the other type is known to be an instance of Type
-     * 
-     * @param other
-     * @return
-     */
-    public boolean isEqualTo(Type<?> other) {
-        if (this == other)
-            return true;
-        if (other == null)
-            return false;
-        
-        if (!Arrays.equals(actualTypeArguments, other.actualTypeArguments)) {
-            return false;
-        }
-        
-        if (rawType == null) {
-            if (other.rawType != null) {
-                return false;
-            }
-        } else if (!rawType.equals(other.rawType)) {
-            return false;
-        }
-        return true;
-    }
-    
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -294,17 +261,24 @@ public final class Type<T> implements ParameterizedType {
             return false;
         Type<?> other = (Type<?>) obj;
         
-        if (!Arrays.equals(actualTypeArguments, other.actualTypeArguments)) {
-            return false;
-        }
-        
-        if (rawType == null) {
-            if (other.rawType != null) {
-                return false;
-            }
-        } else if (!rawType.equals(other.rawType)) {
-            return false;
-        }
-        return true;
+        return this.key.equals(other.key);
+//        if (!this.key.equals(other.key)) {
+//            // shortcut
+//            return false;
+//        }
+//        
+//        if (rawType == null) {
+//            if (other.rawType != null) {
+//                return false;
+//            }
+//        } else if (!rawType.equals(other.rawType)) {
+//            return false;
+//        }
+//        
+//        if (!Arrays.equals(actualTypeArguments, other.actualTypeArguments)) {
+//            return false;
+//        }
+//        
+//        return true;
     }
 }

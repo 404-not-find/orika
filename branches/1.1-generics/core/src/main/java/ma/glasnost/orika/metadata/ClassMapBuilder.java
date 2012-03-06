@@ -136,22 +136,40 @@ public final class ClassMapBuilder<A, B> {
         return this;
     }
     
+    /**
+     * @deprecated use {@link #byDefault(DefaultFieldMapper...)} instead
+     * 
+     * @param hint0
+     * @return
+     */
     @Deprecated
     public ClassMapBuilder<A, B> byDefault(MappingHint hint0) {
     	return byDefault(new MappingHint[]{hint0});
     }
     
+    /**
+     * @deprecated use {@link #byDefault(DefaultFieldMapper...)} instead
+     * 
+     * @param hint0 first hint
+     * @param mappingHints remaining hints
+     * @return
+     */
     @Deprecated
-    public ClassMapBuilder<A, B> byDefault(MappingHint hint0, MappingHint hint1, MappingHint... mappingHints) {
-    	MappingHint[] hints = new MappingHint[mappingHints.length+2];
+    public ClassMapBuilder<A, B> byDefault(MappingHint hint0, MappingHint... mappingHints) {
+    	MappingHint[] hints = new MappingHint[mappingHints.length+1];
     	hints[0] = hint0;
-    	hints[1] = hint1;
     	if (mappingHints.length>0) {
-    		System.arraycopy(mappingHints, 0, hints, 2, mappingHints.length);
+    		System.arraycopy(mappingHints, 0, hints, 1, mappingHints.length);
     	}
-    	return byDefault(new MappingHint[]{hint0, hint1});
+    	return byDefault(hints);
     }
     
+    /**
+     * @deprecated use {@link #byDefault(DefaultFieldMapper...)} instead
+     * 
+     * @param mappingHints
+     * @return
+     */
     @Deprecated
     public ClassMapBuilder<A, B> byDefault(MappingHint[] mappingHints) {
         
