@@ -1,3 +1,21 @@
+/*
+ * Orika - simpler, better and faster Java bean mapping
+ * 
+ * Copyright (C) 2011 Orika authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package ma.glasnost.orika.impl;
 
 import ma.glasnost.orika.OrikaSystemProperties;
@@ -10,6 +28,13 @@ import ma.glasnost.orika.impl.generator.JavassistCompilerStrategy;
 import ma.glasnost.orika.property.IntrospectorPropertyResolver;
 import ma.glasnost.orika.property.PropertyResolverStrategy;
 
+/**
+ * UtilityResolver is used to resolve implementations for the various
+ * customizable utility types used in Orika.
+ * 
+ * @author matt.deboer@gmail.com
+ * 
+ */
 public abstract class UtilityResolver {
     
     /**
@@ -19,25 +44,7 @@ public abstract class UtilityResolver {
      * @return
      */
     public static CompilerStrategy getDefaultCompilerStrategy() {
-        return resolveStrategy(OrikaSystemProperties.COMPILER_STRATEGY, JavassistCompilerStrategy.class);
-//        CompilerStrategy compilerStrategy = null;
-//        String strategy = System.getProperty(OrikaSystemProperties.COMPILER_STRATEGY);
-//        if (strategy != null) {
-//            // User may specify the compiler strategy using a system property
-//            try {
-//                @SuppressWarnings("unchecked")
-//                Class<? extends CompilerStrategy> strategyType = (Class<? extends CompilerStrategy>) Class.forName(strategy, true,
-//                        Thread.currentThread().getContextClassLoader());
-//                compilerStrategy = strategyType.newInstance();
-//                
-//            } catch (Exception e) {
-//                throw new IllegalArgumentException("compiler strategy specified was invalid", e);
-//            }
-//            
-//        } else {
-//            compilerStrategy = new JavassistCompilerStrategy();
-//        }
-//        return compilerStrategy;
+        return resolveUtility(OrikaSystemProperties.COMPILER_STRATEGY, JavassistCompilerStrategy.class);
     }
     
     /**
@@ -47,25 +54,7 @@ public abstract class UtilityResolver {
      * @return
      */
     public static ConverterFactory getDefaultConverterFactory() {
-        return resolveStrategy(OrikaSystemProperties.CONVERTER_FACTORY, DefaultConverterFactory.class);
-//        ConverterFactory converterFactory = null;
-//        String strategy = System.getProperty(OrikaSystemProperties.CONVERTER_FACTORY);
-//        if (strategy != null) {
-//            
-//            try {
-//                @SuppressWarnings("unchecked")
-//                Class<? extends ConverterFactory> strategyType = (Class<? extends ConverterFactory>) Class.forName(strategy, true,
-//                        Thread.currentThread().getContextClassLoader());
-//                converterFactory = strategyType.newInstance();
-//                
-//            } catch (Exception e) {
-//                throw new IllegalArgumentException("converter factory specified was invalid", e);
-//            }
-//            
-//        } else {
-//            converterFactory = new DefaultConverterFactory();
-//        }
-//        return converterFactory;
+        return resolveUtility(OrikaSystemProperties.CONVERTER_FACTORY, DefaultConverterFactory.class);
     }
     
     /**
@@ -75,27 +64,7 @@ public abstract class UtilityResolver {
      * @return
      */
     public static ConstructorResolverStrategy getDefaultConstructorResolverStrategy() {
-        return resolveStrategy(OrikaSystemProperties.CONSTRUCTOR_RESOLVER_STRATEGY, SimpleConstructorResolverStrategy.class);
-//        ConstructorResolverStrategy constructorResolverStrategy = null;
-//        String strategy = System.getProperty(OrikaSystemProperties.CONSTRUCTOR_RESOLVER_STRATEGY);
-//        if (strategy != null) {
-//            
-//            try {
-//                @SuppressWarnings("unchecked")
-//                Class<? extends ConstructorResolverStrategy> strategyType = (Class<? extends ConstructorResolverStrategy>) Class.forName(
-//                        strategy, true, Thread.currentThread().getContextClassLoader());
-//                constructorResolverStrategy = strategyType.newInstance();
-//                
-//            } catch (Exception e) {
-//                throw new IllegalArgumentException("constructor resolver strategy specified was invalid", e);
-//            }
-//            
-//        } else {
-//            constructorResolverStrategy = new SimpleConstructorResolverStrategy();
-//            // constructorResolverStrategy = new
-//            // BestFitConstructorResolverStrategy();
-//        }
-//        return constructorResolverStrategy;
+        return resolveUtility(OrikaSystemProperties.CONSTRUCTOR_RESOLVER_STRATEGY, SimpleConstructorResolverStrategy.class);
     }
     
     /**
@@ -105,59 +74,42 @@ public abstract class UtilityResolver {
      * @return
      */
     public static PropertyResolverStrategy getDefaultPropertyResolverStrategy() {
-        return resolveStrategy(
-                OrikaSystemProperties.PROPERTY_RESOLVER_STRATEGY, 
-                IntrospectorPropertyResolver.class);
-//        PropertyResolverStrategy constructorResolverStrategy = null;
-//        String strategy = System.getProperty(OrikaSystemProperties.CONSTRUCTOR_RESOLVER_STRATEGY);
-//        if (strategy != null) {
-//            
-//            try {
-//                @SuppressWarnings("unchecked")
-//                Class<? extends PropertyResolverStrategy> strategyType = (Class<? extends PropertyResolverStrategy>) Class.forName(
-//                        strategy, true, Thread.currentThread().getContextClassLoader());
-//                constructorResolverStrategy = strategyType.newInstance();
-//                
-//            } catch (Exception e) {
-//                throw new IllegalArgumentException("constructor resolver strategy specified was invalid", e);
-//            }
-//            
-//        } else {
-//            constructorResolverStrategy = new IntrospectionPropertyResolver();
-//        }
-//        return constructorResolverStrategy;
+        return resolveUtility(OrikaSystemProperties.PROPERTY_RESOLVER_STRATEGY, IntrospectorPropertyResolver.class);
+        
     }
     
-    
     /**
+     * Resolves a utility implementation, given a system property for customized
+     * instance, and a default implementation class.
+     * 
      * @param systemProperty
-     * @param defaultStrategy
+     * @param defaultImplementation
      * @return
      */
-    private static <S> S resolveStrategy(String systemProperty, Class<? extends S> defaultStrategy) {
+    private static <U> U resolveUtility(String systemProperty, Class<? extends U> defaultImplementation) {
         
-        S strategy = null;
-        String strategyClass = System.getProperty(systemProperty);
-        if (strategyClass != null) {
+        U utility = null;
+        String utilityClassName = System.getProperty(systemProperty);
+        if (utilityClassName != null) {
             
             try {
                 @SuppressWarnings("unchecked")
-                Class<? extends S> strategyType = (Class<? extends S>) Class.forName(
-                        strategyClass, true, Thread.currentThread().getContextClassLoader());
-                strategy = strategyType.newInstance();
+                Class<? extends U> utilityClass = (Class<? extends U>) Class.forName(utilityClassName, true, Thread.currentThread()
+                        .getContextClassLoader());
+                utility = utilityClass.newInstance();
                 
             } catch (Exception e) {
-                throw new IllegalArgumentException("strategy implementation specified for " + systemProperty +" was invalid", e);
+                throw new IllegalArgumentException("utility implementation specified for " + systemProperty + " was invalid", e);
             }
             
         } else {
             try {
-                strategy = defaultStrategy.newInstance();
+                utility = defaultImplementation.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException(e);
-            } 
+            }
         }
-        return strategy;
+        return utility;
     }
     
 }
