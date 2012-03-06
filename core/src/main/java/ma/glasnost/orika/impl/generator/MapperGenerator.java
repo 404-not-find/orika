@@ -18,14 +18,7 @@
 
 package ma.glasnost.orika.impl.generator;
 
-import static ma.glasnost.orika.impl.Specifications.aCollection;
-import static ma.glasnost.orika.impl.Specifications.aConversionFromString;
-import static ma.glasnost.orika.impl.Specifications.aConversionToString;
-import static ma.glasnost.orika.impl.Specifications.aPrimitiveToWrapper;
-import static ma.glasnost.orika.impl.Specifications.aWrapperToPrimitive;
-import static ma.glasnost.orika.impl.Specifications.anArray;
-import static ma.glasnost.orika.impl.Specifications.immutable;
-import static ma.glasnost.orika.impl.Specifications.toAnEnumeration;
+import static ma.glasnost.orika.impl.Specifications.*;
 
 import java.util.Collection;
 import java.util.Set;
@@ -37,8 +30,6 @@ import ma.glasnost.orika.MappingContext;
 import ma.glasnost.orika.MappingException;
 import ma.glasnost.orika.converter.ConverterFactory;
 import ma.glasnost.orika.impl.GeneratedMapperBase;
-import ma.glasnost.orika.impl.generator.CompilerStrategy.SourceCodeGenerationException;
-import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.FieldMap;
 import ma.glasnost.orika.metadata.MapperKey;
