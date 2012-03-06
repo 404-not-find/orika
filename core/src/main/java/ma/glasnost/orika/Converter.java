@@ -21,30 +21,7 @@ import ma.glasnost.orika.metadata.Type;
 
 public interface Converter<S, D> {
     
-    boolean canConvert(Type<?> sourceClass, Type<?> destinationType);
+    boolean canConvert(Type<?> sourceType, Type<?> destinationType);
     
     D convert(S source, Type<? extends D> destinationType);
-    
-    public static class LegacyConverter<S,D> implements Converter<S, D> {
-
-    	private ma.glasnost.orika.converter.Converter<S,D> delegate;
-    	
-    	public LegacyConverter(ma.glasnost.orika.converter.Converter<S, D> delegate) {
-    		this.delegate = delegate;
-    	}
-    	
-		@SuppressWarnings("unchecked")
-		public boolean canConvert(Type<?> sourceClass,
-				Type<?> destinationType) {
-			
-			return delegate.canConvert((Class<S>)sourceClass.getRawType(), 
-					(Class<D>)destinationType.getRawType());
-		}
-
-		public D convert(S source, Type<? extends D> destinationType) {
-			
-			return delegate.convert(source, destinationType.getRawType());
-		}
-    	
-    }
 }

@@ -19,17 +19,11 @@
 package ma.glasnost.orika.test.generics;
 
 import java.io.Serializable;
-import java.lang.reflect.GenericDeclaration;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
 import java.util.Map;
 
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
-import ma.glasnost.orika.OrikaSystemProperties;
-import ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy;
 import ma.glasnost.orika.impl.util.PropertyUtil;
-import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.metadata.Property;
 import ma.glasnost.orika.metadata.Type;
@@ -150,6 +144,68 @@ public class GenericsTestCase {
         Assert.assertEquals(fromObject.getValue().getContents(),result.getValue().getContained());
     }
     
+    /**
+     * This test confirms that multiple mappings
+     */
+    @Test
+    public void testMultipleMappingsForParameterizedTypes() {
+        
+        Type<TestEntry<Holder<Long>, Holder<String>>> fromType = 
+        		new TypeBuilder<TestEntry<Holder<Long>, Holder<String>>>(){}.build();
+        Type<OtherTestEntry<Container<String>, Container<String>>> toType_1 = 
+        		new TypeBuilder<OtherTestEntry<Container<String>, Container<String>>>(){}.build();
+        Type<OtherTestEntry<Container<Long>, Container<String>>> toType_2 = 
+                new TypeBuilder<OtherTestEntry<Container<Long>, Container<String>>>(){}.build();
+        
+        Type<Container<Long>> _Container_Long = toType_2.getNestedType(0);	
+        Type<Holder<String>> _Holder_String = fromType.getNestedType(1);
+        Type<Container<String>> _Container_String = toType_1.getNestedType(0);
+        Type<Holder<Long>> _Holder_Long = fromType.getNestedType(0);
+        
+        MapperFactory factory = MappingUtil.getMapperFactory();
+        
+        TestEntry<Holder<Long>, Holder<String>> fromObject = new TestEntry<Holder<Long>, Holder<String>>();
+        fromObject.setKey(new Holder<Long>());
+        fromObject.getKey().setContents(Long.valueOf(42L));
+        fromObject.setValue(new Holder<String>());
+        fromObject.getValue().setContents("What is the meaning of life?");
+        
+        /*
+         * We map the field types explicitly for the separate type mappings
+         */
+        factory.registerClassMap(
+                ClassMapBuilder.map(_Holder_String, _Container_String)
+                    .field("contents", "contained").byDefault().toClassMap());
+        factory.registerClassMap(
+                ClassMapBuilder.map(_Holder_Long, _Container_String)
+                    .field("contents", "contained").byDefault().toClassMap());
+        factory.registerClassMap(
+                ClassMapBuilder.map(_Holder_Long, _Container_Long)
+                    .field("contents", "secondaryContained").byDefault().toClassMap());
+        
+        MapperFacade mapper = factory.getMapperFacade(); 
+        
+        
+        /*
+         * Map the same source type to 2 different parameterized variations of the destination
+         * class; the mappings should not step on each other, since different types are used
+         */
+        OtherTestEntry<Container<String>, Container<String>> result1 = mapper.map(fromObject, fromType, toType_1);
+        OtherTestEntry<Container<Long>, Container<String>> result2 = mapper.map(fromObject, fromType, toType_2);
+        
+        Assert.assertNotNull(result1);
+        Assert.assertEquals(""+fromObject.getKey().getContents(),result1.getKey().getContained());
+        Assert.assertEquals(fromObject.getValue().getContents(),result1.getValue().getContained());
+        Assert.assertNull(result1.getKey().getSecondaryContained());
+        
+        Assert.assertNotNull(result1);
+        Assert.assertNull(result2.getKey().getContained());
+        Assert.assertEquals(fromObject.getKey().getContents(),result2.getKey().getSecondaryContained());
+        Assert.assertEquals(fromObject.getValue().getContents(),result2.getValue().getContained());
+    }
+    
+    
+    
     public static class TestEntry<K, V> {
         
         private K key;
@@ -209,8 +265,17 @@ public class GenericsTestCase {
     
     public static class Container<C> {
         private C contained;
+        private C secondaryContained;
         
-        public C getContained() {
+        public C getSecondaryContained() {
+			return secondaryContained;
+		}
+
+		public void setSecondaryContained(C secondaryContained) {
+			this.secondaryContained = secondaryContained;
+		}
+
+		public C getContained() {
             return contained;
         }
         

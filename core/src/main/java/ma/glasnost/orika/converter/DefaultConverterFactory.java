@@ -139,15 +139,23 @@ public class DefaultConverterFactory implements ConverterFactory {
         convertersMap.put(converterId, (Converter) converter);
     }
 
+    /* (non-Javadoc)
+     * @see ma.glasnost.orika.converter.ConverterFactory#registerConverter(ma.glasnost.orika.Converter)
+     */
+    @Deprecated
 	public <S, D> void registerConverter(
 			ma.glasnost.orika.converter.Converter<S, D> converter) {
 		
-		registerConverter(new Converter.LegacyConverter<S, D>(converter));
+		registerConverter(new ma.glasnost.orika.converter.Converter.LegacyConverter<S, D>(converter));
 	}
 
+    /* (non-Javadoc)
+     * @see ma.glasnost.orika.converter.ConverterFactory#registerConverter(java.lang.String, ma.glasnost.orika.Converter)
+     */
+    @Deprecated
 	public <S, D> void registerConverter(String converterId,
 			ma.glasnost.orika.converter.Converter<S, D> converter) {
 		
-		registerConverter(converterId, new Converter.LegacyConverter<S, D>(converter));
+		registerConverter(converterId, new ma.glasnost.orika.converter.Converter.LegacyConverter<S, D>(converter));
 	}
 }

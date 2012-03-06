@@ -27,7 +27,7 @@ import ma.glasnost.orika.impl.util.ClassUtil;
 import ma.glasnost.orika.metadata.Property;
 import ma.glasnost.orika.metadata.Type;
 import ma.glasnost.orika.metadata.TypeFactory;
- 
+
 public class CodeSourceBuilder {
     
     private final StringBuilder out = new StringBuilder();
@@ -38,7 +38,6 @@ public class CodeSourceBuilder {
         this.currentIndent = indent;
         this.usedTypes = usedTypes;
     }
-    
     
     public CodeSourceBuilder assertType(String var, Class<?> clazz) {
         newLine();
@@ -53,15 +52,14 @@ public class CodeSourceBuilder {
         
         final String typeCastGetter = getGetter(source, "source");
         final String typeCastSetter = getSetter(destination, "destination");
+        final String sourceType = getUsedType(source);
+        final String targetType = getUsedType(destination);
         
         final Class<?> destinationClass = destination.getRawType();
         converterId = getConverterId(converterId);
-        return newLine().ifSourceNotNull(source)
-                .then()
-                // Need to convert to use new Types-based method
-                .append("%s((%s)mapperFacade.convert(%s, %s.class, %s));", typeCastSetter, destinationClass.getCanonicalName(),
-                        typeCastGetter, destinationClass.getCanonicalName(), converterId)       
-                        
+        return newLine().ifSourceNotNull(source).then()
+                .append("%s((%s)mapperFacade.convert(%s, %s, %s, %s));", typeCastSetter, destinationClass.getCanonicalName(),
+                        typeCastGetter, sourceType, targetType, converterId)
                 .newLine()
                 .end();
     }
@@ -76,47 +74,53 @@ public class CodeSourceBuilder {
         final String typeCastSetter = getSetter(d, "destination");
         return newLine().append("%s(%s);", typeCastSetter, typeCastGetter);
     }
-     
+    
     /**
-     * Returns a fully type-cast getter for the property which has no reliance on
-     * java generics. 
+     * Returns a fully type-cast getter for the property which has no reliance
+     * on java generics.
      * 
-     * @param property the Property for which to return the getter
-     * @param variableExpression the String value to use for the variable on which the getter is called
+     * @param property
+     *            the Property for which to return the getter
+     * @param variableExpression
+     *            the String value to use for the variable on which the getter
+     *            is called
      * @return
      */
     private String getGetter(final Property property, String variableExpression) {
         String var = variableExpression;
         if (property.hasPath()) {
             for (final Property p : property.getPath()) {
-               var = getGetter(p,var); 
+                var = getGetter(p, var);
             }
-        } 
+        }
         return "((" + property.getType().getCanonicalName() + ")" + var + "." + property.getGetter() + "())";
     }
     
     /**
-     * Returns a fully type-cast setter for the property which has no reliance on
-     * java generics. 
+     * Returns a fully type-cast setter for the property which has no reliance
+     * on java generics.
      * 
-     * @param property the Property for which to return the getter
-     * @param variableExpression the String value to use for the variable on which the getter is called
+     * @param property
+     *            the Property for which to return the getter
+     * @param variableExpression
+     *            the String value to use for the variable on which the getter
+     *            is called
      * @return
      */
     private String getSetter(final Property property, final String variableExpression) {
         String var = variableExpression;
         if (property.hasPath()) {
             for (final Property p : property.getPath()) {
-               var = getGetter(p,var); 
+                var = getGetter(p, var);
             }
-        } 
-        return var + "." + property.getSetter() ;
-    
-    }  
+        }
+        return var + "." + property.getSetter();
+        
+    }
     
     private String getUsedType(Type<?> type) {
         int index = usedTypes.getUsedTypeIndex(type);
-        return "usedTypes["+index+"]";
+        return "usedTypes[" + index + "]";
     }
     
     private String getUsedType(Property prop) {
@@ -163,29 +167,25 @@ public class CodeSourceBuilder {
         }
         
         if (destinationHasSetter) {
-            newLine().append("if (%s == null) ", destinationGetter)
-                    .begin()
-                    .append("%s(%s);", destinationSetter, newStatement)
-                    .end();
+            newLine().append("if (%s == null) ", destinationGetter).begin().append("%s(%s);", destinationSetter, newStatement).end();
         }
         // Start check if source property ! = null
         ifSourceNotNull(sp).then();
         
         newLine().append("%s.clear();", destinationGetter);
-        newLine().append("%s.addAll(mapperFacade.mapAs%s(%s, %s, %s, mappingContext));", destinationGetter,
-                destinationCollection, sourceGetter, sourceType, destinationType);
+        newLine().append("%s.addAll(mapperFacade.mapAs%s(%s, %s, %s, mappingContext));", destinationGetter, destinationCollection,
+                sourceGetter, sourceType, destinationType);
         if (ip != null) {
             final String ipGetter = getGetter(ip, "orikaCollectionItem");
             final String ipSetter = getSetter(ip, "orikaCollectionItem");
             
             if (ip.isCollection()) {
-                newLine().append("for (java.util.Iterator orikaIterator = %s.iterator(); orikaIterator.hasNext();) ",
-                        destinationGetter);
+                newLine().append("for (java.util.Iterator orikaIterator = %s.iterator(); orikaIterator.hasNext();) ", destinationGetter);
                 begin().append("%s orikaCollectionItem = (%s) orikaIterator.next();", dp.getElementType().getCanonicalName(),
                         dp.getElementType().getCanonicalName());
                 newLine().append("if (%s == null) ", ipGetter);
                 begin();
-                if (ip.isSet()) { 
+                if (ip.isSet()) {
                     append("%s(new java.util.HashSet());", ipSetter);
                     newLine();
                 } else if (ip.isList()) {
@@ -200,8 +200,7 @@ public class CodeSourceBuilder {
             } else if (ip.isArray()) {
                 // TODO To implement
             } else {
-                newLine().append("for (java.util.Iterator orikaIterator = %s.iterator(); orikaIterator.hasNext();)",
-                        destinationGetter);
+                newLine().append("for (java.util.Iterator orikaIterator = %s.iterator(); orikaIterator.hasNext();)", destinationGetter);
                 begin().append("%s orikaCollectionItem = (%s) orikaIterator.next();", dp.getElementType().getCanonicalName(),
                         dp.getElementType().getCanonicalName());
                 newLine().append("%s(destination);", ipSetter);
@@ -263,19 +262,18 @@ public class CodeSourceBuilder {
     }
     
     public CodeSourceBuilder setFromStringConversion(Property dp, Property sp) {
-    	final String getter = getGetter(sp, "source");
+        final String getter = getGetter(sp, "source");
         final String setter = getSetter(dp, "destination");
         
         newLine();
         if (dp.getType().isPrimitive()) {
-        	final String wrapperTypeName = ClassUtil.getWrapperType(dp.getRawType()).getCanonicalName(); 
-        	append("%s(%s.valueOf(%s).%sValue() );", setter, wrapperTypeName, getter,
-                    getPrimitiveType(dp.getRawType()));
+            final String wrapperTypeName = ClassUtil.getWrapperType(dp.getRawType()).getCanonicalName();
+            append("%s(%s.valueOf(%s).%sValue() );", setter, wrapperTypeName, getter, getPrimitiveType(dp.getRawType()));
         } else {
-        	final String wrapperTypeName = dp.getType().getCanonicalName(); 
-        	ifSourceNotNull(sp).then();
-        	append("%s(%s.valueOf(%s));", setter, wrapperTypeName, getter);
-        	end();
+            final String wrapperTypeName = dp.getType().getCanonicalName();
+            ifSourceNotNull(sp).then();
+            append("%s(%s.valueOf(%s));", setter, wrapperTypeName, getter);
+            end();
         }
         
         return this;
@@ -283,17 +281,17 @@ public class CodeSourceBuilder {
     }
     
     public CodeSourceBuilder setToStringConversion(Property dp, Property sp) {
-    	final String getter = getGetter(sp, "source");
+        final String getter = getGetter(sp, "source");
         final String setter = getSetter(dp, "destination");
         
         newLine();
         
         if (!sp.getType().isPrimitive()) {
-        	ifSourceNotNull(sp).then();
-        	append("%s(%s.toString());", setter, getter);
-        	end();
+            ifSourceNotNull(sp).then();
+            append("%s(%s.toString());", setter, getter);
+            end();
         } else {
-        	append("%s(\"\"+%s);", setter, getter);
+            append("%s(\"\"+%s);", setter, getter);
         }
         
         return this;
@@ -303,8 +301,7 @@ public class CodeSourceBuilder {
     public CodeSourceBuilder setWrapper(Property dp, Property sp) {
         final String getter = getGetter(sp, "source");
         final String setter = getSetter(dp, "destination");
-        newLine().append("%s(%s.valueOf((%s)%s));", setter, dp.getType().getCanonicalName(),
-                getPrimitiveType(dp.getRawType()), getter);
+        newLine().append("%s(%s.valueOf((%s)%s));", setter, dp.getType().getCanonicalName(), getPrimitiveType(dp.getRawType()), getter);
         return this;
     }
     
@@ -313,13 +310,13 @@ public class CodeSourceBuilder {
         final String setter = getSetter(dp, "destination");
         
         if (!sp.getType().isPrimitive()) {
-        	ifSourceNotNull(sp).then();
+            ifSourceNotNull(sp).then();
         }
         
         newLine().append("%s(%s.%sValue());", setter, getter, getPrimitiveType(dp.getRawType()));
         
         if (!sp.getType().isPrimitive()) {
-        	end();
+            end();
         }
         
         return this;
@@ -327,8 +324,7 @@ public class CodeSourceBuilder {
     
     public CodeSourceBuilder setArray(Property dp, Property sp) {
         final String getSizeCode = sp.getRawType().isArray() ? "length" : "size()";
-        //final String castSource = sp.getType().isArray() ? sp.getType().getCanonicalName() : "";
-        //final String castDestination = dp.getType().getCanonicalName();
+        
         final String paramType = dp.getRawType().getComponentType().getCanonicalName();
         final String getter = getGetter(sp, "source");
         final String setter = getSetter(dp, "destination");
@@ -340,12 +336,11 @@ public class CodeSourceBuilder {
         newLine().append("%s[] %s = new %s[%s.%s];", paramType, dp.getName(), paramType, getter, getSizeCode);
         newLine();
         String convertArrayToList = "asList";
-        if(dp.getRawType().getComponentType().isPrimitive()) {
-            append("mapArray(%s,%s(%s), %s.class, mappingContext);", dp.getName(), convertArrayToList,
-                         getter, paramType);
+        if (dp.getRawType().getComponentType().isPrimitive()) {
+            append("mapArray(%s,%s(%s), %s.class, mappingContext);", dp.getName(), convertArrayToList, getter, paramType);
         } else {
-            append("mapperFacade.mapAsArray(%s, %s(%s), %s, %s, mappingContext);", dp.getName(),
-                    convertArrayToList, getter, sourceType, destinationType);
+            append("mapperFacade.mapAsArray(%s, %s(%s), %s, %s, mappingContext);", dp.getName(), convertArrayToList, getter, sourceType,
+                    destinationType);
         }
         newLine().append("%s(%s);", setter, dp.getName());
         
@@ -360,8 +355,8 @@ public class CodeSourceBuilder {
         final String typeCastSetter = getSetter(dp, "destination");
         
         ifSourceNotNull(sp).then();
-        append("%s((%s)Enum.valueOf(%s.class,\"\"+%s));", typeCastSetter, dp.getType().getCanonicalName(),
-                dp.getType().getCanonicalName(), typeCastGetter);
+        append("%s((%s)Enum.valueOf(%s.class,\"\"+%s));", typeCastSetter, dp.getType().getCanonicalName(), dp.getType().getCanonicalName(),
+                typeCastGetter);
         
         elze();
         setDestinationNull(dp);
@@ -380,8 +375,8 @@ public class CodeSourceBuilder {
         ifSourceNotNull(sp).then();
         
         newLine().append("if (%s == null) ", dpGetter);
-        begin().append("%s((%s)mapperFacade.map(%s, %s, %s, mappingContext));", spSetter,
-                dp.getType().getCanonicalName(), spGetter, sourceType, destinationType);
+        begin().append("%s((%s)mapperFacade.map(%s, %s, %s, mappingContext));", spSetter, dp.getType().getCanonicalName(), spGetter,
+                sourceType, destinationType);
         elze();
         append("mapperFacade.map(%s, %s, %s, %s, mappingContext);", spGetter, dpGetter, sourceType, destinationType);
         end();
@@ -460,9 +455,7 @@ public class CodeSourceBuilder {
             append("if(").append(destinationBase.toString()).append(".").append(p.getGetter()).append("() == null) ");
             newLine();
             append(destinationBase.toString()).append(".").append(p.getSetter()).append("((").append(p.getType().getCanonicalName());
-            append(")mapperFacade.newObject(source, %s, mappingContext));",
-            		propertyType, p.getType().getCanonicalName());
-            
+            append(")mapperFacade.newObject(source, %s, mappingContext));", propertyType, p.getType().getCanonicalName());
             
             destinationBase.append(".").append(p.getGetter()).append("()");
         }
@@ -512,14 +505,13 @@ public class CodeSourceBuilder {
         
         newLine();
         if (dp.getType().isPrimitive()) {
-        	final String wrapperTypeName = ClassUtil.getWrapperType(dp.getRawType()).getCanonicalName(); 
-        	append("%s = %s.valueOf(%s).%sValue();", var, wrapperTypeName, getter,
-                    getPrimitiveType(dp.getRawType()));
+            final String wrapperTypeName = ClassUtil.getWrapperType(dp.getRawType()).getCanonicalName();
+            append("%s = %s.valueOf(%s).%sValue();", var, wrapperTypeName, getter, getPrimitiveType(dp.getRawType()));
         } else {
-        	final String wrapperTypeName = dp.getType().getCanonicalName(); 
-        	ifSourceNotNull(sp).then();
-        	append("%s = %s.valueOf(%s);", var, wrapperTypeName, getter);
-        	end();
+            final String wrapperTypeName = dp.getType().getCanonicalName();
+            ifSourceNotNull(sp).then();
+            append("%s = %s.valueOf(%s);", var, wrapperTypeName, getter);
+            end();
         }
         
         return this;
@@ -528,30 +520,27 @@ public class CodeSourceBuilder {
     public CodeSourceBuilder assignObjectVar(String var, Property sp, Class<?> targetClass) {
         String sourceType = getUsedType(sp);
         String targetType = getUsedType(TypeFactory.valueOf(targetClass));
-        append("%s = (%s) mapperFacade.map(%s, %s, %s);", var, targetClass.getCanonicalName(), getGetter(sp, "source"),
-                sourceType, targetType);
+        append("%s = (%s) mapperFacade.map(%s, %s, %s);", var, targetClass.getCanonicalName(), getGetter(sp, "source"), sourceType,
+                targetType);
         return this;
     }
     
     public CodeSourceBuilder assignCollectionVar(String var, Property sp, Property dp) {
-        //final Class<?> destinationElementClass = dp.getParameterizedType().getRawType();
+        
         String destinationCollection = "List";
-        //String newStatement = "new java.util.ArrayList()";
         String sourceType = getUsedElementType(sp);
         String destinationType = getUsedElementType(dp);
         
         if (dp.isList()) {
             destinationCollection = "List";
-            //newStatement = "new java.util.ArrayList()";
         } else if (dp.isSet()) {
             destinationCollection = "Set";
-            //newStatement = "new java.util.HashSet()";
         }
         
         final String sourceGetter = getGetter(sp, "source");
         
-        append("%s = mapperFacade.mapAs%s(%s, %s, %s, mappingContext);", var, 
-                destinationCollection, sourceGetter, sourceType, destinationType);
+        append("%s = mapperFacade.mapAs%s(%s, %s, %s, mappingContext);", var, destinationCollection, sourceGetter, sourceType,
+                destinationType);
         return this;
     }
     
@@ -563,8 +552,7 @@ public class CodeSourceBuilder {
         final String targetType = getUsedType(TypeFactory.valueOf(targetClass));
         
         append("%s[] %s = new %s[%s.%s];", targetClass, var, targetClass.getCanonicalName(), getter, getSizeCode).append(
-                "mapperFacade.mapAsArray((Object[])%s, (%s)%s, %s, %s, mappingContext);", var, castSource, getter,
-                sourceType, targetType);
+                "mapperFacade.mapAsArray((Object[])%s, (%s)%s, %s, %s, mappingContext);", var, castSource, getter, sourceType, targetType);
         return this;
     }
     
@@ -594,7 +582,7 @@ public class CodeSourceBuilder {
         if (Boolean.TYPE.equals(clazz))
             return "false";
         else if (Character.TYPE.equals(clazz))
-        	return "'\\u0000'";
+            return "'\\u0000'";
         else
             return "0";
     }

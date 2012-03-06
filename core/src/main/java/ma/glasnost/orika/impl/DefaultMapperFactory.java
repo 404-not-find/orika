@@ -29,12 +29,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import ma.glasnost.orika.DefaultFieldMapper;
 import ma.glasnost.orika.Mapper;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MappingContext;
 import ma.glasnost.orika.MappingException;
-import ma.glasnost.orika.MappingHint;
 import ma.glasnost.orika.ObjectFactory;
 import ma.glasnost.orika.OrikaSystemProperties;
 import ma.glasnost.orika.constructor.ConstructorResolverStrategy;
@@ -76,7 +76,7 @@ public class DefaultMapperFactory implements MapperFactory {
     private final ConcurrentHashMap<Type<? extends Object>, ObjectFactory<? extends Object>> objectFactoryRegistry;
     private final Map<Type<?>, Set<Type<?>>> aToBRegistry;
     private final Map<Type<?>, Type<?>> mappedConverters;
-    private final List<MappingHint> mappingHints;
+    private final List<DefaultFieldMapper> defaultFieldMappers;
     private final UnenhanceStrategy unenhanceStrategy;
     private final ConverterFactory converterFactory;
     private final CompilerStrategy compilerStrategy;
@@ -106,7 +106,7 @@ public class DefaultMapperFactory implements MapperFactory {
         this.mappedConverters = new ConcurrentHashMap<Type<?>, Type<?>>();
         this.usedMapperMetadataRegistry = new ConcurrentHashMap<MapperKey, Set<ClassMap<Object, Object>>>();
         this.objectFactoryRegistry = new ConcurrentHashMap<Type<? extends Object>, ObjectFactory<? extends Object>>();
-        this.mappingHints = new CopyOnWriteArrayList<MappingHint>();
+        this.defaultFieldMappers = new CopyOnWriteArrayList<DefaultFieldMapper>();
         this.unenhanceStrategy = buildUnenhanceStrategy(delegateStrategy, superTypeStrategy);
         this.mapperFacade = new MapperFacadeImpl(this, unenhanceStrategy);
         
@@ -374,7 +374,7 @@ public class DefaultMapperFactory implements MapperFactory {
     public GeneratedMapperBase lookupMapper(MapperKey mapperKey) {
         if (!mappersRegistry.containsKey(mapperKey)) {
             final ClassMap<?, ?> classMap = ClassMapBuilder.map(mapperKey.getAType(), mapperKey.getBType())
-                    .byDefault(this.mappingHints.toArray(new MappingHint[0]))
+                    .byDefault(this.defaultFieldMappers.toArray(new DefaultFieldMapper[0]))
                     .toClassMap();
             buildObjectFactories(classMap);
             buildMapper(classMap);
@@ -398,9 +398,18 @@ public class DefaultMapperFactory implements MapperFactory {
         objectFactoryRegistry.put(destinationType, objectFactory);
     }
     
-    public void registerMappingHint(MappingHint... hints) {
-    	// TODO: change to use new DefaultFieldMapping...
-        this.mappingHints.addAll(Arrays.asList(hints));
+    @Deprecated
+    public void registerMappingHint(ma.glasnost.orika.MappingHint... hints) {
+        
+        DefaultFieldMapper[] mappers = new DefaultFieldMapper[hints.length];
+        for (int i = 0, len = hints.length; i < len; ++i) {
+            mappers[i] = new ma.glasnost.orika.MappingHint.DefaultFieldMappingConverter(hints[i]);
+        }
+        registerDefaultFieldMapper(mappers);
+    }
+    
+    public void registerDefaultFieldMapper(DefaultFieldMapper... mappers) {
+        this.defaultFieldMappers.addAll(Arrays.asList(mappers));
     }
     
     @SuppressWarnings("unchecked")
@@ -448,7 +457,7 @@ public class DefaultMapperFactory implements MapperFactory {
             if (destinationType.isAssignableFrom(type) && ClassUtil.isConcrete(type)) {
                 return (Type<? extends D>) type;
             }
-        } 
+        }
         
         return concreteType;
     }
