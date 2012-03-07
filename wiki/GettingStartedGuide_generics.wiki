@@ -339,17 +339,26 @@ This would not normally be possible with the Class-based methods, because there 
 
 But we can accomplish it by explicitly telling Orika both the source and target types to use:
 {{{
-// Define the types
+/*
+ * Define the types
+ */
 Type<?> fromType = new TypeBuilder<Entry<Container<Holder<Long>>, Envelope<Container<String>>>(){}.build();
 Type<?> toType = new TypeBuilder<Entry<Holder<String>, Container<Long>>>(){}.build();
 
-// Register the class-mapping as usual, using the Type<?> instances instead
-// of Class values
+/*
+ * Register the class-mapping as usual, using the Type<?> instances instead
+ * of Class values
+ */
 mapperFactory.registerClassMap(
    ClassMapBuilder.map(fromType, toType)
       .field("key.contained.held", "key.held")
       .field("value.contents.contained", "value.contained")
       .toClassMap());
+
+/*
+ * Map using the specific types
+ */
+mapperFactory.getMapperFacade().map(fromObject, fromType, toType);
 }}}
 
 _Note: this example is implemented in `GenericsTestCase`, for those looking at the source code_
