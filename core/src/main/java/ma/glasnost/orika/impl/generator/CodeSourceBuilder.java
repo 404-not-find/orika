@@ -18,7 +18,6 @@
 
 package ma.glasnost.orika.impl.generator;
 
-import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Set;
 
@@ -418,16 +417,18 @@ public class CodeSourceBuilder {
     public CodeSourceBuilder avoidSourceNPE(Property sp) {
         newLine();
         if (sp.hasPath()) {
-            final StringBuilder sb = new StringBuilder("source");
-            int i = 0;
+            boolean first = true;
             append("if(");
+            String expression = "source";
+            
             for (final Property p : sp.getPath()) {
-                if (i != 0) {
+                if (!first) {
                     append(" && ");
+                } else {
+                    first = false;
                 }
-                sb.append(".").append(p.getGetter()).append("()");
-                append("%s != null", sb.toString());
-                i++;
+                expression = getGetter(p, expression);
+                append("%s != null", expression);
             }
             append(")");
         }
@@ -443,21 +444,21 @@ public class CodeSourceBuilder {
      * @return CodeSourceBuilder
      */
     public CodeSourceBuilder ifDestinationNull(Property property) {
-        final StringBuilder destinationBase = new StringBuilder("destination");
-        
+
+        String getterExpression = "destination";
+        String setterExpression;
         for (final Property p : property.getPath()) {
-            final int modifier = p.getRawType().getModifiers();
-            final String propertyType = getUsedType(p);
-            if (Modifier.isAbstract(modifier) || Modifier.isInterface(modifier)) {
+            
+            if (!ClassUtil.isConcrete(p.getType())) {
                 throw new MappingException("Abstract types are unsupported for nested properties. \n" + property.toString());
             }
+            setterExpression = getSetter(p, getterExpression);
+            getterExpression = getGetter(p, getterExpression);
             
-            append("if(").append(destinationBase.toString()).append(".").append(p.getGetter()).append("() == null) ");
+            append("if(%s == null) ", getterExpression);
             newLine();
-            append(destinationBase.toString()).append(".").append(p.getSetter()).append("((").append(p.getType().getCanonicalName());
-            append(")mapperFacade.newObject(source, %s, mappingContext));", propertyType, p.getType().getCanonicalName());
-            
-            destinationBase.append(".").append(p.getGetter()).append("()");
+            append("\t%s((%s)mapperFacade.newObject(source, %s, mappingContext));",
+                    setterExpression, p.getType().getCanonicalName(), getUsedType(p));
         }
         return this;
     }

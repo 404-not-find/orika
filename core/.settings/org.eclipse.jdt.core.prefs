@@ -1,4 +1,4 @@
-#Mon Mar 05 17:24:31 PST 2012
+#Tue Mar 06 19:00:45 PST 2012
 eclipse.preferences.version=1
 org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.5
 org.eclipse.jdt.core.compiler.compliance=1.5
@@ -100,7 +100,7 @@ org.eclipse.jdt.core.formatter.insert_new_line_before_else_in_if_statement=do no
 org.eclipse.jdt.core.formatter.insert_new_line_before_finally_in_try_statement=do not insert
 org.eclipse.jdt.core.formatter.insert_new_line_before_while_in_do_statement=do not insert
 org.eclipse.jdt.core.formatter.insert_new_line_in_empty_annotation_declaration=insert
-org.eclipse.jdt.core.formatter.insert_new_line_in_empty_anonymous_type_declaration=insert
+org.eclipse.jdt.core.formatter.insert_new_line_in_empty_anonymous_type_declaration=do not insert
 org.eclipse.jdt.core.formatter.insert_new_line_in_empty_block=insert
 org.eclipse.jdt.core.formatter.insert_new_line_in_empty_enum_constant=insert
 org.eclipse.jdt.core.formatter.insert_new_line_in_empty_enum_declaration=insert
