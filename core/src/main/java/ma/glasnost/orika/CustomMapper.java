@@ -39,12 +39,15 @@ public abstract class CustomMapper<A, B> implements Mapper<A, B> {
     public CustomMapper() {
         java.lang.reflect.Type genericSuperclass = getClass().getGenericSuperclass();
         if (genericSuperclass != null && genericSuperclass instanceof ParameterizedType) {
-            ParameterizedType superType = (ParameterizedType)genericSuperclass;
-            aType = TypeFactory.valueOf(superType.getActualTypeArguments()[0]);
-            bType = TypeFactory.valueOf(superType.getActualTypeArguments()[1]);
-        } else {
-            throw new IllegalStateException("When you subclass " + 
-                    CustomMapper.class.getSimpleName() + " A and B type-parameters are required.");
+            ParameterizedType superType = (ParameterizedType)getClass().getGenericSuperclass();
+            try {
+                aType = TypeFactory.valueOf(superType.getActualTypeArguments()[0]);
+                bType = TypeFactory.valueOf(superType.getActualTypeArguments()[1]);
+            } catch (IllegalArgumentException e) {
+                /* do nothing; this was not extended by a user 
+                 * getXXType methods must be manually overridden 
+                 */
+            }
         }
     }
     
@@ -61,11 +64,17 @@ public abstract class CustomMapper<A, B> implements Mapper<A, B> {
     }
     
     public Type<A> getAType() {
-    	return aType;
+        if (aType==null) {
+            throw new IllegalStateException("getAType() must be overridden when Type parameters are not supplied");
+        }
+        return aType;
     }
     
     public Type<B> getBType() {
-    	return bType;
+        if (bType==null) {
+            throw new IllegalStateException("getBType() must be overridden when Type parameters are not supplied");
+        }
+        return bType;
     }
     
     public void setUsedMappers(Mapper<Object, Object>[] mapper) {
