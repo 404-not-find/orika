@@ -305,6 +305,52 @@ Orika will auto-detect mappers defined for parent objects, and will attempt to r
 
 Orika will also attempt to use an existing mapping from a parent or interface if a mapper for a child cannot be created. This means that if you have a defined mapping for `A` to `B`, and Orika is asked to map `A1` to `B`(where `A1` extends `A`, but cannot mapped directly--such as when `A1` is inaccessible to the current class-loader), Orika will use the declared mapping for `A` to `B`. 
 
+=== Generic Types ===
+As of version 1.1.0, all of the Orika map methods support type-specific versions which allow exact specification of the source type and destination type.
+
+These new method signatures use the special `Type<?>` class to specify the generic information needed at runtime to exactly identify parameterized type(s).
+
+For example, suppose you have the following domain (getters/setters omitted):
+{{{
+class Envelope<T> {
+   private String id;
+   private T contents;
+}
+
+class Container<T> {
+   private String id;
+   private T contained;
+}
+
+class Holder<T> {
+   private T held;
+}
+
+class Entry<K, V> {
+   private K key;
+   private V value;
+}
+}}}
+And you'd like to map from instances of: `Entry<Container<Holder<Long>>, Envelope<Container<String>>` 
+to instances of: `Entry<Holder<String>, Container<Long>>`:
+
+This would not normally be possible with the Class-based methods, because there is not enough information available (at runtime, after java erasure) to determine the nested properties of the objects.
+
+But we can accomplish it by explicitly telling Orika both the source and target types to use:
+{{{
+// register the auto-mapping function
+Type<?> fromType = new TypeBuilder<Entry<Container<Holder<Long>>, Envelope<Container<String>>>(){}.build();
+Type<?> toType = new TypeBuilder<Entry<Holder<String>, Container<Long>>>(){}.build();
+
+mapperFactory.registerClassMap(
+   ClassMapBuilder.map(fromType, toType)
+      .field(
+      .byDefault()
+      .toClassMap());
+}}}
+
+
+
 === Object factories ===
 
 In some cases we want to control how new object instances are created; in such cases we can define and register a custom `ObjectFactory`.
