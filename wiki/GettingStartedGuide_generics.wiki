@@ -1,0 +1,419 @@
+=Getting Started Guide=
+
+<wiki:toc max_depth="3" />
+
+_This guide is very brief and incomplete. Feel free to fix or improve it_
+
+==Installation==
+For maven users, the easiest way to get going is to add the following dependency to your project. 
+
+_Please verify the latest version_:
+
+
+{{{
+<dependency>
+   <groupId>ma.glasnost.orika</groupId>
+   <artifactId>orika-core</artifactId>
+   <version>1.0</version>
+</dependency> 
+}}}
+
+If you do not use maven please download the latest version of the archive zip with dependencies and put it on your classpath.
+
+
+Once your project configured you can start the following tutorial.
+
+===3rd Party Dependencies===
+
+Orika use javassist to generate byte-code dynamically. If you're downloading and installing the compiled jar in your local m2 repository rather than building from source using maven, you will not get any of the transitive dependencies
+
+
+
+== Tutorial ==
+
+=== Setup the mapping factory ===
+
+The get an instance of MapperFacade initialise a MapperFactory:
+
+{{{
+MapperFactory factory = new DefaultMapperFactory.Builder().build();
+factory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
+  .field("product.state.type.label", "stateLabel")
+  .field("product.name", "productName").toClassMap());
+        
+factory.build();
+
+factory.getMapperFacade();
+}}}
+
+=== Reference ====
+
+n this example we will show you how to map from a class A to another class B and vice versa.
+Let’s have a look at our domain model:
+
+*Product (A) Source :*
+{{{
+public class Product {
+
+    private String productName;
+
+    private String productDescription;
+
+    private Double price;
+
+    private Boolean availability;
+
+    // getters & setters
+    
+}
+}}}
+
+*ProductDto (B) Destination :*
+
+{{{
+public class ProductDto {
+
+    private String productName;
+
+    private String description;
+
+    private BigDecimal price;
+
+    private Boolean availability;
+
+    // getters & setters
+}
+}}}
+
+Note that we have explicitly chosen different and alike attributes names and types.
+
+=== Auto mapping ===
+
+==== Map from Product to ProductDto ====
+
+*Result (Orika-AutoMapping) :*
+
+Orika will automatically find all attributes with the same name and type and map them.
+
+NB: remember that, declaring a custom mapper and/or a converter override the orika auto-mapping functionality, the byDefault() function set it  active again, this was deliberately done this way to give developers full  hands on their mapping.
+
+{{{
+// register the auto-mapping function
+mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,ProductDto.class).byDefault().toClassMap());
+}}}
+
+=== Custom Mapper ===
+
+*Let’s take now a closer look at our Dto:*
+
+The description field in our case has nothing to do with the former one from the product class, this field is now a set of information collected from other fields, let’s say that the description should look something like this:
+* Description example: The Dreamcast is a fabulous product which only cost 150
+* Description in java: {{{ "The " + product.getProductName() +" is a fabulous product which only cost " + product.getPrice() }}}
+
+For specific field we have specific treatment, in this case we will create and register a custom mapper :
+
+{{{
+// register your custom mapper
+ClassMapBuilder<ProductDto, Product> builder = ClassMapBuilder.map(ProductDto.class, Product.class);
+builder.customize(new MapperBase<ProductDto, Product>() {
+    
+// create your custom mapper                
+@Override
+public void mapBtoA( Product b,  ProductDto a, MappingContext  context) {
+a.setDescription("The " + b.getProductName() + " is a fabulous  product which only cost  " + b.getPrice());
+
+}});
+mapperFactory.registerClassMap(builder.byDefault().toClassMap());
+
+}}}
+
+
+=== Converter ===
+
+Let’s move now to the price, in our case we want to format the price:
+  * Price in our product class is a Double
+  * Price in our Dto class is a BigDecimal
+For this case we need to create a converter:
+
+{{{
+// register your converter
+mapperFactory.getConverterFactory().registerConverter(new Converter<Double, String>() {
+    public BigDecimal convert(Double source, Class<? extends BigDecimal> destinationClass) {
+        return new BigDecimal(source);
+    }
+    public boolean canConvert(Class<Double> sourceClass, Class<? extends BigDecimal> destinationClass) {
+        return Double.class.equals(sourceClass) && BigDecimal.class.equals(destinationClass);
+    }
+});
+}}}
+
+In this example our converter was anonymous, Orika use the converter's `canConvert` to check if it can use it.
+
+Hopefully for this kind of simple types conversion, Orika provide a less verbose solution. You can just subclass the builtin `TypeConverter`:
+
+{{{
+// register your converter
+mapperFactory.getConverterFactory().registerConverter(new TypeConverter<Double, String>() {
+    public BigDecimal convert(Double source, Class<? extends BigDecimal> destinationClass) {
+        return new BigDecimal(source);
+    }
+});
+}}}
+
+To use a field map level converter,  it is required to register an identified converter:
+
+{{{
+ConverterFactory converterFactory = factory.getConverterFactory();
+        converterFactory.registerConverter("dateConverter1", new DateToStringConverter("dd/MM/yyyy"));
+converterFactory.registerConverter("dateConverter2", new DateToStringConverter("dd-MM-yyyy"));
+        
+factory.registerClassMap(ClassMapBuilder.map(A.class, B.class).fieldMap("date").converter("dateConverter1").add().toClassMap());
+factory.registerClassMap(ClassMapBuilder.map(A.class, C.class).fieldMap("date").converter("dateConverter2").add().toClassMap());
+}}}
+
+In the last snippet, two converters was registered using two identifier: dateConverter1 and dateConverter2 and was used on two diffirent field mapping.
+
+If the mapping is a two way one, it is necessary to use a bidirectional converter. (In the previous example the `DateToStringConverter` is builtin bidirectional converter).
+=== Mapping fields with different name ===
+
+
+Is an easy task--just point out the name of the attribute in class A and the supposed match in class B; keep in mind that the mapped attributes should be of an automatically-convertible type, otherwise you'll need to register a converter.
+
+{{{
+mapperFactory.registerClassMap(
+   ClassMapBuilder.map(Product.class,ProductDto.class)
+      .field("productDescription", "description")
+      .byDefault()
+      .toClassMap()
+   );
+}}}
+
+=== Auto mapping Hints ===
+In some cases, you may have a particular pattern that applies to the attributes to be mapped; or you might have some special property name mappings which are common to your whole object graph. 
+You can avoid declaring multiple explicit class (and field) mappings (if you wish) by registering a *MappingHint* on the MapperFactory.
+
+For example, suppose all of the properties on a class A have names like "name", "title", "age", etc., but the corresponding properties on another class B have names like "myName", "myTitle", "myAge", etc.
+{{{
+MappingHint myHint = new MappingHint() {
+   public String suggestMapping(String propertyName, Class<?> fromPropertyType) { 
+      if(propertyName.startsWith("my")) {
+         // Remove the "my" prefix and adjust camel-case
+         return propertyName.substring(2,1).toLowerCase() +
+               propertyName.substring(3);
+      } else {
+         // Add a "my" prefix and adjust camel-case
+         return "my" + propertyName.substring(0,1).toUpperCase() +
+               propertyName.substring(1);
+      }   
+   }
+}
+
+mapperFactory.registerMappingHint(myHint);
+}}}
+By using this hint, you could automatically map from A to B without any explicit class mapping declaration.
+
+The *MappingHints* registered are applied whenever the internal auto-mapping functionality is triggered, and are applied only _after_ a direct one-to-one mapping for the attribute has failed. This means that if you have any attribute names which *_do_* match exactly, the hints would not override them; hints are used to provide extra 'guesses' when the name doesn't match.
+
+You can also pass any hints you've defined (as var-args) into the *byDefault()* method when using ClassMapBuilder to build a class mapping; like so:
+{{{
+MappingHint myHint = ... // same hint as defined above
+
+mapperFactory.registerClassMap(
+   ClassMapBuilder.map(A.class,B.class)
+      .byDefault(myHint)
+      .toClassMap()
+   );
+}}}
+
+
+=== Nested property ===
+
+
+In some cases the class we’re mapping from is not a mirror of the one we’re mapping to, attribute we’re seeking can be at a different depth, use nested property expression to access attribute at different level/depth.
+We are going to introduce the order class:
+
+An order contains only one product at a time.
+
+Our Dto diagram contains a new attribute the orderNum which is in our case the product name.
+
+{{{
+// register the nested property expression
+mapperFactory.registerClassMap(
+   ClassMapBuilder.map(Order.class,OrderDto.class)
+      .field("product.productName", "orderNum")
+      .byDefault()
+      .toClassMap()
+   );
+}}}
+
+=== Collections ===
+
+In reality an order contains a set of products:
+{{{
+// register product and order
+mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,
+ProductDto.class).field("productDescription", "description")
+.byDefault().toClassMap());
+
+mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,
+OrderDto.class).field("products", "productsDto").byDefault()
+.toClassMap());
+
+}}}
+
+You have guessed right, there is no special treatment for collections case, since it’s implicit, Orika will automatically detects the collection inside your source object and map it to the destination.
+
+=== Bi-directional mapping ====
+
+Let’s have a look at our bi-directional domain, 
+
+Our dto model :
+
+{{{
+BookDto bookDto = mapperFacade.map(book, BookDto.class);
+}}}
+
+As you can see, nothing has changed, and of course the destination object will have bi-directional references as well.
+
+=== Primitives ===
+
+Orika will map from primitives to their respective wrapper and vice versa automatically.
+
+=== Enumerations ===
+
+Orika will map between the same Enum definition automatically.
+Orika will also map from one Enum to another Enum so long as a matching instance name is found; if the appropriate mapping can't be determined by instance name, you can resolve this by registering a converter.
+
+=== Inheritance ===
+
+As of the primitives Orika detect inheritance and map automatically child and parent object.
+
+Orika will also attempt to use an existing mapping from a parent or interface if a mapping for a child cannot be found. This means that if you have a defined mapping for A to B, and Orika is asked to map A1 (which extends A) to B, it will use the declared mapping for A to B (assuming there's no mapping for A1 to B. 
+
+=== Object factories ===
+
+In some cases we want to add an object factory to our mapping processing, let’s take for instance a case where we have a Person with a default address that we want Orika to add automatically whenever facing a PersonDto.
+Let’s introduce the person domain’s model:
+                        
+Dto’s model :
+
+{{{
+public class PersonFactory implements ObjectFactory<PersonDto> {
+
+    @Override
+    public PersonDto create(Object source, Class destinationClass) {
+        PersonDto personDto = new PersonDto();
+        // set the default adress
+        personDto.setAdressDto(new AdressDto("Morocco", "Casablanca"));
+            return personDto;
+    }
+
+    @Override
+    public Class<PersonDto> getTargetClass() {
+        return PersonDto.class;
+    }
+
+}
+
+}}}
+
+Your factory must implements Orika’s ObjectFactory, then all you will have to do is to implement the create () method, and indicate the type to be expected by the object factory in the getTargetClass() method.
+
+{{{
+mapperFactory.registerObjectFactory(new PersonFactory(),PersonDto.class);
+}}}
+
+Don’t forget to register your Object factory.
+
+Orika is designed with the idea that the default behavior should be able to handle most scenarios automatically.  that it will automatically do everything for you, you should be concerned by treat only your special cases.
+
+=== Proxy Instances ====
+
+Orika will automatically handle proxy instances of java.lang.reflect.Proxy, as well as javassist and cglib style byte-code proxies. This handling is provided by using super-type resolution mechanism to find an accessible super-type (class or interface) from which to build a mapper. 
+
+
+_more specifics needed_
+
+----
+
+== Debugging Generated Mappers, Converters, etc. ==
+=== _Pre-requisites_ ===
+If you're not getting the expected results out of Orika (or you want to contribute a fix or feature), you may wish to download the source and step through the mapping process to see the details. 
+
+To enable step-through debugging into the generated objects (which Orika is building at run-time), you'll need to include the *orika-eclipse-tools* module in your project, like so:
+{{{
+<dependency>
+   <groupId>ma.glasnost.orika</groupId>
+   <artifactId>orika-eclipse-tools</artifactId>
+   <version>1.0-SNAPSHOT</version>
+</dependency> 
+}}}
+In addition, you'll also need to tell Orika you want to use Eclipse Jdt as the compiler strategy; there are 2 ways to do this, listed in order of precedence: 
+ 
+  # Use the DefaultMapperFactory.Builder
+{{{
+MapperFactory factory = 
+        new DefaultMapperFactory.Builder()
+                .compilerStrategy(new EclipseJdtCompilerStrategy())
+                .build();
+// add mappers, hints, converters, etc...     
+}}}
+  # Set the system property
+{{{
+System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY,EclipseJdtCompilerStrategy.class.getName());
+}}}
+
+=== _Edit Source Lookup Path_ ===
+If you're using Eclipse as your IDE, you may initially receive the "Source not found" window with a button labeled "Edit Source Lookup Path..." while trying to (debug) step into the source of a generated object. When you click this button, you'll need to add the location of the *compiler output folder* for your project as a *File System Folder* (not a Workspace Folder). This is due to the fact that source files will not actually exist until just before you're at the break-point and Eclipse will have a "stale" view of the workspace folder by that time.
+
+If you're using an IDE other than Eclipse, the procedure should be similar. Note that although Orika is leveraging the Eclipse Jdt to format and compile the code, it resolves these from it's own dependencies, so if using Maven, there should be few differences.
+
+If your project follows the Maven folder structure, this folder would be the *target/test-classes* folder by default. Check your project configuration build path to see the target location if you're unsure.
+
+If not using Maven, you'll need to make sure the following Eclipse Jdt artifacts are added to the build path:
+
+|| *_jdt artifact_* || *_version_* ||
+|| core         || 3.5.2   ||
+|| text         || 3.3.0   ||
+|| commands     || 3.3.0   ||
+|| runtime      || 3.3.100 ||
+|| osgi         || 3.3.0   ||
+|| common       || 3.3.0   ||
+|| jobs         || 3.3.0   ||
+|| registry     || 3.3.0   ||
+|| preferences  || 3.2.100 ||
+|| contenttype  || 3.2.100 ||
+
+_Will other versions work (such as the latest from your own Eclipse IDE)? Probably...but we haven't confirmed this yet_
+
+=== _Security Exception for Eclipse jar signing_ ===
+If you receive an exception like "'org.eclipse.core.runtime.ListenerList''s singing information doesn't match..., try moving the eclipse binaries to the front of the classpath; if you're using maven, just move the *orika-eclipse-tools* dependency before *orika-core* and you're done.
+
+=== _Generate Source and/or Class Files_ ===
+When using Javassist (the default) as the compiler strategy, Orika will not generate source or class files by default. When using Eclipse Jdt, Orika will generate source but not class files by default. 
+
+This behavior can be customized by setting some special system properties, like so:
+{{{
+// Write out source files to (classpath:)/ma/glasnost/orika/generated/
+System.setProperty(OrikaSystemProperties.WRITE_SOURCE_FILES,"true");
+
+// Write out class files to (classpath:)/ma/glasnost/orika/generated/
+System.setProperty(OrikaSystemProperties.WRITE_CLASS_FILES,"true");
+}}}
+
+Note that when using Javassist, the debug info is not being generated  so you can look at the code, but you normally _can't_ step into it during a debug session.
+
+You may also need to apply the auto-formatting feature of your favorite IDE to the Javassist strategy source as we're not really shooting for style points on these (normally in-memory only) classes.
+
+The Eclipse strategy generated files includes auto-formatting of the source and includes debug info so that you can step into the code during a debug session (as mentioned in the section above).
+----
+== Summary ==
+
+Orika attempts to provide a relatively simple and painless means to map beans from one object graph to another, while also providing performance very close to coding by hand.
+
+It does this by generating and reusing byte-code for mappers, avoiding most of the extra processing that comes from relying on reflection.
+
+We're not attempting to discuss whether or not to use DTOs, or whether you _should_ perform mapping between object graphs. We _are_ going to illustrate some cases in which you may need to do this mapping, and where we hope Orika can help, such as:
+ * Multi layered applications
+ * DDD you need for example a data mapper between bounded context
+ * Converting XML binding objects to UI beans
