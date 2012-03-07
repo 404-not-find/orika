@@ -10,6 +10,7 @@ import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.metadata.Type;
 import ma.glasnost.orika.metadata.TypeBuilder;
+import ma.glasnost.orika.test.MappingUtil;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -71,6 +72,8 @@ public class GenericCollectionsTestCase {
     
     @Test
     public void testParameterizedCollection() {
+        
+        MappingUtil.useEclipseJdt();
         
         MapperFactory factory = new DefaultMapperFactory.Builder().build();
         

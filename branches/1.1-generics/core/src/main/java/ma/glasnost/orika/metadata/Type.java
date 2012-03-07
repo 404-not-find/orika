@@ -175,22 +175,29 @@ public final class Type<T> implements ParameterizedType {
         if (!this.getRawType().isAssignableFrom(other.getRawType())) {
             return false;
         }
-        if (this.getActualTypeArguments().length!=other.getActualTypeArguments().length) {
-            return false;
-        }
-        java.lang.reflect.Type[] thisTypes = this.getActualTypeArguments();
-        java.lang.reflect.Type[] thatTypes = other.getActualTypeArguments();
-        for (int i=0, total=thisTypes.length; i < total; ++i ) {
-            Type<?> thisType = (Type<?>)thisTypes[i];
-            Type<?> thatType = (Type<?>)thatTypes[i];
-            // TODO: this may not actually be correct according to generic
-            // specification rules...
-        	if (!thisType.isAssignableFrom(thatType)) {
-        		return false;
-        	}   
-        }
-        return true;
+        if (!this.isParameterized && other.isParameterized) {
+            return true;
+        } else if (this.rawType.equals(Enum.class) && other.isEnum()){
+            return true;
+        } else {
         
+            if (this.getActualTypeArguments().length!=other.getActualTypeArguments().length) {
+                return false;
+            }
+            java.lang.reflect.Type[] thisTypes = this.getActualTypeArguments();
+            java.lang.reflect.Type[] thatTypes = other.getActualTypeArguments();
+            for (int i=0, total=thisTypes.length; i < total; ++i ) {
+                Type<?> thisType = (Type<?>)thisTypes[i];
+                Type<?> thatType = (Type<?>)thatTypes[i];
+                // Note: this may be less strict than the rules for compile-time
+                // assignability of generic types, but we're only interested in
+                // actual runtime types
+            	if (!thisType.isAssignableFrom(thatType)) {
+            		return false;
+            	}   
+            }
+            return true;
+        }
     }
     
     /**

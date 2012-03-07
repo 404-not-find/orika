@@ -19,6 +19,7 @@
 package ma.glasnost.orika.test.generics;
 
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 
 import ma.glasnost.orika.MapperFacade;
@@ -92,8 +93,9 @@ public class GenericsTestCase {
         NestedKey<Long> key = new NestedKey<Long>();
         key.setKey(42L);
         sourceObject.setId(key);
+        Type<EntityLong> _Entity_Long = TypeFactory.valueOf(EntityLong.class);
         
-        EntityLong clone = mapperFacade.map(sourceObject, sourceType, TypeFactory.valueOf(EntityLong.class));
+        EntityLong clone = mapperFacade.map(sourceObject, sourceType, _Entity_Long);
         
         Assert.assertEquals(Long.valueOf(42L), clone.getId());
     }
@@ -290,7 +292,22 @@ public class GenericsTestCase {
         
         Type<?> alternateTypeA2 = TypeFactory.valueOf(TestEntry.class, _Holder_Long, _Holder_String);
         Assert.assertEquals(typeA, alternateTypeA2);
+        
+        Type<? extends Container<? extends Number>> wildType = new TypeBuilder<Container<? extends Number>>(){}.build();
+        Assert.assertNotNull(wildType);
+        // Note that wildcard types are resolved to the nearest actual type
+        Assert.assertEquals(new TypeBuilder<Container<Number>>(){}.build(), wildType);
     }
+    
+    @Test
+    public void testRecursivelyDefinedTypes() {
+        
+        Type<?> recursive = new TypeBuilder<RecursiveImpl>(){}.build();
+        Assert.assertNotNull(recursive);
+        Type<?> recursiveSuper = recursive.getSuperType();
+        Assert.assertNotNull(recursiveSuper);
+    }
+    
     
     public static class Envelope<T> {
         private String id;
@@ -474,5 +491,27 @@ public class GenericsTestCase {
         }
         
     }
+    
+    public static abstract class RecursiveType<R extends RecursiveType<R>> implements Comparable<R>{
+        
+        private Type<R> recursiveType;
+        
+        public RecursiveType() {
+            ParameterizedType superType = (ParameterizedType)getClass().getGenericSuperclass();
+            recursiveType = TypeFactory.valueOf(superType.getActualTypeArguments()[0]);
+        }
+        
+        public final int compareTo(R o) {
+            RecursiveType<R> other = (RecursiveType<R>)o;
+            RecursiveType<R> self = this;
+            return self.recursiveType.getName().compareTo(other.recursiveType.getName());
+        }
+        
+    }
+    
+    public static class RecursiveImpl extends RecursiveType<RecursiveImpl> {
+        
+    }
+    
     
 }

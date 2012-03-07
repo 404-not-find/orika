@@ -20,6 +20,7 @@ package ma.glasnost.orika.metadata;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,19 +63,12 @@ public abstract class TypeFactory implements ParameterizedType {
     }
     
     /**
-     * Use a custom concurrent map to avoid keeping static references to Types
+     * Use a weak-valued concurrent map to avoid keeping static references to Types
      * (classes) which may belong to descendant class-loaders
      */
-//    private static final CustomConcurrentHashMap<TypeKey, Type<?>> typeCache = new CustomConcurrentHashMap<TypeKey, Type<?>>(
-//            CustomConcurrentHashMap.STRONG, CustomConcurrentHashMap.EQUALS, CustomConcurrentHashMap.WEAK, CustomConcurrentHashMap.EQUALS,
-//            16);
-    
     private static final ConcurrentHashMap<TypeKey, WeakReference<Type<?>>> typeCache = new ConcurrentHashMap<TypeKey, WeakReference<Type<?>>>();
     
-    
-    static {
-        intern(Object.class, new Type<?>[0]);
-    }
+    public static final Type<Object> TYPE_OF_OBJECT = valueOf(Object.class);
     
     /**
      * Merge an int value into byte array, starting at the specified starting
@@ -148,9 +142,11 @@ public abstract class TypeFactory implements ParameterizedType {
             WeakReference<Type<?>> existing = typeCache.putIfAbsent(key, mapped);
             if (existing != null) {
                 if (existing.get() == null) {
-                    synchronized(key) {
-                        typeCache.put(key, mapped);
-                    }
+                    // Should not be possible, since the references are based on Class objects,
+                    // which cannot be GC'd until their respective class loader is GC'd,
+                    // in which case, such a Class could not be passed into this method as
+                    // an argument, or embedded within an argument
+                    typeCache.put(key, mapped);
                 } else {
                     mapped = existing;
                 }
@@ -220,7 +216,63 @@ public abstract class TypeFactory implements ParameterizedType {
      */
     @SuppressWarnings("unchecked")
     public static <T> Type<T> valueOf(final ParameterizedType type) {
-        return valueOf((Class<? extends T>) type.getRawType(), type.getActualTypeArguments());
+        if (Enum.class.equals(type.getRawType())) {
+            // Enum is a special recursively-defined type which causes
+            // StackOverflowError; this doesn't seem to occur with other
+            // recursively-defined types...
+            return (Type<T>) valueOf(Enum.class, new Type<?>[0]);
+        } else {
+            return valueOf((Class<? extends T>) type.getRawType(), type.getActualTypeArguments());
+        }
+    }
+    
+    
+    
+    @SuppressWarnings("unchecked")
+    public static <T> Type<T> valueOf(final TypeVariable<?> var) {
+
+        if (var.getBounds().length > 0) {
+            Set<Type<?>> bounds = new HashSet<Type<?>>(var.getBounds().length);
+            for (int i=0, len=var.getBounds().length; i < len; ++i) {
+                bounds.add(valueOf(var.getBounds()[i]));
+            }
+            return (Type<T>) refineBounds(bounds);
+        } else {
+            return (Type<T>) TYPE_OF_OBJECT;
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> Type<T> valueOf(final WildcardType var) {
+
+        Set<Type<?>> bounds = new HashSet<Type<?>>(var.getUpperBounds().length + var.getLowerBounds().length);
+        for (int i=0, len=var.getUpperBounds().length; i < len; ++i) {
+            bounds.add(valueOf(var.getUpperBounds()[i]));
+        }
+        for (int i=0, len=var.getLowerBounds().length; i < len; ++i) {
+            bounds.add(valueOf(var.getLowerBounds()[i]));
+        }
+        return (Type<T>) refineBounds(bounds); 
+    }
+    
+    private static Type<?> refineBounds(Set<Type<?>> bounds) {
+        if (bounds.size() > 1) {
+            // Consolidate bounds to most significant
+            Iterator<Type<?>> currentBoundIter = bounds.iterator();
+            while (currentBoundIter.hasNext()) {
+                Type<?> currentBound = currentBoundIter.next();
+                Iterator<Type<?>> boundIter = bounds.iterator();
+                while (boundIter.hasNext()) {
+                    Type<?> nextType = boundIter.next();
+                    if (nextType.equals(currentBound)) {
+                        continue;
+                    } else if (currentBound.isAssignableFrom(nextType)) {
+                        boundIter.remove();
+                    }
+                }
+            }
+        }
+        return bounds.iterator().next(); 
     }
     
     
@@ -233,37 +285,16 @@ public abstract class TypeFactory implements ParameterizedType {
      */
     @SuppressWarnings("unchecked")
     public static <T> Type<T> valueOf(final java.lang.reflect.Type type) {
-        if (type instanceof ParameterizedType) {
+        if (type instanceof Type) {
+            return (Type<T>)type;
+        } else if (type instanceof ParameterizedType) {
             return valueOf((ParameterizedType)type);
         } else if (type instanceof Class) {
             return valueOf((Class<T>)type);
         } else if (type instanceof TypeVariable) {
-            TypeVariable<?> var = (TypeVariable<?>)type;
-            if (var.getBounds().length > 0) {
-                Set<Type<?>> bounds = new HashSet<Type<?>>(var.getBounds().length);
-                for (int i=0, len=var.getBounds().length; i < len; ++i) {
-                    bounds.add(valueOf(var.getBounds()[i]));
-                }
-                if (bounds.size() > 1) {
-                    // Consolidate bounds to most significant
-                    Iterator<Type<?>> currentBoundIter = bounds.iterator();
-                    while (currentBoundIter.hasNext()) {
-                        Type<?> currentBound = currentBoundIter.next();
-                        Iterator<Type<?>> boundIter = bounds.iterator();
-                        while (boundIter.hasNext()) {
-                            Type<?> nextType = boundIter.next();
-                            if (nextType.equals(currentBound)) {
-                                continue;
-                            } else if (currentBound.isAssignableFrom(nextType)) {
-                                boundIter.remove();
-                            }
-                        }
-                    }
-                }
-                return (Type<T>) bounds.iterator().next();
-            } else {
-                return (Type<T>) valueOf(Object.class);
-            }
+            return valueOf((TypeVariable<?>)type);
+        } else if (type instanceof WildcardType) {
+            return valueOf((WildcardType)type);
         } else {
             throw new IllegalArgumentException(type + " is an unsupported type");
         }
@@ -303,7 +334,7 @@ public abstract class TypeFactory implements ParameterizedType {
             return null;
         } else {
             if (type.getTypeParameters() != null && type.getTypeParameters().length > 0) {
-                java.lang.reflect.Type[] actualTypeArguments = TypeUtil.resolveActualTypeArguments(type.getTypeParameters(), referenceType);
+                java.lang.reflect.Type[] actualTypeArguments = TypeUtil.resolveActualTypeArguments(type.getTypeParameters(), type.getTypeParameters(), referenceType);
                 return valueOf(type, actualTypeArguments);
             } else {
                 return valueOf(type);

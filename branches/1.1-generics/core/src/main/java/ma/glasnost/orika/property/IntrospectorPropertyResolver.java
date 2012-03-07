@@ -103,13 +103,14 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
                         
                         if (genericType instanceof TypeVariable && typeHolder.isParameterized()) {
                             java.lang.reflect.Type t = typeHolder.getTypeByVariable((TypeVariable<?>) genericType);
-                            if (t instanceof Type) {
-                                property.setType((Type<?>)t);
-                            } else if (t instanceof ParameterizedType) {
-                                property.setType(TypeFactory.valueOf((ParameterizedType)t));
-                            } else {
-                                property.setType(TypeFactory.valueOf((Object.class)));
-                            }
+                            property.setType(TypeFactory.valueOf(t));
+//                            if (t instanceof Type) {
+//                                property.setType((Type<?>)t);
+//                            } else if (t instanceof ParameterizedType) {
+//                                property.setType(TypeFactory.valueOf((ParameterizedType)t));
+//                            } else {
+//                                property.setType(TypeFactory.TYPE_OF_OBJECT);
+//                            }
                         } else if (rawType!=returnType && rawType.isAssignableFrom(returnType)) {
                             property.setType(TypeFactory.valueOf(returnType));
                         } else if (genericType instanceof ParameterizedType) {
@@ -193,24 +194,10 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
     }
     
     private void resolvePropertyFromType(Property property, java.lang.reflect.Type t) {
-        Type<?> elementType = TypeFactory.valueOf(Object.class);
-        if (t instanceof ParameterizedType) {
-            elementType = TypeFactory.valueOf((ParameterizedType)t);
-        } else if (t instanceof Class) {
-            elementType = TypeFactory.valueOf((Class<?>)t);
-        } else if (t instanceof TypeVariable) {
-            TypeVariable<?> var = (TypeVariable<?>)t;
-            if (var.getBounds().length > 0) {
-                for (java.lang.reflect.Type bound: var.getBounds()) {
-                    resolvePropertyFromType(property, bound);
-                }
-            } 
-        } else {
-            throw new IllegalArgumentException("Unsupported collection nested type " + t);
-        }
         
+        Type<?> elementType = TypeFactory.valueOf(t);
         Type<?> newPropertyType = TypeFactory.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType});
-        //if (TypeFactory.valueOf(Object.class).equals(property.getElementType())) {
+        
         if (!property.getType().equals(newPropertyType) && property.getType().isAssignableFrom(newPropertyType)) {
             property.setType(newPropertyType);
         }
