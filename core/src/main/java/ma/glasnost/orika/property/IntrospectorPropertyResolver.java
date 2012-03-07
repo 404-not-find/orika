@@ -113,7 +113,11 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
                         } else if (rawType!=returnType && rawType.isAssignableFrom(returnType)) {
                             property.setType(TypeFactory.valueOf(returnType));
                         } else if (genericType instanceof ParameterizedType) {
-                             property.setType(TypeFactory.valueOf((ParameterizedType)genericType));
+                            if (typeHolder.isParameterized()) { 
+                                property.setType(TypeFactory.resolveValueOf((ParameterizedType)genericType, typeHolder));
+                            } else {
+                                property.setType(TypeFactory.valueOf((ParameterizedType)genericType));
+                            }
                         } else {
                              property.setType(TypeFactory.valueOf(rawType));
                         }
@@ -161,7 +165,6 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
     public NestedProperty getNestedProperty(java.lang.reflect.Type type, String p) {
         
         String typeName = type.toString();
-        //Class<?> rawType = (Class<?>)((type instanceof ParameterizedType) ? ((ParameterizedType)type).getRawType() : type);
         Map<String, Property> properties = getProperties(type);
         Property property = null;
         final List<Property> path = new ArrayList<Property>();
@@ -190,17 +193,26 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
     }
     
     private void resolvePropertyFromType(Property property, java.lang.reflect.Type t) {
-        final Type<?> elementType;
+        Type<?> elementType = TypeFactory.valueOf(Object.class);
         if (t instanceof ParameterizedType) {
             elementType = TypeFactory.valueOf((ParameterizedType)t);
         } else if (t instanceof Class) {
             elementType = TypeFactory.valueOf((Class<?>)t);
-            //property.setParameterizedType(Type.valueOf((Class<?>)t));
+        } else if (t instanceof TypeVariable) {
+            TypeVariable<?> var = (TypeVariable<?>)t;
+            if (var.getBounds().length > 0) {
+                for (java.lang.reflect.Type bound: var.getBounds()) {
+                    resolvePropertyFromType(property, bound);
+                }
+            } 
         } else {
             throw new IllegalArgumentException("Unsupported collection nested type " + t);
         }
-        if (TypeFactory.valueOf(Object.class).equals(property.getElementType())) {
-            property.setType(TypeFactory.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType}));
+        
+        Type<?> newPropertyType = TypeFactory.valueOf(property.getRawType(), new java.lang.reflect.Type[]{elementType});
+        //if (TypeFactory.valueOf(Object.class).equals(property.getElementType())) {
+        if (!property.getType().equals(newPropertyType) && property.getType().isAssignableFrom(newPropertyType)) {
+            property.setType(newPropertyType);
         }
     }
 }

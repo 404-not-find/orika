@@ -31,7 +31,7 @@ public final class Type<T> implements ParameterizedType {
     //private java.lang.reflect.Type ownerType;
     private final Type<?>[] actualTypeArguments;
     private final boolean isParameterized;
-    private Map<TypeVariable<?>, java.lang.reflect.Type> typesByVariable;
+    private Map<TypeVariable<?>, Type<?>> typesByVariable;
     private Type<?> superType;
     private Type<?>[] interfaces;
     private Type<?> componentType;
@@ -42,7 +42,7 @@ public final class Type<T> implements ParameterizedType {
      * @param actualTypeArguments
      */
     @SuppressWarnings("unchecked")
-    Type(TypeKey key, Class<?> rawType, Map<TypeVariable<?>, java.lang.reflect.Type> typesByVariable, Type<?>... actualTypeArguments) {
+    Type(TypeKey key, Class<?> rawType, Map<TypeVariable<?>, Type<?>> typesByVariable, Type<?>... actualTypeArguments) {
         this.key = key;
         this.rawType = (Class<T>)rawType;
         this.actualTypeArguments = actualTypeArguments;
@@ -123,7 +123,7 @@ public final class Type<T> implements ParameterizedType {
         return actualTypeArguments;
     }
     
-    public Map<TypeVariable<?>, java.lang.reflect.Type> getTypesByVariable() {
+    public Map<TypeVariable<?>, Type<?>> getTypesByVariable() {
     	return Collections.unmodifiableMap(typesByVariable);
     }
     

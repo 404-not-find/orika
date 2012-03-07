@@ -22,7 +22,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -157,9 +160,9 @@ public abstract class TypeFactory implements ParameterizedType {
     }
     
     private static <T> Type<T> createType(TypeKey key, Class<T> rawType, Type<?>[] typeArguments) {
-        Map<TypeVariable<?>, java.lang.reflect.Type> typesByVariable = null;
+        Map<TypeVariable<?>, Type<?>> typesByVariable = null;
         if (typeArguments.length > 0) {
-            typesByVariable = new HashMap<TypeVariable<?>, java.lang.reflect.Type>(typeArguments.length);
+            typesByVariable = new HashMap<TypeVariable<?>, Type<?>>(typeArguments.length);
             for (int i = 0, len = typeArguments.length; i < len; ++i) {
                 typesByVariable.put(rawType.getTypeParameters()[i], typeArguments[i]);
             }
@@ -234,6 +237,33 @@ public abstract class TypeFactory implements ParameterizedType {
             return valueOf((ParameterizedType)type);
         } else if (type instanceof Class) {
             return valueOf((Class<T>)type);
+        } else if (type instanceof TypeVariable) {
+            TypeVariable<?> var = (TypeVariable<?>)type;
+            if (var.getBounds().length > 0) {
+                Set<Type<?>> bounds = new HashSet<Type<?>>(var.getBounds().length);
+                for (int i=0, len=var.getBounds().length; i < len; ++i) {
+                    bounds.add(valueOf(var.getBounds()[i]));
+                }
+                if (bounds.size() > 1) {
+                    // Consolidate bounds to most significant
+                    Iterator<Type<?>> currentBoundIter = bounds.iterator();
+                    while (currentBoundIter.hasNext()) {
+                        Type<?> currentBound = currentBoundIter.next();
+                        Iterator<Type<?>> boundIter = bounds.iterator();
+                        while (boundIter.hasNext()) {
+                            Type<?> nextType = boundIter.next();
+                            if (nextType.equals(currentBound)) {
+                                continue;
+                            } else if (currentBound.isAssignableFrom(nextType)) {
+                                boundIter.remove();
+                            }
+                        }
+                    }
+                }
+                return (Type<T>) bounds.iterator().next();
+            } else {
+                return (Type<T>) valueOf(Object.class);
+            }
         } else {
             throw new IllegalArgumentException(type + " is an unsupported type");
         }

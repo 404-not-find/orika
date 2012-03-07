@@ -34,6 +34,7 @@ import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.FieldMap;
 import ma.glasnost.orika.metadata.MapperKey;
 import ma.glasnost.orika.metadata.Property;
+import ma.glasnost.orika.metadata.Type;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,24 +85,26 @@ public final class MapperGenerator {
                 .append(mapMethod)
                 .append("(java.lang.Object a, java.lang.Object b, %s mappingContext) {\n\n", MappingContext.class.getCanonicalName());
         
-        Class<?> sourceClass, destinationClass;
+        Class<?> sourceClass;
+        Type<?> destinationType;
         if (aToB) {
             sourceClass = classMap.getAType().getRawType();
-            destinationClass = classMap.getBType().getRawType();
+            destinationType = classMap.getBType();
         } else {
             sourceClass = classMap.getBType().getRawType();
-            destinationClass = classMap.getAType().getRawType();
+            destinationType = classMap.getAType();
         }
-        out.assertType("a", sourceClass);
-        out.assertType("b", destinationClass);
+        
+        //out.assertType("a", sourceClass);
+        //out.assertType("b", destinationClass);
         out.append("\n\t\tsuper.").append(mapMethod).append("(a,b, mappingContext);\n\n");
         out.append("\t\t" + sourceClass.getCanonicalName())
                 .append(" source = \n\t\t\t\t (")
                 .append(sourceClass.getCanonicalName())
                 .append(") a; \n");
-        out.append("\t\t" + destinationClass.getCanonicalName())
+        out.append("\t\t" + destinationType.getCanonicalName())
                 .append(" destination = \n\t\t\t\t (")
-                .append(destinationClass.getCanonicalName())
+                .append(destinationType.getCanonicalName())
                 .append(") b; \n\n");
         
         for (FieldMap fieldMap : classMap.getFieldsMapping()) {
@@ -113,7 +116,7 @@ public final class MapperGenerator {
             }
             if (!fieldMap.isIgnored()) {
                 try {
-                    generateFieldMapCode(out, fieldMap, destinationClass);
+                    generateFieldMapCode(out, fieldMap, destinationType);
                 } catch (final Exception e) {
                     throw new MappingException(e);
                 }
@@ -144,7 +147,7 @@ public final class MapperGenerator {
         return exists;
     }
     
-    private void generateFieldMapCode(CodeSourceBuilder code, FieldMap fieldMap, Class<?> destinationClass) throws Exception {
+    private void generateFieldMapCode(CodeSourceBuilder code, FieldMap fieldMap, Type<?> destinationType) throws Exception {
         final Property sp = fieldMap.getSource(), dp = fieldMap.getDestination();
         
         if (sp.getGetter() == null || ((dp.getSetter() == null) && !Collection.class.isAssignableFrom(dp.getRawType()))) {
@@ -182,7 +185,7 @@ public final class MapperGenerator {
             } else if (fieldMap.is(anArray())) {
                 code.setArray(dp, sp);
             } else if (fieldMap.is(aCollection())) {
-                code.setCollection(dp, sp, fieldMap.getInverse(), destinationClass);
+                code.setCollection(dp, sp, fieldMap.getInverse(), destinationType);
             } else if (fieldMap.is(aWrapperToPrimitive())) {
                 code.setPrimitive(dp, sp);
             } else if (fieldMap.is(aPrimitiveToWrapper())) {

@@ -122,6 +122,10 @@ public class ObjectFactoryGenerator {
         try {
             Constructor<?> constructor = (Constructor<?>) constructorResolverStrategy.resolve(classMap, type);
             
+            if (constructor == null) {
+                throw new IllegalArgumentException("no constructors found for " + type);
+            }
+            
             String[] parameters = paranamer.lookupParameterNames(constructor);
             Class<?>[] constructorArguments = constructor.getParameterTypes();
             
@@ -196,9 +200,10 @@ public class ObjectFactoryGenerator {
                 }
             }
             out.append(");").end();
-            
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
-            LOG.warn("Can not find " + type.getName() + "constructor's parameters name");
+            LOG.warn("Could not find " + type.getName() + " constructor's parameters name");
             /* SKIP */
         }
     }

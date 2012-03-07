@@ -18,7 +18,9 @@
 
 package ma.glasnost.orika.impl.generator;
 
+import java.lang.reflect.TypeVariable;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import ma.glasnost.orika.MappingException;
@@ -134,7 +136,9 @@ public class CodeSourceBuilder {
         return getUsedType(prop.getElementType());
     }
     
-    public CodeSourceBuilder setCollection(Property dp, Property sp, Property ip, Class<?> dc) {
+    public CodeSourceBuilder setCollection(Property dp, Property sp, Property ip, Type<?> destinationType) {
+        
+        final Class<?> dc = destinationType.getRawType();
         final Class<?> destinationElementClass = dp.getElementType().getRawType();
         
         if (destinationElementClass == null) {
@@ -154,8 +158,9 @@ public class CodeSourceBuilder {
         final String sourceGetter = getGetter(sp, "source");
         final String destinationGetter = getGetter(dp, "destination");
         final String destinationSetter = getSetter(dp, "destination");
+        
         final String sourceType = getUsedElementType(sp);
-        final String destinationType = getUsedElementType(dp);
+        final String destinationElementType = getUsedElementType(dp);
         
         boolean destinationHasSetter = false;
         try {
@@ -173,7 +178,7 @@ public class CodeSourceBuilder {
         
         newLine().append("%s.clear();", destinationGetter);
         newLine().append("%s.addAll(mapperFacade.mapAs%s(%s, %s, %s, mappingContext));", destinationGetter, destinationCollection,
-                sourceGetter, sourceType, destinationType);
+                sourceGetter, sourceType, destinationElementType);
         if (ip != null) {
             final String ipGetter = getGetter(ip, "orikaCollectionItem");
             final String ipSetter = getSetter(ip, "orikaCollectionItem");

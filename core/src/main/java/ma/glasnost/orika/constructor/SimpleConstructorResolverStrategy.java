@@ -32,7 +32,7 @@ public class SimpleConstructorResolverStrategy implements ConstructorResolverStr
         Type<?> targetClass = aToB ? classMap.getBType() : classMap.getAType();
         
         // TODO to specify
-        return (Constructor<T>) targetClass.getRawType().getConstructors()[0];
-        
+        Constructor<T>[] constructors = (Constructor<T>[]) targetClass.getRawType().getConstructors();
+        return constructors.length == 0 ? null : constructors[0];
     }
 }
