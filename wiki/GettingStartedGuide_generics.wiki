@@ -130,7 +130,7 @@ For specific field we have specific treatment, in this case we will create and r
 {{{
 // register your custom mapper
 ClassMapBuilder<ProductDto, Product> builder = ClassMapBuilder.map(ProductDto.class, Product.class);
-builder.customize(new MapperBase<ProductDto, Product>() {
+builder.customize(new CustomMapper<ProductDto, Product>() {
     
 // create your custom mapper                
 @Override
@@ -142,6 +142,7 @@ mapperFactory.registerClassMap(builder.byDefault().toClassMap());
 
 }}}
 
+_Note that an instance of the current `MapperFacade` is available within your `CustomMapper` class as the protected field `mapperFacade`._
 
 === Converter ===
 
@@ -162,13 +163,13 @@ mapperFactory.getConverterFactory().registerConverter(new Converter<Double, Stri
 });
 }}}
 
-In this example our converter was anonymous, Orika use the converter's `canConvert` to check if it can use it.
+In this example our converter was anonymous, and Orika use the converter's `canConvert` to check if it can be used for a given mapping.
 
-For this kind of simple type conversion, Orika provides a less verbose solution. You can just subclass the builtin `ConverterBase`:
+For this kind of simple type conversion, Orika provides a less verbose solution. You can just subclass the builtin `CustomConverter`:
 
 {{{
 // register your converter
-mapperFactory.getConverterFactory().registerConverter(new ConverterBase<Double, String>() {
+mapperFactory.getConverterFactory().registerConverter(new CustomConverter<Double, String>() {
     public BigDecimal convert(Double source, Type<? extends BigDecimal> destinationClass) {
         return new BigDecimal(source);
     }
@@ -189,7 +190,7 @@ factory.registerClassMap(ClassMapBuilder.map(A.class, C.class).fieldMap("date").
 
 In the last snippet, two converters are registered using two identifiers: ("dateConverter1" and "dateConverter2") and are specified on two different field mappings.
 
-In the case of a two-way mapping, it is necessary to use a bidirectional converter. (In the previous example the `DateToStringConverter` is builtin bidirectional converter).
+In the case of a two-way mapping, it is necessary to use a bidirectional converter. (In the previous example the `DateToStringConverter` is built-in bidirectional converter).
 === Mapping fields with different name ===
 
 
