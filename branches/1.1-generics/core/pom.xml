@@ -94,11 +94,6 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
- 
-        <dependency>
-            <groupId>org.codehaus.jsr166-mirror</groupId>
-            <artifactId>extra166y</artifactId>
-        </dependency>
         
     </dependencies>
 

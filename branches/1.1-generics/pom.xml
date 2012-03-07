@@ -117,12 +117,6 @@
 				<version>${slf4j.version}</version>
                 <scope>compile</scope>
 			</dependency>
-			
-            <dependency>
-                <groupId>org.codehaus.jsr166-mirror</groupId>
-                <artifactId>extra166y</artifactId>
-                <version>1.7.0</version>
-            </dependency>
 
             <!-- Dependencies for optional eclipse jdt/formatter -->
             <dependency>
