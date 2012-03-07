@@ -63,7 +63,9 @@ public class MapperFacadeImpl implements MapperFacade {
         }
         
         if (context.isAlreadyMapped(sourceObject, destinationType)) {
-			return context.getMappedObject(sourceObject, destinationType);
+			@SuppressWarnings("unchecked")
+            D result = (D) context.getMappedObject(sourceObject, destinationType);
+            return result;
         }
         
         final S unenhancedSourceObject = unenhanceStrategy.unenhanceObject(sourceObject);
