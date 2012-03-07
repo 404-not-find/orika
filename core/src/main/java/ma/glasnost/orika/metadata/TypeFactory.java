@@ -17,13 +17,13 @@
  */
 package ma.glasnost.orika.metadata;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import extra166y.CustomConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * TypeFactory contains various methods for obtaining a Type instance to
@@ -62,9 +62,12 @@ public abstract class TypeFactory implements ParameterizedType {
      * Use a custom concurrent map to avoid keeping static references to Types
      * (classes) which may belong to descendant class-loaders
      */
-    private static final CustomConcurrentHashMap<TypeKey, Type<?>> typeCache = new CustomConcurrentHashMap<TypeKey, Type<?>>(
-            CustomConcurrentHashMap.STRONG, CustomConcurrentHashMap.EQUALS, CustomConcurrentHashMap.WEAK, CustomConcurrentHashMap.EQUALS,
-            16);
+//    private static final CustomConcurrentHashMap<TypeKey, Type<?>> typeCache = new CustomConcurrentHashMap<TypeKey, Type<?>>(
+//            CustomConcurrentHashMap.STRONG, CustomConcurrentHashMap.EQUALS, CustomConcurrentHashMap.WEAK, CustomConcurrentHashMap.EQUALS,
+//            16);
+    
+    private static final ConcurrentHashMap<TypeKey, WeakReference<Type<?>>> typeCache = new ConcurrentHashMap<TypeKey, WeakReference<Type<?>>>();
+    
     
     static {
         intern(Object.class, new Type<?>[0]);
@@ -136,15 +139,21 @@ public abstract class TypeFactory implements ParameterizedType {
         Type<?>[] convertedArguments = TypeUtil.convertTypeArguments(rawType, typeArguments);
         TypeKey key = getIdentityKey(rawType, convertedArguments);
         
-        Type<T> mapped = (Type<T>) typeCache.get(key);
-        if (mapped == null) {
-            mapped = createType(key, rawType, convertedArguments);
-            Type<T> existing = (Type<T>) typeCache.putIfAbsent(key, mapped);
+        WeakReference<Type<?>> mapped = typeCache.get(key);
+        if (mapped == null || mapped.get() == null) {
+            mapped = new WeakReference<Type<?>>(createType(key, rawType, convertedArguments));
+            WeakReference<Type<?>> existing = typeCache.putIfAbsent(key, mapped);
             if (existing != null) {
-                mapped = existing;
+                if (existing.get() == null) {
+                    synchronized(key) {
+                        typeCache.put(key, mapped);
+                    }
+                } else {
+                    mapped = existing;
+                }
             }
         }
-        return mapped;
+        return (Type<T>) mapped.get();
     }
     
     private static <T> Type<T> createType(TypeKey key, Class<T> rawType, Type<?>[] typeArguments) {
