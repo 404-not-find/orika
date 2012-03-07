@@ -313,13 +313,11 @@ These new method signatures use the special `Type<?>` class to specify the gener
 
 For example, suppose you have the following domain (getters/setters omitted):
 {{{
-class Envelope<T> {
-   private String id;
+class Envelope<T>
    private T contents;
 }
 
-class Container<T> {
-   private String id;
+class Container<T>
    private T contained;
 }
 
@@ -333,7 +331,7 @@ class Entry<K, V> {
 }
 }}}
 And you'd like to map from instances of: `Entry<Container<Holder<Long>>, Envelope<Container<String>>` 
-to instances of: `Entry<Holder<String>, Container<Long>>`:
+to instances of: `Entry<Holder<String>, Container<String>>`:
 
 This would not normally be possible with the Class-based methods, because there is not enough information available (at runtime, after java erasure) to determine the nested properties of the objects.
 
@@ -343,7 +341,7 @@ But we can accomplish it by explicitly telling Orika both the source and target 
  * Define the types
  */
 Type<?> fromType = new TypeBuilder<Entry<Container<Holder<Long>>, Envelope<Container<String>>>(){}.build();
-Type<?> toType = new TypeBuilder<Entry<Holder<String>, Container<Long>>>(){}.build();
+Type<?> toType = new TypeBuilder<Entry<Holder<String>, Container<String>>>(){}.build();
 
 /*
  * Register the class-mapping as usual, using the Type<?> instances instead
@@ -358,7 +356,7 @@ mapperFactory.registerClassMap(
 /*
  * Map using the specific types
  */
-Entry<Holder<String>, Container<Long>> result = mapperFactory.getMapperFacade().map(fromObject, fromType, toType);
+Entry<Holder<String>, Container<String>> result = mapperFactory.getMapperFacade().map(fromObject, fromType, toType);
 }}}
 
 _Note: this example is implemented in `GenericsTestCase`, for those looking at the source code_
