@@ -166,9 +166,9 @@ public abstract class TypeFactory implements ParameterizedType {
     public static <E> Type<E> valueOf(final Class<? extends E> rawType) {
         if (rawType == null) {
             return null;
-        } else if (rawType.getTypeParameters().length > 0 && rawType.getGenericSuperclass() instanceof ParameterizedType) {
+        } else if (rawType.isAnonymousClass() && rawType.getGenericSuperclass() instanceof ParameterizedType) {
             ParameterizedType genericSuper = (ParameterizedType) rawType.getGenericSuperclass();
-            return valueOf(rawType, genericSuper.getActualTypeArguments());
+            return valueOf(genericSuper);
         } else {
             return (Type<E>) intern(rawType, new java.lang.reflect.Type[0]);
         }
