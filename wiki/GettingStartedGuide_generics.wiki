@@ -358,7 +358,7 @@ mapperFactory.registerClassMap(
 /*
  * Map using the specific types
  */
-mapperFactory.getMapperFacade().map(fromObject, fromType, toType);
+Entry<Holder<String>, Container<Long>> result = mapperFactory.getMapperFacade().map(fromObject, fromType, toType);
 }}}
 
 _Note: this example is implemented in `GenericsTestCase`, for those looking at the source code_
