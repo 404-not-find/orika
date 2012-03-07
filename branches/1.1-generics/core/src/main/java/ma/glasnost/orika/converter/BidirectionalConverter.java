@@ -17,6 +17,7 @@
  */
 package ma.glasnost.orika.converter;
 
+import ma.glasnost.orika.CustomConverter;
 import ma.glasnost.orika.metadata.Type;
 
 
@@ -28,7 +29,7 @@ import ma.glasnost.orika.metadata.Type;
  * @param <S>
  * @param <D>
  */
-public abstract class BidirectionalConverter<S, D> extends CustomConverterBase<Object, Object> implements ma.glasnost.orika.Converter<Object, Object> {
+public abstract class BidirectionalConverter<S, D> extends CustomConverter<Object, Object> implements ma.glasnost.orika.Converter<Object, Object> {
     
     public abstract D convertTo(S source, Type<D> destinationType);
     

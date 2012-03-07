@@ -18,17 +18,35 @@
 
 package ma.glasnost.orika;
 
+import java.lang.reflect.ParameterizedType;
+
+import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
+
 /**
  * Abstract super-class for all generated mappers and user custom mappers.
  * 
  * @see ma.glasnost.orika.metadata.ClassMapBuilder
  * @author S.M. El Aatifi
- * @deprecated use {@link ma.glasnost.orika.CustomMapper} instead
+ * 
  */
-@Deprecated
-public abstract class MapperBase<A, B> {
+public abstract class CustomMapper<A, B> implements Mapper<A, B> {
     
     protected MapperFacade mapperFacade;
+    protected Type<A> aType;
+    protected Type<B> bType;
+    
+    public CustomMapper() {
+        java.lang.reflect.Type genericSuperclass = getClass().getGenericSuperclass();
+        if (genericSuperclass != null && genericSuperclass instanceof ParameterizedType) {
+            ParameterizedType superType = (ParameterizedType)genericSuperclass;
+            aType = TypeFactory.valueOf(superType.getActualTypeArguments()[0]);
+            bType = TypeFactory.valueOf(superType.getActualTypeArguments()[1]);
+        } else {
+            throw new IllegalStateException("When you subclass " + 
+                    CustomMapper.class.getSimpleName() + " A and B type-parameters are required.");
+        }
+    }
     
     public void mapAtoB(A a, B b, MappingContext context) {
         /* */
@@ -42,49 +60,23 @@ public abstract class MapperBase<A, B> {
         this.mapperFacade = mapper;
     }
     
-    public Class<A> getAType() {
-        throw throwShouldNotCalledCustomMapper();
+    public Type<A> getAType() {
+    	return aType;
     }
     
-    public Class<B> getBType() {
-        throw throwShouldNotCalledCustomMapper();
+    public Type<B> getBType() {
+    	return bType;
     }
     
     public void setUsedMappers(Mapper<Object, Object>[] mapper) {
         throw throwShouldNotCalledCustomMapper();
     }
     
+    public void setUsedTypes(Type<Object>[] usedTypes) {
+        throw throwShouldNotCalledCustomMapper();
+    }
+    
     private IllegalStateException throwShouldNotCalledCustomMapper() {
         return new IllegalStateException("Should not be called for a user custom mapper.");
     }
-    
-    /**
-     * Provides backward-compatibility for custom mappers that extend
-     * the deprecated MapperBase.
-     * 
-     * @author matt.deboer@gmail.com
-     *
-     * @param <A>
-     * @param <B>
-     */
-    public static class MapperBaseAdapter<A, B> extends CustomMapper<A, B> {
-        private MapperBase<A, B> delegate;
-        
-        public MapperBaseAdapter(MapperBase<A, B> delegate) {
-            this.delegate = delegate;
-        }
-        
-        public void mapAtoB(A a, B b, MappingContext context) {
-            delegate.mapAtoB(a, b, context);
-        }
-        
-        public void mapBtoA(B b, A a, MappingContext context) {
-            delegate.mapBtoA(b, a, context);
-        }
-        
-        public void setMapperFacade(MapperFacade mapper) {
-            delegate.setMapperFacade(mapper);
-        }
-    }
-
 }
