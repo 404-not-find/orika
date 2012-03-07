@@ -1,6 +1,6 @@
-= ! Under Construction ! =
 =Getting Started Guide (New for v 1.1.0-SNAPSHOT)=
-
+|| *Under Construction* ||
+ _This is an updated version of the Getting Started Guide which applies   for the changes in the 1.1.0 generics branch found at http://orika.googlecode.svn/branches/1.1-generics, which should soon be merged into the trunk_
 <wiki:toc max_depth="3" />
 
 _This guide is very brief and incomplete. Feel free to fix or improve it_
