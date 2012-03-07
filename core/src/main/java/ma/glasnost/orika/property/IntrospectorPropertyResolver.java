@@ -68,9 +68,9 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
         BeanInfo beanInfo;
         try {
             LinkedList<Class<? extends Object>> types = new LinkedList<Class<? extends Object>>();
-            types.push((Class<? extends Object>)typeHolder.getRawType());
+            types.addFirst((Class<? extends Object>)typeHolder.getRawType());
             while(!types.isEmpty()) {
-                Class<? extends Object> type = types.pop();
+                Class<? extends Object> type = types.removeFirst();
                 beanInfo = Introspector.getBeanInfo(type);
                 PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
                 for (final PropertyDescriptor pd : descriptors) {
@@ -147,7 +147,7 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
                 if (type.getSuperclass()!=null && !Object.class.equals(type.getSuperclass())) {
                     types.add(type.getSuperclass());
                 }
-                types.addAll(Arrays.asList(type.getInterfaces()));
+                types.addAll(Arrays.<Class<? extends Object>>asList(type.getInterfaces()));
             }
         } catch (final IntrospectionException e) {
             e.printStackTrace();
