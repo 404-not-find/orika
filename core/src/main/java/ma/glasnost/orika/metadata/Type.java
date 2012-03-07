@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import ma.glasnost.orika.impl.util.ClassUtil;
-import ma.glasnost.orika.metadata.TypeFactory.TypeKey;
 
 /**
  * Type is an implementation of ParameterizedType which may be

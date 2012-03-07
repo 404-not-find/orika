@@ -33,13 +33,20 @@ abstract class TypeUtil {
                     TypeFactory.valueOf(Cloneable.class), 
                     TypeFactory.valueOf(Serializable.class),
                     TypeFactory.valueOf(Externalizable.class)));
-    
-    
     static java.lang.reflect.Type[] resolveActualTypeArguments(ParameterizedType type, Type<?> reference) {
           
         return resolveActualTypeArguments(((Class<?>)type.getRawType()).getTypeParameters(), type.getActualTypeArguments(), reference);
     }
     
+    /**
+     * Resolves the array of provided actual type arguments using the actual
+     * types of the reference type and the type variables list for comparison.
+     * 
+     * @param vars
+     * @param typeArguments
+     * @param reference
+     * @return
+     */
     static java.lang.reflect.Type[] resolveActualTypeArguments(TypeVariable<?>[] vars, java.lang.reflect.Type[] typeArguments, Type<?> reference) {
     	
 		java.lang.reflect.Type[] actualTypeArguments = new java.lang.reflect.Type[typeArguments.length];
@@ -55,29 +62,36 @@ abstract class TypeUtil {
             Type<?> typeFromReference = (Type<?>) reference.getTypeByVariable(var);
             Type<?> typeFromArgument = (Type<?>) TypeFactory.valueOf(typeArg);
             actualTypeArguments[i] = getMostSpecificType(typeFromReference, typeFromArgument, IGNORED_TYPES);
-//            if (typeFromReference != null && typeFromArgument.isAssignableFrom(typeFromReference)) {
-//                actualTypeArguments[i] = typeFromReference;
-//            } else {
-//                actualTypeArguments[i] = typeFromArgument;
-//            }
-            
-            
-//            if (typeArg instanceof TypeVariable) {
-//                java.lang.reflect.Type resolvedVariable = null;
-//                if (reference!=null) {
-//                    resolvedVariable = reference.getTypeByVariable((TypeVariable<?>)typeArg);
-//                }
-//                if (resolvedVariable!=null) {
-//                    actualTypeArguments[i] = resolvedVariable;
-//                } else {
-//                    actualTypeArguments[i] = TypeFactory.valueOf(Object.class);
-//                }
-//            }
         }   
         return actualTypeArguments;
 	
     }
     
+    /**
+     * Attempts to determine the more specific type out of the two
+     * provided types.<br>
+     * 
+     * @param type0
+     * @param type1
+     */ 
+    static Type<?> getMostSpecificType(Type<?> type0, Type<?> type1) {
+        return getMostSpecificType(type0, type1, IGNORED_TYPES);
+    }
+    
+    
+    /**
+     * Attempts to determine the more specific type out of the two
+     * provided types.<br>
+     * Allows a provided list of types to ignore (which are basically considered
+     * the same as Object's type in terms of their specificity); this is
+     * to allow ignoring types that are not a useful part of the hierarchy
+     * comparison.
+     * 
+     * @param type0
+     * @param type1
+     * @param ignoredTypes
+     * @return
+     */
     static Type<?> getMostSpecificType(Type<?> type0, Type<?> type1, Set<Type<?>> ignoredTypes) {
         if (type1 == null && type0 == null) {
             return null;
@@ -99,19 +113,25 @@ abstract class TypeUtil {
             return type0;
         } else {
             // Types not comparable...
-            //return TypeFactory.TYPE_OF_OBJECT;
             throw new IllegalArgumentException("types " + type0 + " and " + type1 + " are not comparable");
         }
     }
     
+    /**
+     * Converts the provided list of actual type arguments to their equivalent Type
+     * representation.
+     * 
+     * @param rawType
+     * @param actualTypeArguments
+     * @return
+     */
     static Type<?>[] convertTypeArguments(Class<?> rawType, java.lang.reflect.Type[] actualTypeArguments) {
         
         TypeVariable<?>[] typeVariables = rawType.getTypeParameters();
         Type<?>[] resultTypeArguments = new Type<?>[typeVariables.length];
         if (actualTypeArguments.length == 0) {
             for (int i=0, len=typeVariables.length; i < len; ++i) {
-                //typesByVariable.put(typeVariables[i], typeVariables[i]);
-                resultTypeArguments[i] = TypeFactory.valueOf(Object.class);
+                resultTypeArguments[i] = TypeFactory.TYPE_OF_OBJECT;
             }
         } else if (actualTypeArguments.length < typeVariables.length) {
             throw new IllegalArgumentException("Must provide all type-arguments or none");

@@ -21,7 +21,6 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,32 +34,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @author matt.deboer@gmail.com
  * 
- * @param <T>
+ *  
  */
-public abstract class TypeFactory implements ParameterizedType {
+public abstract class TypeFactory {
     
-    static class TypeKey {
-        private final byte[] bytes;
-        public TypeKey(byte[] bytes) {
-            this.bytes = bytes;
-        }
-        
-        public boolean equals(Object other) {
-            if (this == other)
-                return true;
-            if (other == null)
-                return false;
-            if (other.getClass() != getClass())
-                return false;
-            TypeKey otherKey = (TypeKey)other;
-                
-            return Arrays.equals(this.bytes, otherKey.bytes);
-        }
-        
-        public int hashCode() {
-            return Arrays.hashCode(this.bytes);
-        }
-    }
+    /**
+     * Should not be extended
+     */
+    private TypeFactory() { }
     
     /**
      * Use a weak-valued concurrent map to avoid keeping static references to Types
@@ -69,57 +50,7 @@ public abstract class TypeFactory implements ParameterizedType {
     private static final ConcurrentHashMap<TypeKey, WeakReference<Type<?>>> typeCache = new ConcurrentHashMap<TypeKey, WeakReference<Type<?>>>();
     
     public static final Type<Object> TYPE_OF_OBJECT = valueOf(Object.class);
-    
-    /**
-     * Merge an int value into byte array, starting at the specified starting
-     * index (occupies the next 4 bytes);
-     * 
-     * @param value
-     * @param bytes
-     * @param startIndex
-     */
-    private static final void intToByteArray(int value, byte[] bytes, int startIndex) {
-        int i = startIndex * 4;
-        bytes[i] = (byte) (value >>> 24);
-        bytes[i + 1] = (byte) (value >>> 16);
-        bytes[i + 2] = (byte) (value >>> 8);
-        bytes[i + 3] = (byte) (value);
-    }
-    
-    /**
-     * Calculates an identity for a Class, Type[] pair; avoids maintaining a
-     * reference the actual class.
-     * 
-     * @param rawType
-     * @param typeArguments
-     * @return
-     */
-    private static final TypeKey getIdentityKey(Class<?> rawType, java.lang.reflect.Type[] typeArguments) {
-          byte[] identityHashBytes = new byte[(typeArguments.length + 1) * 4];
-          intToByteArray(System.identityHashCode(rawType), identityHashBytes, 0);
-          for (int i = 0, len = typeArguments.length; i < len; ++i) {
-              intToByteArray(System.identityHashCode(typeArguments[i]), identityHashBytes, i + 1);
-          }
-          return new TypeKey(identityHashBytes);
         
-          // Alternative byte-hash generation
-          
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        DataOutputStream dos = new DataOutputStream(baos);
-//        try {
-//            dos.writeInt(System.identityHashCode(rawType));
-//            for (int i = 0, len = typeArguments.length; i < len; ++i) {
-//                dos.writeInt(System.identityHashCode(typeArguments[i]));
-//            }   
-//        } catch (IOException e) {
-//            // TODO Auto-generated catch block
-//            e.printStackTrace();
-//        }
-//        return new TypeKey(baos.toByteArray());
-        
-
-    }
-    
     /**
      * Store the combination of rawType and type arguments as a Type within the
      * type cache.<br>
@@ -134,7 +65,7 @@ public abstract class TypeFactory implements ParameterizedType {
     private static <T> Type<T> intern(Class<T> rawType, java.lang.reflect.Type[] typeArguments) {
         
         Type<?>[] convertedArguments = TypeUtil.convertTypeArguments(rawType, typeArguments);
-        TypeKey key = getIdentityKey(rawType, convertedArguments);
+        TypeKey key = TypeKey.valueOf(rawType, convertedArguments);
         
         WeakReference<Type<?>> mapped = typeCache.get(key);
         if (mapped == null || mapped.get() == null) {
@@ -255,6 +186,12 @@ public abstract class TypeFactory implements ParameterizedType {
         return (Type<T>) refineBounds(bounds); 
     }
     
+    /**
+     * Returns the most specific type from the set of provided bounds.
+     * 
+     * @param bounds
+     * @return
+     */
     private static Type<?> refineBounds(Set<Type<?>> bounds) {
         if (bounds.size() > 1) {
             // Consolidate bounds to most significant
@@ -266,12 +203,20 @@ public abstract class TypeFactory implements ParameterizedType {
                     Type<?> nextType = boundIter.next();
                     if (nextType.equals(currentBound)) {
                         continue;
-                    } else if (currentBound.isAssignableFrom(nextType)) {
-                        boundIter.remove();
+                    } else{
+                        Type<?> mostSpecific = TypeUtil.getMostSpecificType(currentBound, nextType);
+                        if (nextType.equals(mostSpecific)) {
+                            boundIter.remove();
+                        }
                     }
+                    
                 }
             }
+            if (bounds.size() != 1) {
+                throw new IllegalArgumentException(bounds + " is not refinable");
+            }
         }
+        
         return bounds.iterator().next(); 
     }
     
