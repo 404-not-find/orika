@@ -361,6 +361,27 @@ Entry<Holder<String>, Container<String>> result = mapperFactory.getMapperFacade(
 
 _Note: this example is implemented in `GenericsTestCase`, for those looking at the source code_
 
+==== Working with Type<?> ====
+All of the new generics-supporting methods require using the custom `ma.glasnost.orika.metadata.Type<?>` class to specify the actual generic types. Instances of `Type<?>` can be obtained in 2 ways:
+  * Use the `TypeBuilder`, construct a new anonymous instance, and call the `build()` method on it, like so:
+{{{
+Type<A<B,C>> type = new TypeBuilder<A<B,C>>(){}.build();
+
+Type<A<B<C,D>,E> type2 = new TypeBuilder<A<B<C,D>,E>(){}.build();
+}}}
+  * Use one of the static `TypeFactory` methods, like so:
+{{{
+/* 
+ * First argument is the raw type, following are 0..N parameter types,
+ * which may be any instance of java.lang.reflect.Type, of which 
+ * ma.glasnost.orika.metadata.Type is also an instance.
+ */ 
+Type<A<B,C>> type = TypeFactory.valueOf(A.class, B.class, C.class);
+
+Type<A<B<C,D>,E> type2 = TypeFactory.valueOf(A.class, 
+   TypeFactory.valueOf(B.class, C.class, D.class), E.class);
+
+}}}
 
 === Object factories ===
 
