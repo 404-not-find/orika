@@ -1,4 +1,4 @@
-=Getting Started Guide=
+=Getting Started Guide (New for v 1.1.0-SNAPSHOT)=
 
 <wiki:toc max_depth="3" />
 
@@ -21,7 +21,7 @@ _Please verify the latest version_:
 If you do not use maven please download the latest version of the archive zip with dependencies and put it on your classpath.
 
 
-Once your project configured you can start the following tutorial.
+Once your project is configured you can begin the following tutorial.
 
 ===3rd Party Dependencies===
 
@@ -48,7 +48,7 @@ factory.getMapperFacade();
 
 === Reference ====
 
-n this example we will show you how to map from a class A to another class B and vice versa.
+In this example we will show you how to map from a class A to another class B and vice versa.
 Let’s have a look at our domain model:
 
 *Product (A) Source :*
@@ -95,11 +95,25 @@ Note that we have explicitly chosen different and alike attributes names and typ
 
 Orika will automatically find all attributes with the same name and type and map them.
 
-NB: remember that, declaring a custom mapper and/or a converter override the orika auto-mapping functionality, the byDefault() function set it  active again, this was deliberately done this way to give developers full  hands on their mapping.
-
+NB: Remember that, when declaring a custom mapper and/or a converter, you are overriding the Orika auto-mapping functionality temporarily; applying the byDefault() method to the ClassMapBuilder will apply default auto-mapping behvaior to the remaining properties.
+This allows you to do any of the following:
+  # map all properties automatically
 {{{
 // register the auto-mapping function
 mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,ProductDto.class).byDefault().toClassMap());
+}}}
+  # explicitly specify every property mapping
+{{{
+mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
+  .field("product.state.type.label", "stateLabel")
+  .field("product.name", "productName").toClassMap());
+}}}
+  # customize some properties, and accept automatic behavior for the rest
+{{{
+mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
+  .field("product.state.type.label", "stateLabel")
+  .field("product.name", "productName")
+  .byDefault().toClassMap());
 }}}
 
 === Custom Mapper ===
@@ -138,29 +152,30 @@ For this case we need to create a converter:
 {{{
 // register your converter
 mapperFactory.getConverterFactory().registerConverter(new Converter<Double, String>() {
-    public BigDecimal convert(Double source, Class<? extends BigDecimal> destinationClass) {
+    public BigDecimal convert(Double source, Type<? extends BigDecimal> destinationType) {
         return new BigDecimal(source);
     }
-    public boolean canConvert(Class<Double> sourceClass, Class<? extends BigDecimal> destinationClass) {
-        return Double.class.equals(sourceClass) && BigDecimal.class.equals(destinationClass);
+    public boolean canConvert(Type<Double> sourceType, Type<? extends BigDecimal> destinationType) {
+        return Double.class.equals(sourceType.getRawType()) && BigDecimal.class.equals(destinationType.getRawType());
     }
 });
 }}}
 
 In this example our converter was anonymous, Orika use the converter's `canConvert` to check if it can use it.
 
-Hopefully for this kind of simple types conversion, Orika provide a less verbose solution. You can just subclass the builtin `TypeConverter`:
+For this kind of simple type conversion, Orika provides a less verbose solution. You can just subclass the builtin `ConverterBase`:
 
 {{{
 // register your converter
-mapperFactory.getConverterFactory().registerConverter(new TypeConverter<Double, String>() {
-    public BigDecimal convert(Double source, Class<? extends BigDecimal> destinationClass) {
+mapperFactory.getConverterFactory().registerConverter(new ConverterBase<Double, String>() {
+    public BigDecimal convert(Double source, Type<? extends BigDecimal> destinationClass) {
         return new BigDecimal(source);
     }
 });
 }}}
 
-To use a field map level converter,  it is required to register an identified converter:
+In some cases you may want to be more specific about when a converter is applied; you can specify a converter at field mapping scope
+To use a field mapping scoped converter,  the converter is registered with a string identifier; you can then specify that converter by id when declaring a field-mapping.
 
 {{{
 ConverterFactory converterFactory = factory.getConverterFactory();
@@ -171,9 +186,9 @@ factory.registerClassMap(ClassMapBuilder.map(A.class, B.class).fieldMap("date").
 factory.registerClassMap(ClassMapBuilder.map(A.class, C.class).fieldMap("date").converter("dateConverter2").add().toClassMap());
 }}}
 
-In the last snippet, two converters was registered using two identifier: dateConverter1 and dateConverter2 and was used on two diffirent field mapping.
+In the last snippet, two converters are registered using two identifiers: ("dateConverter1" and "dateConverter2") and are specified on two different field mappings.
 
-If the mapping is a two way one, it is necessary to use a bidirectional converter. (In the previous example the `DateToStringConverter` is builtin bidirectional converter).
+In the case of a two-way mapping, it is necessary to use a bidirectional converter. (In the previous example the `DateToStringConverter` is builtin bidirectional converter).
 === Mapping fields with different name ===
 
 
@@ -188,14 +203,14 @@ mapperFactory.registerClassMap(
    );
 }}}
 
-=== Auto mapping Hints ===
+=== Customize the default field-name mapping ===
 In some cases, you may have a particular pattern that applies to the attributes to be mapped; or you might have some special property name mappings which are common to your whole object graph. 
-You can avoid declaring multiple explicit class (and field) mappings (if you wish) by registering a *MappingHint* on the MapperFactory.
+You can avoid declaring multiple explicit class (and field) mappings (if you wish) by registering a `DefaultFieldMapper` on the `MapperFactory`.
 
 For example, suppose all of the properties on a class A have names like "name", "title", "age", etc., but the corresponding properties on another class B have names like "myName", "myTitle", "myAge", etc.
 {{{
-MappingHint myHint = new MappingHint() {
-   public String suggestMapping(String propertyName, Class<?> fromPropertyType) { 
+DefaultFieldMapper myDefaultMapper = new DefaultFieldMapper() {
+   public String suggestMapping(String propertyName, Type<?> fromPropertyType) { 
       if(propertyName.startsWith("my")) {
          // Remove the "my" prefix and adjust camel-case
          return propertyName.substring(2,1).toLowerCase() +
@@ -208,11 +223,11 @@ MappingHint myHint = new MappingHint() {
    }
 }
 
-mapperFactory.registerMappingHint(myHint);
+mapperFactory.registerDefaultFieldMapper(myDefaultMapper );
 }}}
-By using this hint, you could automatically map from A to B without any explicit class mapping declaration.
+By using this default field mapper, you could automatically map from A to B without any explicit class mapping declaration; or you could combine with your own explicit mappings for some fields in the usual manner.
 
-The *MappingHints* registered are applied whenever the internal auto-mapping functionality is triggered, and are applied only _after_ a direct one-to-one mapping for the attribute has failed. This means that if you have any attribute names which *_do_* match exactly, the hints would not override them; hints are used to provide extra 'guesses' when the name doesn't match.
+The `DefaultFieldMapper`s registered are applied whenever the internal auto-mapping functionality is triggered, and are applied only _after_ a direct one-to-one mapping for the attribute has failed. This means that if you have any attribute names which *_do_* match exactly, the hints would not override them; hints are used to provide extra 'guesses' when the name doesn't match.
 
 You can also pass any hints you've defined (as var-args) into the *byDefault()* method when using ClassMapBuilder to build a class mapping; like so:
 {{{
@@ -281,18 +296,20 @@ Orika will map from primitives to their respective wrapper and vice versa automa
 
 === Enumerations ===
 
-Orika will map between the same Enum definition automatically.
-Orika will also map from one Enum to another Enum so long as a matching instance name is found; if the appropriate mapping can't be determined by instance name, you can resolve this by registering a converter.
+Orika will map between instances of the same Enum automatically.
+Orika will also map from one Enum type to another so long as a matching instance name is found; if the appropriate mapping can't be determined by instance name, you can resolve this by registering a converter.
 
 === Inheritance ===
 
-As of the primitives Orika detect inheritance and map automatically child and parent object.
+Orika will auto-detect mappers defined for parent objects, and will attempt to reuse them in child class mappings.
 
-Orika will also attempt to use an existing mapping from a parent or interface if a mapping for a child cannot be found. This means that if you have a defined mapping for A to B, and Orika is asked to map A1 (which extends A) to B, it will use the declared mapping for A to B (assuming there's no mapping for A1 to B. 
+Orika will also attempt to use an existing mapping from a parent or interface if a mapper for a child cannot be created. This means that if you have a defined mapping for `A` to `B`, and Orika is asked to map `A1` to `B`(where `A1` extends `A`, but cannot mapped directly--such as when `A1` is inaccessible to the current class-loader), Orika will use the declared mapping for `A` to `B`. 
 
 === Object factories ===
 
-In some cases we want to add an object factory to our mapping processing, let’s take for instance a case where we have a Person with a default address that we want Orika to add automatically whenever facing a PersonDto.
+In some cases we want to control how new object instances are created; in such cases we can define and register a custom `ObjectFactory`.
+
+Let’s take for instance a case where we have a Person with a default address that we want Orika to add automatically whenever facing a PersonDto.
 Let’s introduce the person domain’s model:
                         
 Dto’s model :
@@ -301,31 +318,25 @@ Dto’s model :
 public class PersonFactory implements ObjectFactory<PersonDto> {
 
     @Override
-    public PersonDto create(Object source, Class destinationClass) {
+    public PersonDto create(Object source, Type<PersonDto> destinationType) {
         PersonDto personDto = new PersonDto();
         // set the default adress
         personDto.setAdressDto(new AdressDto("Morocco", "Casablanca"));
             return personDto;
     }
-
-    @Override
-    public Class<PersonDto> getTargetClass() {
-        return PersonDto.class;
-    }
-
 }
 
 }}}
 
-Your factory must implements Orika’s ObjectFactory, then all you will have to do is to implement the create () method, and indicate the type to be expected by the object factory in the getTargetClass() method.
+Your factory must implement Orika’s `ObjectFactory`, with a suitable  `create()` method which provides the custom instances.
 
 {{{
 mapperFactory.registerObjectFactory(new PersonFactory(),PersonDto.class);
 }}}
 
-Don’t forget to register your Object factory.
+_Don’t forget to register your Object factory._
 
-Orika is designed with the idea that the default behavior should be able to handle most scenarios automatically.  that it will automatically do everything for you, you should be concerned by treat only your special cases.
+Orika is designed with the idea that the default behavior should be sufficient for most scenarios.  It then offers customization points which can be used as needed to support what the defaults cannot.
 
 === Proxy Instances ====
 
