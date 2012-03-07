@@ -25,11 +25,17 @@ import ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy;
 
 public abstract class MappingUtil {
     
+    /**
+     * @return a new default instance of MapperFactory
+     */
     public static MapperFactory getMapperFactory() {
-        
         return new DefaultMapperFactory.Builder().build();
     }
     
+    /**
+     * Utility method specifying that EclipseJdtCompilerStrategy (with written source and class files) should
+     * be used for mapping
+     */
     public static void useEclipseJdt() {
         System.setProperty(OrikaSystemProperties.COMPILER_STRATEGY, EclipseJdtCompilerStrategy.class.getCanonicalName());
     }
