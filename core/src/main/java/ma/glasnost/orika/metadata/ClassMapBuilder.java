@@ -85,6 +85,25 @@ public final class ClassMapBuilder<A, B> {
         return fieldMapBuilder;
     }
     
+    /**
+     * Set the custom mapper to use for this mapping.
+     * 
+     * @param legacyCustomizedMapper
+     * @return
+     * @deprecated use {@link #customize(Mapper)} instead
+     */
+    @Deprecated
+    public ClassMapBuilder<A, B> customize(ma.glasnost.orika.MapperBase<A, B> legacyCustomizedMapper) {
+        customize(new ma.glasnost.orika.MapperBase.MapperBaseAdapter<A, B>(legacyCustomizedMapper));
+        return this;
+    }
+    
+    /**
+     * Set the custom mapper to use for this mapping.
+     * 
+     * @param customizedMapper
+     * @return
+     */
     public ClassMapBuilder<A, B> customize(Mapper<A, B> customizedMapper) {
         this.customizedMapper = customizedMapper;
         return this;

@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ma.glasnost.orika.Mapper;
-import ma.glasnost.orika.MapperBase;
+import ma.glasnost.orika.CustomMapper;
 import ma.glasnost.orika.MappingContext;
 import ma.glasnost.orika.metadata.Type;
 
-public abstract class GeneratedMapperBase extends MapperBase<Object, Object> {
+public abstract class GeneratedMapperBase extends CustomMapper<Object, Object> {
 
     protected Mapper<Object, Object> customMapper;
     protected Type<Object>[] usedTypes;

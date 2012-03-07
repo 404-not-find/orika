@@ -25,7 +25,7 @@ import java.lang.reflect.Type;
  * @param <S>
  * @param <D>
  * 
- * @deprecated use {@link ma.glasnost.orika.converter.CustomConverterBase} instead
+ * @deprecated use {@link ma.glasnost.orika.CustomConverter} instead
  */
 @Deprecated
 public abstract class TypeConverter<S, D> implements Converter<S, D> {
