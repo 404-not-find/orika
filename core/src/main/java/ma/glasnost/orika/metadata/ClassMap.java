@@ -113,6 +113,10 @@ public class ClassMap<A, B> {
         return usedMappers;
     }
     
+    public String toString() {
+        return getClass().getSimpleName() + "([A]:" + aType + ", [B]:"+bType+")";
+    }
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

@@ -70,10 +70,12 @@ public class GenericCollectionsTestCase {
         }
     }
     
+    /**
+     * This test uses the older Class-based mapping method, which is unable
+     * to determine the proper type hierarchy from the raw types
+     */
     @Test
-    public void testParameterizedCollection() {
-        
-        MappingUtil.useEclipseJdt();
+    public void testFailingParameterizedCollection() {
         
         MapperFactory factory = new DefaultMapperFactory.Builder().build();
         
@@ -92,6 +94,21 @@ public class GenericCollectionsTestCase {
         } catch (RuntimeException ex) {
             Assert.assertTrue(ex.getLocalizedMessage().contains("No concrete class mapping defined"));
         }
+    }
+    
+    /**
+     * This test attempts the same mapping using the newer type-based methods
+     * which allow passing in the exact runtime types.
+     */
+    @Test
+    public void testParameterizedCollection() {
+       
+        MapperFactory factory = new DefaultMapperFactory.Builder().build();
+        
+        Employee e = new Employee();
+        e.setName("Name");
+        TaskLayer1<Employee> t1 = new TaskLayer1<Employee>();
+        t1.setWorkers(Arrays.asList(e));
         
         Type<TaskLayer1<Employee>> sourceType = new TypeBuilder<TaskLayer1<Employee>>(){}.build();
         Type<TaskLayer2<Employee>> targetType = new TypeBuilder<TaskLayer2<Employee>>(){}.build();
@@ -102,8 +119,6 @@ public class GenericCollectionsTestCase {
         TaskLayer2<Employee> t2 = factory.getMapperFacade().map(t1, sourceType, targetType);
         Assert.assertNotNull(t2);
         Assert.assertTrue(t1.getWorkers().containsAll(t2.getWorkers()));
-        Assert.assertTrue(t2.getWorkers().containsAll(t1.getWorkers()));
-        
+        Assert.assertTrue(t2.getWorkers().containsAll(t1.getWorkers())); 
     }
-    
 }
