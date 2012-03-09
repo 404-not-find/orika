@@ -21,11 +21,13 @@ package ma.glasnost.orika.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -408,12 +410,12 @@ public class DefaultMapperFactory implements MapperFactory {
     
     private void buildClassMapRegistry() {
         // prepare a map for classmap (stored as set)
-        Map<MapperKey, ClassMap<Object, Object>> classMapsDictionnary = new HashMap<MapperKey, ClassMap<Object, Object>>();
+        Map<MapperKey, ClassMap<Object, Object>> classMapsDictionary = new HashMap<MapperKey, ClassMap<Object, Object>>();
         
         Set<ClassMap<Object, Object>> classMaps = new HashSet<ClassMap<Object, Object>>(classMapRegistry.values());
         
         for (final ClassMap<Object, Object> classMap : classMaps) {
-            classMapsDictionnary.put(new MapperKey(classMap.getAType(), classMap.getBType()), classMap);
+            classMapsDictionary.put(new MapperKey(classMap.getAType(), classMap.getBType()), classMap);
         }
         
         for (final ClassMap<?, ?> classMap : classMaps) {
@@ -422,7 +424,7 @@ public class DefaultMapperFactory implements MapperFactory {
             Set<ClassMap<Object, Object>> usedClassMapSet = new HashSet<ClassMap<Object, Object>>();
             
             for (final MapperKey parentMapperKey : classMap.getUsedMappers()) {
-                ClassMap<Object, Object> usedClassMap = classMapsDictionnary.get(parentMapperKey);
+                ClassMap<Object, Object> usedClassMap = classMapsDictionary.get(parentMapperKey);
                 if (usedClassMap == null) {
                     throw new MappingException("Cannot find class mapping using mapper : " + classMap.getMapperClassName());
                 }
@@ -448,14 +450,55 @@ public class DefaultMapperFactory implements MapperFactory {
         }
     }
     
+    private static final Comparator<MapperKey> mapperComparator  = 
+            new Comparator<MapperKey>() {
+
+                public int compare(MapperKey key1, MapperKey key2) {
+                    if (key1.getAType().isAssignableFrom(key2.getAType()) && key1.getBType().isAssignableFrom(key2.getBType())) {
+                        return 1;
+                    } else if (key2.getAType().isAssignableFrom(key1.getAType()) && key2.getBType().isAssignableFrom(key1.getBType())) {
+                        return -1;
+                    } else if (key1.getAType().equals(key2.getAType()) && key1.getBType().equals(key2.getBType())) {
+                        return 0;
+                    } else {
+                        throw new IllegalArgumentException("keys " + key1 + " and " + key2 + " are unrelated");
+                    }
+                }
+            };
+    
     @SuppressWarnings("unchecked")
     private void initializeUsedMappers(ClassMap<?, ?> classMap) {
+        
         Mapper<Object, Object> mapper = lookupMapper(new MapperKey(classMap.getAType(), classMap.getBType()));
         
         List<Mapper<Object, Object>> parentMappers = new ArrayList<Mapper<Object, Object>>();
         
-        for (MapperKey parentMapperKey : classMap.getUsedMappers()) {
-            collectUsedMappers(classMap, parentMappers, parentMapperKey);
+        if (!classMap.getUsedMappers().isEmpty()) {
+            for (MapperKey parentMapperKey : classMap.getUsedMappers()) {
+                collectUsedMappers(classMap, parentMappers, parentMapperKey);
+            }
+        } else {
+            /*
+             *  Attempt to auto-determine used mappers for this classmap; 
+             *  however, we should only add the most-specific of the available
+             *  mappers to avoid calling the same mapper multiple times during
+             *  a single map request
+             */
+            Set<MapperKey> usedMappers = new TreeSet<MapperKey>(mapperComparator);
+            for (MapperKey key: this.classMapRegistry.keySet()) {
+                if (!key.getAType().equals(classMap.getAType()) || !key.getBType().equals(classMap.getBType())) {
+                    if (key.getAType().isAssignableFrom(classMap.getAType()) && key.getBType().isAssignableFrom(classMap.getBType())) {
+                        usedMappers.add(key);
+                    }
+                }
+            }
+            if (!usedMappers.isEmpty()) {
+                //Set<ClassMap<Object, Object>> usedClassMapSet = new HashSet<ClassMap<Object, Object>>();
+                MapperKey parentKey = usedMappers.iterator().next();
+//                usedClassMapSet.add(classMapRegistry.get(parentKey));
+//                usedMapperMetadataRegistry.put(parentKey, usedClassMapSet);
+                collectUsedMappers(classMap, parentMappers, parentKey);
+            }
         }
         
         mapper.setUsedMappers(parentMappers.toArray(new Mapper[parentMappers.size()]));
