@@ -294,7 +294,8 @@ As you can see, nothing has changed, and of course the destination object will h
 
 === Primitives ===
 
-Orika will map from primitives to their respective wrapper and vice versa automatically.
+Orika will map from primitives to their respective wrapper and vice versa automatically. 
+Orika also automatically handles mappings for primitives (and their respective wrapper types) to and from `java.lang.String` whenever possible.
 
 === Enumerations ===
 
