@@ -246,13 +246,32 @@ mapperFactory.registerClassMap(
 === Nested property ===
 
 
-In some cases the class we’re mapping from is not a mirror of the one we’re mapping to, attribute we’re seeking can be at a different depth, use nested property expression to access attribute at different level/depth.
-We are going to introduce the order class:
+In some cases the class we’re mapping from is not a mirror of the one we’re mapping to. A nested property expression can be used to access attributes at different levels/depth.
 
-An order contains only one product at a time.
+Example:
+{{{
+public class Order {
+   private Product product;
+
+   // getter/setter
+}
+
+public class Product {
+   
+   private String productName;
+   
+   // getter/setter
+}
+
+public clsss OrderDTO {
+
+   private String orderNum;
+
+   // getter/setter
+}
+}}}
 
 Our Dto diagram contains a new attribute the orderNum which is in our case the product name.
-
 {{{
 // register the nested property expression
 mapperFactory.registerClassMap(
