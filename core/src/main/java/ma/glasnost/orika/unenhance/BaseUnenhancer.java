@@ -51,23 +51,7 @@ public class BaseUnenhancer implements UnenhanceStrategy {
 	public void addSuperTypeResolverStrategy(final SuperTypeResolverStrategy strategy) {
 		supertypeStrategyChain.add(strategy);
 	}
-	
-    public <T> T unenhanceObject(T object) {
-        
-    	T unenhancedObject = object;
-    	for(UnenhanceStrategy strategy: unenhanceStrategyChain) {
-    		T delegateUnenhanced = (T) strategy.unenhanceObject(object);
-    		// Accept the first delegate strategy result which produces 
-    		// something different than the object itself
-    		if (delegateUnenhanced != null && delegateUnenhanced != object) {
-    			unenhancedObject = delegateUnenhanced;
-    			break;
-    		}
-    	}
-    	
-    	return unenhancedObject;
-    }
-    
+	    
     @SuppressWarnings("unchecked")
     public <T> Type<T> unenhanceType(T object, Type<T> type) {
         

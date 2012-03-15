@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ma.glasnost.orika.Converter;
 import ma.glasnost.orika.Mapper;
@@ -42,19 +43,44 @@ public class MapperFacadeImpl implements MapperFacade {
     
     private final MapperFactory mapperFactory;
     private final UnenhanceStrategy unenhanceStrategy;
+    private final ConcurrentHashMap<Type<?>,Type<?>> resolvedTypes = new ConcurrentHashMap<Type<?>,Type<?>>();
     
     public MapperFacadeImpl(MapperFactory mapperFactory, UnenhanceStrategy unenhanceStrategy) {
         this.mapperFactory = mapperFactory;
         this.unenhanceStrategy = unenhanceStrategy;
     }
     
+    @SuppressWarnings("unchecked")
+    private <S> Type<S> normalizeSourceType(S sourceObject, Type<S> sourceType) {
+        
+        Type<?> resolvedType = resolvedTypes.get(sourceType);
+        if (resolvedType == null) {
+            Type<?> newlyResolvedType;
+            if (sourceType!=null) {
+                if (ClassUtil.isConcrete(sourceType)) {
+                    newlyResolvedType = unenhanceStrategy.unenhanceType(sourceObject, sourceType);
+                } else {
+                    newlyResolvedType = unenhanceStrategy.unenhanceType(sourceObject, TypeFactory.resolveTypeOf(sourceObject, sourceType));
+                }
+                resolvedType = resolvedTypes.putIfAbsent(sourceType, newlyResolvedType);
+                if (resolvedType == null) {
+                    resolvedType = newlyResolvedType;
+                }
+            } else {
+                resolvedType = unenhanceStrategy.unenhanceType(sourceObject, TypeFactory.typeOf(sourceObject));
+            }
+            
+        }
+        return (Type<S>) resolvedType;
+    }
+    
     public <S, D> D map(S sourceObject, Type<S> sourceType, Type<D> destinationClass) {
         return map(sourceObject, sourceType, destinationClass, new MappingContext());
     }
     
-	public <S, D> D map(S sourceObject, Type<S> sourceType, Type<D> destinationType,
-			MappingContext context) {
-		if (destinationType == null) {
+    public <S, D> D map(S sourceObject, Type<S> sourceType, Type<D> destinationType,
+            MappingContext context) {
+        if (destinationType == null) {
             throw new MappingException("Can not map to a null class.");
         }
         if (sourceObject == null) {
@@ -63,34 +89,23 @@ public class MapperFacadeImpl implements MapperFacade {
         }
         
         if (context.isAlreadyMapped(sourceObject, destinationType)) {
-			@SuppressWarnings("unchecked")
+            @SuppressWarnings("unchecked")
             D result = (D) context.getMappedObject(sourceObject, destinationType);
             return result;
         }
         
-        final S unenhancedSourceObject = unenhanceStrategy.unenhanceObject(sourceObject);
-        final Type<S> resolvedSourceType;
-        if (sourceType!=null) {
-        	if (ClassUtil.isConcrete(sourceType)) {
-        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, sourceType);
-        	} else {
-        		resolvedSourceType = unenhanceStrategy.unenhanceType(unenhancedSourceObject, TypeFactory.resolveTypeOf(unenhancedSourceObject, sourceType));
-        	}
-        } else {
-        	resolvedSourceType = unenhanceStrategy.unenhanceType(sourceObject, TypeFactory.typeOf(unenhancedSourceObject));
-        }
+        final Type<S> resolvedSourceType = normalizeSourceType(sourceObject, sourceType);
         
         // XXX when it's immutable it's ok to copy by ref
         if (ClassUtil.isImmutable(resolvedSourceType) && (resolvedSourceType.equals(destinationType) || resolvedSourceType.getRawType().equals(ClassUtil.getWrapperType(destinationType.getRawType())))) {
             @SuppressWarnings("unchecked")
-			D result = (D) unenhancedSourceObject;
-        	return result; 
+            D result = (D) sourceObject;
+            return result; 
         }
         
         // Check if we have a converter
-        
         if (canConvert(resolvedSourceType, destinationType)) {
-            return convert(unenhancedSourceObject, sourceType, destinationType, null);
+            return convert(sourceObject, sourceType, destinationType, null);
         }
         
         Type<? extends D> concreteDestinationClass = mapperFactory.lookupConcreteDestinationType(resolvedSourceType, destinationType, context);
@@ -104,32 +119,29 @@ public class MapperFacadeImpl implements MapperFacade {
        
         final Mapper<Object, Object> mapper = prepareMapper(resolvedSourceType,concreteDestinationClass);
         
-        final D destinationObject = newObject(unenhancedSourceObject, concreteDestinationClass, context);
+        final D destinationObject = newObject(sourceObject, concreteDestinationClass, context);
         
         context.cacheMappedObject(sourceObject, destinationObject);
         
-        mapDeclaredProperties(unenhancedSourceObject, destinationObject, resolvedSourceType, concreteDestinationClass, context, mapper);
+        mapDeclaredProperties(sourceObject, destinationObject, resolvedSourceType, concreteDestinationClass, context, mapper);
         
         return destinationObject;
-	}
+    }
     
-	public <S, D> void map(S sourceObject, D destinationObject, Type<S> sourceType, Type<D> destinationType, MappingContext context) {
-	    if (destinationObject == null) {
+    public <S, D> void map(S sourceObject, D destinationObject, Type<S> sourceType, Type<D> destinationType, MappingContext context) {
+        if (destinationObject == null) {
             throw new MappingException("[destinationObject] can not be null.");
         }
         if (sourceObject == null) {
             throw new MappingException("[sourceObject] can not be null.");
         }
         
-        final S unenhancedSourceObject = unenhanceStrategy.unenhanceObject(sourceObject);
-        final D unenhancedDestinationObject = unenhanceStrategy.unenhanceObject(destinationObject);
+        final Type<S> theSourceType = normalizeSourceType(sourceObject, sourceType !=null ? sourceType : TypeFactory.typeOf(sourceObject));
+        final Type<D> theDestinationType = destinationType != null ? destinationType : TypeFactory.typeOf(destinationObject);
         
-        final Type<S> theSourceType = sourceType !=null ? sourceType : TypeFactory.typeOf(unenhancedSourceObject);
-        final Type<D> theDestinationType = destinationType != null ? destinationType : TypeFactory.typeOf(unenhancedDestinationObject);
-        
-        final Mapper<Object, Object> mapper = prepareMapper(theSourceType, theDestinationType);
-        mapDeclaredProperties(unenhancedSourceObject, unenhancedDestinationObject, theSourceType, theDestinationType, context, mapper);
-	}
+        final Mapper<Object, Object> mapper = prepareMapper(sourceType,destinationType);
+        mapDeclaredProperties(sourceObject, destinationObject, theSourceType, theDestinationType, context, mapper);
+    }
 	
 	public <S, D> void map(S sourceObject, D destinationObject, Type<S> sourceType, Type<D> destinationType) {
 	    map(sourceObject, destinationObject, sourceType, destinationType, new MappingContext());

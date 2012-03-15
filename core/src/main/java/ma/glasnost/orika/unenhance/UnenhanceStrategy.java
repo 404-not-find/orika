@@ -34,18 +34,7 @@ import ma.glasnost.orika.metadata.Type;
 public interface UnenhanceStrategy {
 
 	/**
-	 * If the object itself needs to be un-enhanced (unwrapped from a proxy, for instance), 
-	 * this method should return the un-enhanced version of the object; 
-	 * otherwise, the object should be returned as-is.
-	 * 
-	 * @param <T>
-	 * @param object
-	 * @return
-	 */
-	public <T> T unenhanceObject(T object);
-
-	/**
-	 * Should return the un-enhanced type to be used when determining attribute mapping information
+	 * Should return the unenhanced type to be used when determining attribute mapping information
 	 * for the type.
 	 * 
 	 * @param <T>

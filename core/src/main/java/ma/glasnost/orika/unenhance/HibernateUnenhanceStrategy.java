@@ -18,28 +18,53 @@
 
 package ma.glasnost.orika.unenhance;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import ma.glasnost.orika.metadata.Type;
 import ma.glasnost.orika.metadata.TypeFactory;
 
-import org.hibernate.Hibernate;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HibernateUnenhanceStrategy implements UnenhanceStrategy {
     
-    @SuppressWarnings("unchecked")
-    public <T> T unenhanceObject(T object) {
-        if (object instanceof HibernateProxy) {
-            final HibernateProxy hibernateProxy = (HibernateProxy) object;
-            final LazyInitializer lazyInitializer = hibernateProxy.getHibernateLazyInitializer();
-            
-            return (T) lazyInitializer.getImplementation();
+    private static final Logger LOGGER = LoggerFactory.getLogger(HibernateUnenhanceStrategy.class);
+    private Method getHibernateClass;
+    
+    public HibernateUnenhanceStrategy() {
+        try {
+            Class<?> hibernate = Class.forName("org.hibernate.Hibernate", false, Thread.currentThread().getContextClassLoader());
+            getHibernateClass = hibernate.getMethod("getClass", Object.class);
+        } catch (ClassNotFoundException e) {
+            hibernateInaccessible(e);
+        } catch (NoSuchMethodException e) {
+            hibernateInaccessible(e);
+        } catch (SecurityException e) {
+            hibernateInaccessible(e);
         }
-        return object;
+    }
+    
+    private static void hibernateInaccessible(Exception e) {
+        throw new ExceptionInInitializerError("org.hibernate.Hibernate is not accessible" + e);
+    }
+    
+    private static void hibernateGetClassUnavailable(Exception e) {
+        LOGGER.warn("org.hibernate.Hibernate.getClass(Object) is not available",e);
     }
     
     @SuppressWarnings("unchecked")
     public <T> Type<T> unenhanceType(T object, Type<T> type) {
-    	return TypeFactory.resolveValueOf(Hibernate.getClass(object), type);
+        
+        try {
+            return TypeFactory.resolveValueOf((Class<T>)getHibernateClass.invoke(null, object), type);
+        } catch (IllegalAccessException e) {
+            hibernateGetClassUnavailable(e);
+        } catch (IllegalArgumentException e) {
+            hibernateGetClassUnavailable(e);
+        } catch (InvocationTargetException e) {
+            hibernateGetClassUnavailable(e);
+        }
+        return null;
     }
 }
