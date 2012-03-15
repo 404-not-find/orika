@@ -103,14 +103,11 @@ public class IntrospectorPropertyResolver implements PropertyResolverStrategy {
                         
                         if (genericType instanceof TypeVariable && typeHolder.isParameterized()) {
                             java.lang.reflect.Type t = typeHolder.getTypeByVariable((TypeVariable<?>) genericType);
-                            property.setType(TypeFactory.valueOf(t));
-//                            if (t instanceof Type) {
-//                                property.setType((Type<?>)t);
-//                            } else if (t instanceof ParameterizedType) {
-//                                property.setType(TypeFactory.valueOf((ParameterizedType)t));
-//                            } else {
-//                                property.setType(TypeFactory.TYPE_OF_OBJECT);
-//                            }
+                            if (t != null) {
+                                property.setType(TypeFactory.valueOf(t));
+                            } else {
+                                property.setType(TypeFactory.TYPE_OF_OBJECT);
+                            }
                         } else if (rawType!=returnType && rawType.isAssignableFrom(returnType)) {
                             property.setType(TypeFactory.valueOf(returnType));
                         } else if (genericType instanceof ParameterizedType) {
