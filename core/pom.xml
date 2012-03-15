@@ -101,11 +101,6 @@
             <artifactId>dozer</artifactId>
         </dependency>
         
-        <dependency>
-            <groupId>com.google.caliper</groupId>
-            <artifactId>caliper</artifactId>
-        </dependency>
-        
     </dependencies>
 
 </project>
