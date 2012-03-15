@@ -127,7 +127,7 @@ public class MapperFacadeImpl implements MapperFacade {
         final Type<S> theSourceType = sourceType !=null ? sourceType : TypeFactory.typeOf(unenhancedSourceObject);
         final Type<D> theDestinationType = destinationType != null ? destinationType : TypeFactory.typeOf(unenhancedDestinationObject);
         
-        final Mapper<Object, Object> mapper = prepareMapper(sourceType,destinationType);
+        final Mapper<Object, Object> mapper = prepareMapper(theSourceType, theDestinationType);
         mapDeclaredProperties(unenhancedSourceObject, unenhancedDestinationObject, theSourceType, theDestinationType, context, mapper);
 	}
 	
