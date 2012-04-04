@@ -50,14 +50,14 @@ public class HibernateUnenhanceStrategy implements UnenhanceStrategy {
     }
     
     private static void hibernateGetClassUnavailable(Exception e) {
-        LOGGER.warn("org.hibernate.Hibernate.getClass(Object) is not available",e);
+        LOGGER.warn("org.hibernate.Hibernate.getClass(Object) is not available", e);
     }
     
     @SuppressWarnings("unchecked")
     public <T> Type<T> unenhanceType(T object, Type<T> type) {
         
         try {
-            return TypeFactory.resolveValueOf((Class<T>)getHibernateClass.invoke(null, object), type);
+            return TypeFactory.resolveValueOf((Class<T>) getHibernateClass.invoke(null, object), type);
         } catch (IllegalAccessException e) {
             hibernateGetClassUnavailable(e);
         } catch (IllegalArgumentException e) {
@@ -66,5 +66,11 @@ public class HibernateUnenhanceStrategy implements UnenhanceStrategy {
             hibernateGetClassUnavailable(e);
         }
         return null;
+    }
+    
+    //
+    // XXX we should extract target object from hibernate proxy
+    public Object unenhanceObject(Object object, Type<?> type) {
+        return object;
     }
 }

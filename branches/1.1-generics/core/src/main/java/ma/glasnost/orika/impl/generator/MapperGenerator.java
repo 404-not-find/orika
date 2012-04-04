@@ -18,7 +18,14 @@
 
 package ma.glasnost.orika.impl.generator;
 
-import static ma.glasnost.orika.impl.Specifications.*;
+import static ma.glasnost.orika.impl.Specifications.aCollection;
+import static ma.glasnost.orika.impl.Specifications.aConversionFromString;
+import static ma.glasnost.orika.impl.Specifications.aConversionToString;
+import static ma.glasnost.orika.impl.Specifications.aPrimitiveToWrapper;
+import static ma.glasnost.orika.impl.Specifications.aWrapperToPrimitive;
+import static ma.glasnost.orika.impl.Specifications.anArray;
+import static ma.glasnost.orika.impl.Specifications.immutable;
+import static ma.glasnost.orika.impl.Specifications.toAnEnumeration;
 
 import java.util.Collection;
 import java.util.Set;
@@ -95,8 +102,8 @@ public final class MapperGenerator {
             destinationType = classMap.getAType();
         }
         
-        //out.assertType("a", sourceClass);
-        //out.assertType("b", destinationClass);
+        // out.assertType("a", sourceClass);
+        // out.assertType("b", destinationClass);
         out.append("\n\t\tsuper.").append(mapMethod).append("(a,b, mappingContext);\n\n");
         out.append("\t\t" + sourceClass.getCanonicalName())
                 .append(" source = \n\t\t\t\t (")
@@ -108,9 +115,15 @@ public final class MapperGenerator {
                 .append(") b; \n\n");
         
         for (FieldMap fieldMap : classMap.getFieldsMapping()) {
+            
+            if (fieldMap.isExcluded()) {
+                continue;
+            }
+            
             if (isAlreadyExistsInUsedMappers(fieldMap, classMap)) {
                 continue;
             }
+            
             if (!aToB) {
                 fieldMap = fieldMap.flip();
             }
@@ -198,7 +211,8 @@ public final class MapperGenerator {
                 /**/
                 
                 if (sp.isPrimitive() || dp.isPrimitive())
-                code.newLine().append("/* Ignore field map : %s:%s -> %s:%s */", sp.getExpression(), sp.getType().getSimpleName(), dp.getExpression(), dp.getType().getSimpleName());
+                    code.newLine().append("/* Ignore field map : %s:%s -> %s:%s */", sp.getExpression(), sp.getType().getSimpleName(),
+                            dp.getExpression(), dp.getType().getSimpleName());
                 
                 else {
                     code.setObject(dp, sp, fieldMap.getInverse());
@@ -224,8 +238,7 @@ public final class MapperGenerator {
         if (fieldMap.getConverterId() != null) {
             converter = converterFactory.getConverter(fieldMap.getConverterId());
         } else {
-            converter = converterFactory.getConverter(fieldMap.getSource().getType(),
-                     fieldMap.getDestination().getType());
+            converter = converterFactory.getConverter(fieldMap.getSource().getType(), fieldMap.getDestination().getType());
         }
         return converter;
     }

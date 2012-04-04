@@ -51,8 +51,8 @@ import ma.glasnost.orika.metadata.ClassMap;
 import ma.glasnost.orika.metadata.ClassMapBuilder;
 import ma.glasnost.orika.metadata.MapperKey;
 import ma.glasnost.orika.metadata.Type;
+import ma.glasnost.orika.metadata.TypeFactory;
 import ma.glasnost.orika.unenhance.BaseUnenhancer;
-import ma.glasnost.orika.unenhance.HibernateUnenhanceStrategy;
 import ma.glasnost.orika.unenhance.UnenhanceStrategy;
 
 /**
@@ -190,7 +190,6 @@ public class DefaultMapperFactory implements MapperFactory {
         }
         
     }
- 
     
     /**
      * Generates the UnenhanceStrategy to be used for this MapperFactory,
@@ -211,16 +210,14 @@ public class DefaultMapperFactory implements MapperFactory {
         
         if (unenhanceStrategy != null) {
             unenhancer.addUnenhanceStrategy(unenhanceStrategy);
-        } else {
-            // TODO: this delegate strategy may no longer be needed...
-            try {
-                Class.forName("org.hibernate.proxy.HibernateProxy");
-                unenhancer.addUnenhanceStrategy(new HibernateUnenhanceStrategy());
-            } catch (final Throwable e) {
-                // TODO add warning
-            }
-            
-        }
+        } /*
+           * else { // TODO: this delegate strategy may no longer be needed...
+           * try { Class.forName("org.hibernate.proxy.HibernateProxy");
+           * unenhancer.addUnenhanceStrategy(new HibernateUnenhanceStrategy());
+           * } catch (final Throwable e) { // TODO add warning }
+           * 
+           * }
+           */
         
         if (superTypeStrategy != null) {
             unenhancer.addSuperTypeResolverStrategy(superTypeStrategy);
@@ -345,7 +342,7 @@ public class DefaultMapperFactory implements MapperFactory {
             } catch (Exception e) {
                 // Generate an object factory
                 synchronized (objectFactoryGenerator) {
-                    result = (ObjectFactory<T>) objectFactoryGenerator.build((Type<Object>) targetType);
+                    result = (ObjectFactory<T>) objectFactoryGenerator.build(targetType);
                     objectFactoryRegistry.put(targetType, result);
                 }
             }
@@ -450,21 +447,20 @@ public class DefaultMapperFactory implements MapperFactory {
         }
     }
     
-    private static final Comparator<MapperKey> mapperComparator  = 
-            new Comparator<MapperKey>() {
-
-                public int compare(MapperKey key1, MapperKey key2) {
-                    if (key1.getAType().isAssignableFrom(key2.getAType()) && key1.getBType().isAssignableFrom(key2.getBType())) {
-                        return 1;
-                    } else if (key2.getAType().isAssignableFrom(key1.getAType()) && key2.getBType().isAssignableFrom(key1.getBType())) {
-                        return -1;
-                    } else if (key1.getAType().equals(key2.getAType()) && key1.getBType().equals(key2.getBType())) {
-                        return 0;
-                    } else {
-                        throw new IllegalArgumentException("keys " + key1 + " and " + key2 + " are unrelated");
-                    }
-                }
-            };
+    private static final Comparator<MapperKey> mapperComparator = new Comparator<MapperKey>() {
+        
+        public int compare(MapperKey key1, MapperKey key2) {
+            if (key1.getAType().isAssignableFrom(key2.getAType()) && key1.getBType().isAssignableFrom(key2.getBType())) {
+                return 1;
+            } else if (key2.getAType().isAssignableFrom(key1.getAType()) && key2.getBType().isAssignableFrom(key1.getBType())) {
+                return -1;
+            } else if (key1.getAType().equals(key2.getAType()) && key1.getBType().equals(key2.getBType())) {
+                return 0;
+            } else {
+                throw new IllegalArgumentException("keys " + key1 + " and " + key2 + " are unrelated");
+            }
+        }
+    };
     
     @SuppressWarnings("unchecked")
     private void initializeUsedMappers(ClassMap<?, ?> classMap) {
@@ -479,13 +475,13 @@ public class DefaultMapperFactory implements MapperFactory {
             }
         } else {
             /*
-             *  Attempt to auto-determine used mappers for this classmap; 
-             *  however, we should only add the most-specific of the available
-             *  mappers to avoid calling the same mapper multiple times during
-             *  a single map request
+             * Attempt to auto-determine used mappers for this classmap;
+             * however, we should only add the most-specific of the available
+             * mappers to avoid calling the same mapper multiple times during a
+             * single map request
              */
             Set<MapperKey> usedMappers = new TreeSet<MapperKey>(mapperComparator);
-            for (MapperKey key: this.classMapRegistry.keySet()) {
+            for (MapperKey key : this.classMapRegistry.keySet()) {
                 if (!key.getAType().equals(classMap.getAType()) || !key.getBType().equals(classMap.getBType())) {
                     if (key.getAType().isAssignableFrom(classMap.getAType()) && key.getBType().isAssignableFrom(classMap.getBType())) {
                         usedMappers.add(key);
@@ -493,10 +489,11 @@ public class DefaultMapperFactory implements MapperFactory {
                 }
             }
             if (!usedMappers.isEmpty()) {
-                //Set<ClassMap<Object, Object>> usedClassMapSet = new HashSet<ClassMap<Object, Object>>();
+                // Set<ClassMap<Object, Object>> usedClassMapSet = new
+                // HashSet<ClassMap<Object, Object>>();
                 MapperKey parentKey = usedMappers.iterator().next();
-//                usedClassMapSet.add(classMapRegistry.get(parentKey));
-//                usedMapperMetadataRegistry.put(parentKey, usedClassMapSet);
+                // usedClassMapSet.add(classMapRegistry.get(parentKey));
+                // usedMapperMetadataRegistry.put(parentKey, usedClassMapSet);
                 collectUsedMappers(classMap, parentMappers, parentKey);
             }
         }
@@ -553,6 +550,10 @@ public class DefaultMapperFactory implements MapperFactory {
     
     public ConverterFactory getConverterFactory() {
         return converterFactory;
+    }
+    
+    public <T> void registerObjectFactory(ObjectFactory<T> objectFactory, Class<T> targetClass) {
+        registerObjectFactory(objectFactory, TypeFactory.valueOf(targetClass));
     }
     
 }

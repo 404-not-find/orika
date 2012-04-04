@@ -85,6 +85,10 @@ public final class ClassMapBuilder<A, B> {
         return fieldMapBuilder;
     }
     
+    public ClassMapBuilder<A, B> exclude(String a) {
+        return fieldMap(a).exclude().add();
+    }
+    
     /**
      * Set the custom mapper to use for this mapping.
      * 
@@ -109,18 +113,18 @@ public final class ClassMapBuilder<A, B> {
         return this;
     }
     
-    public <X,Y> ClassMapBuilder<A, B> use(Class<?> aParentClass, Class<?> bParentClass) {
+    public <X, Y> ClassMapBuilder<A, B> use(Class<?> aParentClass, Class<?> bParentClass) {
         
-    	@SuppressWarnings("unchecked")
-		Type<Object> aParentType = TypeFactory.valueOf((Class<Object>)aParentClass);
         @SuppressWarnings("unchecked")
-		Type<Object> bParentType = TypeFactory.valueOf((Class<Object>)bParentClass);
-    	
-    	if (aType.isAssignableFrom(aParentType)) {
+        Type<Object> aParentType = TypeFactory.valueOf((Class<Object>) aParentClass);
+        @SuppressWarnings("unchecked")
+        Type<Object> bParentType = TypeFactory.valueOf((Class<Object>) bParentClass);
+        
+        if (!aParentType.isAssignableFrom(aType)) {
             throw new MappingException(aType.getSimpleName() + " is not a subclass of " + aParentClass.getSimpleName());
         }
         
-        if (bType.isAssignableFrom(bParentType)) {
+        if (!bParentType.isAssignableFrom(bType)) {
             throw new MappingException(bType.getSimpleName() + " is not a subclass of " + bParentClass.getSimpleName());
         }
         
@@ -135,7 +139,7 @@ public final class ClassMapBuilder<A, B> {
             if (!propertiesCacheA.contains(propertyName)) {
                 if (bProperties.containsKey(propertyName)) {
                     if (!propertiesCacheB.contains(propertyName)) {
-                    	fieldMap(propertyName).add();
+                        fieldMap(propertyName).add();
                     }
                 } else {
                     Property prop = aProperties.get(propertyName);
@@ -143,7 +147,7 @@ public final class ClassMapBuilder<A, B> {
                         String suggestion = defaulter.suggestMappedField(propertyName, prop.getType());
                         if (suggestion != null && bProperties.containsKey(suggestion)) {
                             if (!propertiesCacheB.contains(suggestion)) {
-                            	fieldMap(propertyName, suggestion).add();
+                                fieldMap(propertyName, suggestion).add();
                             }
                         }
                     }
@@ -162,24 +166,26 @@ public final class ClassMapBuilder<A, B> {
      */
     @Deprecated
     public ClassMapBuilder<A, B> byDefault(ma.glasnost.orika.MappingHint hint0) {
-    	return byDefault(new ma.glasnost.orika.MappingHint[]{hint0});
+        return byDefault(new ma.glasnost.orika.MappingHint[] { hint0 });
     }
     
     /**
      * @deprecated use {@link #byDefault(DefaultFieldMapper...)} instead
      * 
-     * @param hint0 first hint
-     * @param mappingHints remaining hints
+     * @param hint0
+     *            first hint
+     * @param mappingHints
+     *            remaining hints
      * @return
      */
     @Deprecated
     public ClassMapBuilder<A, B> byDefault(ma.glasnost.orika.MappingHint hint0, ma.glasnost.orika.MappingHint... mappingHints) {
-        ma.glasnost.orika.MappingHint[] hints = new ma.glasnost.orika.MappingHint[mappingHints.length+1];
-    	hints[0] = hint0;
-    	if (mappingHints.length>0) {
-    		System.arraycopy(mappingHints, 0, hints, 1, mappingHints.length);
-    	}
-    	return byDefault(hints);
+        ma.glasnost.orika.MappingHint[] hints = new ma.glasnost.orika.MappingHint[mappingHints.length + 1];
+        hints[0] = hint0;
+        if (mappingHints.length > 0) {
+            System.arraycopy(mappingHints, 0, hints, 1, mappingHints.length);
+        }
+        return byDefault(hints);
     }
     
     /**
@@ -191,12 +197,11 @@ public final class ClassMapBuilder<A, B> {
     @Deprecated
     public ClassMapBuilder<A, B> byDefault(ma.glasnost.orika.MappingHint[] mappingHints) {
         
-    	
-    	for (final String propertyName : aProperties.keySet()) {
+        for (final String propertyName : aProperties.keySet()) {
             if (!propertiesCacheA.contains(propertyName)) {
                 if (bProperties.containsKey(propertyName)) {
                     if (!propertiesCacheB.contains(propertyName)) {
-                    	fieldMap(propertyName).add();
+                        fieldMap(propertyName).add();
                     }
                 } else {
                     Property prop = aProperties.get(propertyName);
@@ -204,7 +209,7 @@ public final class ClassMapBuilder<A, B> {
                         String suggestion = hint.suggestMappedField(propertyName, prop.getType().getRawType());
                         if (suggestion != null && bProperties.containsKey(suggestion)) {
                             if (!propertiesCacheB.contains(suggestion)) {
-                            	fieldMap(propertyName, suggestion).add();
+                                fieldMap(propertyName, suggestion).add();
                             }
                         }
                     }
@@ -220,7 +225,7 @@ public final class ClassMapBuilder<A, B> {
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Class<A> aType, Class<B> bType) {
-        return new ClassMapBuilder<A, B>(TypeFactory.<A>valueOf(aType), TypeFactory.<B>valueOf(bType));
+        return new ClassMapBuilder<A, B>(TypeFactory.<A> valueOf(aType), TypeFactory.<B> valueOf(bType));
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Type<A> aType, Type<B> bType) {
@@ -228,15 +233,15 @@ public final class ClassMapBuilder<A, B> {
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Class<A> aType, Type<B> bType) {
-        return new ClassMapBuilder<A, B>(TypeFactory.<A>valueOf(aType), bType);
+        return new ClassMapBuilder<A, B>(TypeFactory.<A> valueOf(aType), bType);
     }
     
     public static <A, B> ClassMapBuilder<A, B> map(Type<A> aType, Class<B> bType) {
-        return new ClassMapBuilder<A, B>(aType, TypeFactory.<B>valueOf(bType));
+        return new ClassMapBuilder<A, B>(aType, TypeFactory.<B> valueOf(bType));
     }
     
     private static boolean isPropertyExpression(String a) {
-      return a.indexOf('.') != -1;
+        return a.indexOf('.') != -1;
     }
     
     Property resolveProperty(java.lang.reflect.Type type, String expr) {

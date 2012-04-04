@@ -54,14 +54,15 @@ public class MappingContext {
     
     public <S, D> boolean isAlreadyMapped(S source, Type<D> destinationClass) {
         return cache.containsKey(hashMappedObject(source, destinationClass));
-    } 
+    }
     
     @SuppressWarnings("unchecked")
-	public <D> D getMappedObject(Object source, Type<?> destinationClass) {
-        return (D) cache.get(hashMappedObject(source, destinationClass));
+    public <D> D getMappedObject(Object source, Type<D> destinationType) {
+        
+        return (D) cache.get(hashMappedObject(source, destinationType));
     }
     
     private static Integer hashMappedObject(Object source, Type<?> destinationType) {
-        return System.identityHashCode(source) * 31 + destinationType.hashCode();
+        return System.identityHashCode(source) * 31 + System.identityHashCode(destinationType);
     }
 }
