@@ -18,9 +18,7 @@
 
 package ma.glasnost.orika.impl.generator;
 
-import java.lang.reflect.TypeVariable;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import ma.glasnost.orika.MappingException;
@@ -33,7 +31,7 @@ public class CodeSourceBuilder {
     
     private final StringBuilder out = new StringBuilder();
     private int currentIndent = 1;
-    private UsedTypesContext usedTypes;
+    private final UsedTypesContext usedTypes;
     
     public CodeSourceBuilder(int indent, UsedTypesContext usedTypes) {
         this.currentIndent = indent;
@@ -55,12 +53,19 @@ public class CodeSourceBuilder {
         final String typeCastSetter = getSetter(destination, "destination");
         final String sourceType = getUsedType(source);
         final String targetType = getUsedType(destination);
-        
         final Class<?> destinationClass = destination.getRawType();
         converterId = getConverterId(converterId);
-        return newLine().ifSourceNotNull(source).then()
-                .append("%s((%s)mapperFacade.convert(%s, %s, %s, %s));", typeCastSetter, destinationClass.getCanonicalName(),
-                        typeCastGetter, sourceType, targetType, converterId)
+        
+        String exprValue = String.format("mapperFacade.convert(%s, %s, %s, %s)", typeCastGetter, sourceType, targetType, converterId);
+        
+        if (destination.isPrimitive()) {
+            exprValue = String.format("((%s)%s).%sValue()", ClassUtil.getWrapperType(destinationClass).getCanonicalName(), exprValue,
+                    getPrimitiveType(destinationClass));
+        }
+        
+        return newLine().ifSourceNotNull(source)
+                .then()
+                .append("%s((%s) %s);", typeCastSetter, destinationClass.getCanonicalName(), exprValue)
                 .newLine()
                 .end();
     }
@@ -357,11 +362,12 @@ public class CodeSourceBuilder {
         
         final String typeCastGetter = getGetter(sp, "source");
         final String typeCastSetter = getSetter(dp, "destination");
+        final String expressionGetter = sp.isEnum() ? typeCastGetter + ".name()" : "\"\"+" + typeCastGetter;
         
         ifSourceNotNull(sp).then();
-        append("%s((%s)Enum.valueOf(%s.class,\"\"+%s));", typeCastSetter, dp.getType().getCanonicalName(), dp.getType().getCanonicalName(),
-                typeCastGetter);
         
+        append("%s((%s)Enum.valueOf(%s.class, %s));", typeCastSetter, dp.getType().getCanonicalName(), dp.getType().getCanonicalName(),
+                expressionGetter);
         elze();
         setDestinationNull(dp);
         end();
@@ -449,7 +455,7 @@ public class CodeSourceBuilder {
      * @return CodeSourceBuilder
      */
     public CodeSourceBuilder ifDestinationNull(Property property) {
-
+        
         String getterExpression = "destination";
         String setterExpression;
         for (final Property p : property.getPath()) {
@@ -462,8 +468,8 @@ public class CodeSourceBuilder {
             
             append("if(%s == null) ", getterExpression);
             newLine();
-            append("\t%s((%s)mapperFacade.newObject(source, %s, mappingContext));",
-                    setterExpression, p.getType().getCanonicalName(), getUsedType(p));
+            append("\t%s((%s)mapperFacade.newObject(source, %s, mappingContext));", setterExpression, p.getType().getCanonicalName(),
+                    getUsedType(p));
         }
         return this;
     }

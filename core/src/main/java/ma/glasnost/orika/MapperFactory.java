@@ -41,6 +41,9 @@ public interface MapperFactory {
     
     <A, B> void registerClassMap(ClassMap<A, B> classMap);
     
+    @Deprecated
+    <T> void registerObjectFactory(ObjectFactory<T> objectFactory, Class<T> targetClass);
+    
     <T> void registerObjectFactory(ObjectFactory<T> objectFactory, Type<T> targetType);
     
     <T> ObjectFactory<T> lookupObjectFactory(Type<T> targetType);
@@ -50,7 +53,7 @@ public interface MapperFactory {
     @Deprecated
     void registerMappingHint(MappingHint... hints);
     
-    void registerDefaultFieldMapper(DefaultFieldMapper...fieldDefaults);
+    void registerDefaultFieldMapper(DefaultFieldMapper... fieldDefaults);
     
     Set<ClassMap<Object, Object>> lookupUsedClassMap(MapperKey mapperKey);
     
