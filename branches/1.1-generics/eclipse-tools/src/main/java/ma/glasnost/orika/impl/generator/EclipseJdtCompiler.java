@@ -45,11 +45,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Uses Eclipse JDT to format and compile the source for the specified
- * GeneratedSourceCode objects.<br><br>
- * 
- * By default, this compiler strategy writes formatted source files relative to the current
- * class path root.
+ * EclipseJdtCompiler leverages the eclipse jdt core to compile
+ * source code provided in String format.<br>
+ * It can also make use of the source formatter tool to format source.
  * 
  * @author matt.deboer@gmail.com
  */
@@ -71,12 +69,9 @@ public class EclipseJdtCompiler {
    
 	public EclipseJdtCompiler() {
 		
-		this.byteCodeClassLoader = new ByteCodeClassLoader(getClass()
-		        .getClassLoader());
-		this.formatter = ToolFactory
-		        .createCodeFormatter(getFormattingOptions());
-		this.compilerNameEnvironment = new NameEnvironment(
-		        this.byteCodeClassLoader);
+		this.byteCodeClassLoader = new ByteCodeClassLoader(getClass().getClassLoader());
+		this.formatter = ToolFactory.createCodeFormatter(getFormattingOptions());
+		this.compilerNameEnvironment = new NameEnvironment(this.byteCodeClassLoader);
 		this.compilerRequester = new CompilerRequestor();
 		this.compiler = new Compiler(
 		        compilerNameEnvironment,
@@ -178,15 +173,15 @@ public class EclipseJdtCompiler {
      * @throws ClassNotFoundException 
      * @throws CannotCompileException
      */
-    public Class<?> compile(String source, String packageName, String className) throws ClassNotFoundException {
+    public Class<?> compile(String source, String packageName, String classSimpleName) throws ClassNotFoundException {
     	
     	Map<String, byte[]> compiledClasses = compile(source,
-		        packageName, className, Thread.currentThread().getContextClassLoader());
-    	
+		        packageName, classSimpleName, Thread.currentThread().getContextClassLoader());
+
+    	String className = packageName + "." + classSimpleName;
     	byte[] data = compiledClasses.get(className);
     	byteCodeClassLoader.putClassData(className, data);
-    	
-    	return byteCodeClassLoader.loadClass(packageName + "." + className);
+    	return byteCodeClassLoader.loadClass(className);
     }
     
     private Map<String, byte[]> compile(String source, String packageName,
