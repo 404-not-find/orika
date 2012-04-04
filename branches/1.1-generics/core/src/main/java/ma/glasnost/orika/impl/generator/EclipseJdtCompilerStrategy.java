@@ -49,24 +49,26 @@ public class EclipseJdtCompilerStrategy extends CompilerStrategy {
     private final Method formatSource;
     private final Method compile;
     private final Method assertTypeAccessible;
+    private final Method load;
     
-	public EclipseJdtCompilerStrategy() {
-		super(WRITE_SOURCE_FILES_BY_DEFAULT, WRITE_CLASS_FILES_BY_DEFAULT);
-		   
+    public EclipseJdtCompilerStrategy() {
+        super(WRITE_SOURCE_FILES_BY_DEFAULT, WRITE_CLASS_FILES_BY_DEFAULT);
+           
         try {
             Class<?> compilerClass = Class.forName(COMPILER_CLASS_NAME, true, Thread.currentThread().getContextClassLoader());
             this.compiler = compilerClass.newInstance();
             this.formatSource = compilerClass.getMethod("formatSource", String.class);
             this.compile = compilerClass.getMethod("compile", String.class, String.class, String.class);
             this.assertTypeAccessible = compilerClass.getMethod("assertTypeAccessible", Class.class);
+            this.load = compilerClass.getMethod("load", String.class, byte[].class);
             
         } catch (Exception e) {
             throw new IllegalStateException(COMPILER_CLASS_NAME + " or one of it's runtime dependencies was not available; is the 'orika-eclipse-tools' module included in your classpath?");
         }
-	}
+    }
 
-	
-	private String formatSource(String rawSource) {
+    
+    private String formatSource(String rawSource) {
         try {
             return (String)formatSource.invoke(compiler, rawSource);
         } catch (IllegalAccessException e) {
@@ -76,45 +78,45 @@ public class EclipseJdtCompilerStrategy extends CompilerStrategy {
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e.getTargetException());
         }
-	}
-	
+    }
+    
     /**
      * Produces the requested source and/or class files for debugging purposes.
      * 
      * @throws IOException
      */
-	protected void writeSourceFile(String sourceText, String packageName,
-	        String className) throws IOException {
+    protected void writeSourceFile(String sourceText, String packageName,
+            String className) throws IOException {
 
-		File parentDir = preparePackageOutputPath(this.pathToWriteSourceFiles, packageName);
+        File parentDir = preparePackageOutputPath(this.pathToWriteSourceFiles, packageName);
 
-		File outputSourceFile = new File(parentDir, className + ".java");
-		if (!outputSourceFile.exists() && !outputSourceFile.createNewFile()) {
-			throw new IOException("Could not write source file for "
-			        + packageName + "." + className);
-		}
+        File outputSourceFile = new File(parentDir, className + ".java");
+        if (!outputSourceFile.exists() && !outputSourceFile.createNewFile()) {
+            throw new IOException("Could not write source file for "
+                    + packageName + "." + className);
+        }
 
-		FileWriter fw = new FileWriter(outputSourceFile);
-		fw.append(sourceText);
-		fw.close();
+        FileWriter fw = new FileWriter(outputSourceFile);
+        fw.append(sourceText);
+        fw.close();
 
     }
     
-	protected void writeClassFile(String packageName, String simpleClassName,
-	        byte[] data) throws IOException {
-		
-		File parentDir = preparePackageOutputPath(this.pathToWriteClassFiles, packageName);
+    protected void writeClassFile(String packageName, String simpleClassName,
+            byte[] data) throws IOException {
+        
+        File parentDir = preparePackageOutputPath(this.pathToWriteClassFiles, packageName);
 
-		File outputSourceFile = new File(parentDir, simpleClassName + ".class");
-		if (!outputSourceFile.exists() && !outputSourceFile.createNewFile()) {
-			throw new IOException("Could not write class file for "
-			        + packageName + "." + simpleClassName);
-		}
+        File outputSourceFile = new File(parentDir, simpleClassName + ".class");
+        if (!outputSourceFile.exists() && !outputSourceFile.createNewFile()) {
+            throw new IOException("Could not write class file for "
+                    + packageName + "." + simpleClassName);
+        }
 
-		FileOutputStream fout = new FileOutputStream(outputSourceFile);
-		fout.write(data);
-		fout.close();
-	}
+        FileOutputStream fout = new FileOutputStream(outputSourceFile);
+        fout.write(data);
+        fout.close();
+    }
     
     public void assureTypeIsAccessible(Class<?> type) throws SourceCodeGenerationException {
         try {
@@ -129,9 +131,21 @@ public class EclipseJdtCompilerStrategy extends CompilerStrategy {
     }
 
     
-    private Class<?> compile(String source, String packageName, String classSimpleName) throws ClassNotFoundException {
+    private byte[] compile(String source, String packageName, String classSimpleName) {
         try {
-            return (Class<?>)compile.invoke(compiler, source, packageName, classSimpleName);
+            return (byte[])compile.invoke(compiler, source, packageName, classSimpleName);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e.getTargetException()); 
+        }
+    }
+    
+    private Class<?> load(String className, byte[] data) throws ClassNotFoundException {
+        try {
+            return (Class<?>)load.invoke(compiler, className, data);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         } catch (IllegalArgumentException e) {
@@ -154,34 +168,38 @@ public class EclipseJdtCompilerStrategy extends CompilerStrategy {
      * @throws IOException
      */
     public Class<?> compileClass(GeneratedSourceCode sourceCode)
-	    throws SourceCodeGenerationException {
+        throws SourceCodeGenerationException {
 
-		Class<?> compiledClass = null;
-		String sourceText = formatSource(sourceCode.toSourceFile());
-		String packageName = sourceCode.getPackageName();
-		String classSimpleName = sourceCode.getClassSimpleName();
-		String className = sourceCode.getClassName();
-		byte[] data = null;
-		try {
+        Class<?> compiledClass = null;
+        String sourceText = formatSource(sourceCode.toSourceFile());
+        String packageName = sourceCode.getPackageName();
+        String classSimpleName = sourceCode.getClassSimpleName();
+        String className = sourceCode.getClassName();
+        byte[] data = null;
+        try {
 
-			// Write source file before compilation in case of failure
-			if (writeSourceFiles) {
-				writeSourceFile(sourceText, packageName, classSimpleName);
-			}
+            // Write source file before compilation in case of failure
+            if (writeSourceFiles) {
+                writeSourceFile(sourceText, packageName, classSimpleName);
+            }
 
-			compiledClass = compile(sourceText, packageName, classSimpleName);
-			
-			if (writeClassFiles) {
-				writeClassFile(packageName, classSimpleName, data);
-			}
+            data = compile(sourceText, packageName, classSimpleName);
+            
+            if (writeClassFiles) {
+                writeClassFile(packageName, classSimpleName, data);
+            }
 
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to write files for " + className, e);
-		} catch (ClassNotFoundException e) {
-		    throw new RuntimeException(e);
-		}
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write files for " + className, e);
+        } 
+        
+        try {
+            compiledClass = load(className, data);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
-		return compiledClass;
+        return compiledClass;
     }
 
 }
