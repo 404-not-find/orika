@@ -43,7 +43,7 @@ public class MapperFacadeImpl implements MapperFacade {
     
     private final MapperFactory mapperFactory;
     private final UnenhanceStrategy unenhanceStrategy;
-    private final ConcurrentHashMap<Type<?>,Type<?>> resolvedTypes = new ConcurrentHashMap<Type<?>,Type<?>>();
+    private final ConcurrentHashMap<java.lang.reflect.Type,Type<?>> resolvedTypes = new ConcurrentHashMap<java.lang.reflect.Type,Type<?>>();
     
     public MapperFacadeImpl(MapperFactory mapperFactory, UnenhanceStrategy unenhanceStrategy) {
         this.mapperFactory = mapperFactory;
@@ -53,7 +53,16 @@ public class MapperFacadeImpl implements MapperFacade {
     @SuppressWarnings("unchecked")
     private <S> Type<S> normalizeSourceType(S sourceObject, Type<S> sourceType) {
         
-        Type<?> resolvedType = resolvedTypes.get(sourceType);
+        /*
+         * Use the raw type in cases where the sourceType is
+         * null or not providing any extra information
+         */
+        java.lang.reflect.Type typeKey = sourceType;
+        if (sourceType==null || !sourceType.isParameterized()) {
+            typeKey = sourceObject.getClass();
+        }
+        
+        Type<?> resolvedType = resolvedTypes.get(typeKey); 
         if (resolvedType == null) {
             Type<?> newlyResolvedType;
             if (sourceType!=null) {
@@ -62,7 +71,7 @@ public class MapperFacadeImpl implements MapperFacade {
                 } else {
                     newlyResolvedType = unenhanceStrategy.unenhanceType(sourceObject, TypeFactory.resolveTypeOf(sourceObject, sourceType));
                 }
-                resolvedType = resolvedTypes.putIfAbsent(sourceType, newlyResolvedType);
+                resolvedType = resolvedTypes.putIfAbsent(typeKey, newlyResolvedType);
                 if (resolvedType == null) {
                     resolvedType = newlyResolvedType;
                 }
