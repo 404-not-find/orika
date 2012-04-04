@@ -165,24 +165,56 @@ public class EclipseJdtCompiler {
     }
 
     /**
-     * Compile and return the (generated) class; this will also cause the
-     * generated class to be detached from the class-pool, and any (optional)
-     * source and/or class files to be written.
+     * Compile and return the (generated) class.
+     * 
+     * @param source
+     * @param packageName
+     * @param classSimpleName
      * 
      * @return the (generated) compiled class
      * @throws ClassNotFoundException 
-     * @throws CannotCompileException
      */
-    public Class<?> compile(String source, String packageName, String classSimpleName) throws ClassNotFoundException {
+    public Class<?> compileAndLoad(String source, String packageName, String classSimpleName) throws ClassNotFoundException {
+    	String className = packageName + "." + classSimpleName;
+    	return load(className, compile(source, packageName, classSimpleName));
+    }
+    
+    /**
+     * Compile and return the raw bytes of the class file.
+     * 
+     * @param source
+     * @param packageName
+     * @param classSimpleName
+     * 
+     * @return the raw bytes of the class file
+     */
+    public byte[] compile(String source, String packageName, String classSimpleName) {
     	
     	Map<String, byte[]> compiledClasses = compile(source,
 		        packageName, classSimpleName, Thread.currentThread().getContextClassLoader());
 
     	String className = packageName + "." + classSimpleName;
     	byte[] data = compiledClasses.get(className);
+    	
+    	return data;
+    }
+    
+    public Class<?> load(String className, byte[] data) throws ClassNotFoundException {
     	byteCodeClassLoader.putClassData(className, data);
     	return byteCodeClassLoader.loadClass(className);
     }
+    
+    /**
+     * Gets the raw bytes of the classFile that was defined for the given className by this
+     * compiler.
+     * 
+     * @param className
+     * @return
+     */
+    public byte[] getBytes(String className) {
+    	return byteCodeClassLoader.getBytes(className);
+    }
+    
     
     private Map<String, byte[]> compile(String source, String packageName,
     		String className, ClassLoader classLoader) {
