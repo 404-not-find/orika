@@ -48,8 +48,13 @@ public class MappingContext {
         mapping.put(subjectClass, concreteClass);
     }
     
+    @Deprecated
     public <S, D> void cacheMappedObject(S source, D destination) {
         cache.put(hashMappedObject(source, TypeFactory.typeOf(destination)), destination);
+    }
+    
+    public <S, D> void cacheMappedObject(S source, Type<D> destinationType, D destination) {
+        cache.put(hashMappedObject(source, destinationType), destination);
     }
     
     public <S, D> boolean isAlreadyMapped(S source, Type<D> destinationClass) {
