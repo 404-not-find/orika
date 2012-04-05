@@ -105,7 +105,7 @@ public class MapperFacadeImpl implements MapperFacade {
         }
         
         final Type<S> resolvedSourceType = normalizeSourceType(sourceObject, sourceType);
-        sourceObject = (S) unenhanceStrategy.unenhanceObject(sourceObject, sourceType);
+        sourceObject = unenhanceStrategy.unenhanceObject(sourceObject, sourceType);
         
         // We can copy by reference when source and destination types are the
         // same and immutable.
@@ -134,7 +134,7 @@ public class MapperFacadeImpl implements MapperFacade {
         
         final D destinationObject = newObject(sourceObject, resolvedDestinationType, context);
         
-        context.cacheMappedObject(sourceObject, destinationObject);
+        context.cacheMappedObject(sourceObject, destinationType, destinationObject);
         
         mapDeclaredProperties(sourceObject, destinationObject, resolvedSourceType, resolvedDestinationType, context, mapper);
         
