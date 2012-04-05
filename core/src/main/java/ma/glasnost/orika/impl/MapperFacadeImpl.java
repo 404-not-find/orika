@@ -66,6 +66,9 @@ public class MapperFacadeImpl implements MapperFacade {
         if (resolvedType == null) {
             Type<?> newlyResolvedType;
             if (sourceType != null) {
+                if (sourceType.isAssignableFrom(sourceObject.getClass())) {
+                    sourceType = (Type<S>) TypeFactory.valueOf(sourceObject.getClass());
+                }
                 if (ClassUtil.isConcrete(sourceType)) {
                     newlyResolvedType = unenhanceStrategy.unenhanceType(sourceObject, sourceType);
                 } else {

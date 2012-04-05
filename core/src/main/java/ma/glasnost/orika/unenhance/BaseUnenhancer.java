@@ -83,13 +83,14 @@ public class BaseUnenhancer implements UnenhanceStrategy {
         return unenhancedClass;
     }
     
-    public Object unenhanceObject(Object object, Type<?> type) {
+    @SuppressWarnings("unchecked")
+    public <T> T unenhanceObject(T object, Type<T> type) {
         for (UnenhanceStrategy strategy : unenhanceStrategyChain) {
             Object delegateUnenhanced = strategy.unenhanceObject(object, type);
             // Accept the first delegate strategy result which produces
             // something different than the object's getClass method
             if (delegateUnenhanced != null && delegateUnenhanced != object) {
-                return delegateUnenhanced;
+                return (T)delegateUnenhanced;
             }
         }
         return object;

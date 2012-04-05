@@ -43,5 +43,5 @@ public interface UnenhanceStrategy {
      */
     public <T> Type<T> unenhanceType(T object, Type<T> type);
     
-    public Object unenhanceObject(Object object, Type<?> type);
+    public <T> T unenhanceObject(T object, Type<T> type);
 }

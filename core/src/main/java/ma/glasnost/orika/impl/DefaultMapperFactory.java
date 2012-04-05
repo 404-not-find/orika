@@ -210,14 +210,7 @@ public class DefaultMapperFactory implements MapperFactory {
         
         if (unenhanceStrategy != null) {
             unenhancer.addUnenhanceStrategy(unenhanceStrategy);
-        } /*
-           * else { // TODO: this delegate strategy may no longer be needed...
-           * try { Class.forName("org.hibernate.proxy.HibernateProxy");
-           * unenhancer.addUnenhanceStrategy(new HibernateUnenhanceStrategy());
-           * } catch (final Throwable e) { // TODO add warning }
-           * 
-           * }
-           */
+        } 
         
         if (superTypeStrategy != null) {
             unenhancer.addSuperTypeResolverStrategy(superTypeStrategy);
