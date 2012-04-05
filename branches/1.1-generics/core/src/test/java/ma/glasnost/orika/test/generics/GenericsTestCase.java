@@ -66,7 +66,6 @@ public class GenericsTestCase {
     
     @Test
     public void testGenericsWithNestedParameterizedTypes() {
-        MappingUtil.useEclipseJdt();
         
         MapperFactory factory = MappingUtil.getMapperFactory();
         
@@ -117,8 +116,6 @@ public class GenericsTestCase {
     @Test
     public void testMappingParameterizedTypes() {
         
-        MappingUtil.useEclipseJdt();
-        
         Type<TestEntry<Holder<Long>, Holder<String>>> fromType = new TypeBuilder<TestEntry<Holder<Long>, Holder<String>>>() {}.build();
         Type<OtherTestEntry<Container<String>, Container<String>>> toType = new TypeBuilder<OtherTestEntry<Container<String>, Container<String>>>() {}.build();
         
@@ -153,9 +150,7 @@ public class GenericsTestCase {
     
     @Test
     public void testMappingParameterizedTypes2() {
-        
-        MappingUtil.useEclipseJdt();
-        
+       
         Type<Entry<Container<Holder<Long>>, Envelope<Container<String>>>> fromType = 
                 new TypeBuilder<Entry<Container<Holder<Long>>, Envelope<Container<String>>>>() {}.build();
         Type<Entry<Holder<String>, Container<String>>> toType = 

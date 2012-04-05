@@ -17,6 +17,7 @@ import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.OtherE
 import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.Policy;
 import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.PolicyDTO;
 import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.PolicyElement;
+import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.PolicyElementDTO;
 import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.PolicyElementProxy;
 import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.ProductElement;
 import ma.glasnost.orika.test.crossfeatures.PolicyElementsTestCaseClasses.ProductElementDTO;
@@ -65,9 +66,10 @@ public class PolicyElementsTestCase {
                 return type;
             }
             
-            public Object unenhanceObject(Object object, Type<?> type) {
+            @SuppressWarnings("unchecked")
+            public <T> T unenhanceObject(T object, Type<T> type) {
                 if (object instanceof PolicyElementProxy)
-                    return ((PolicyElementProxy) object).getTarget();
+                    return (T) ((PolicyElementProxy) object).getTarget();
                 return object;
             }
             
@@ -89,6 +91,11 @@ public class PolicyElementsTestCase {
         
         Assert.assertEquals(elements.size(), dto.getElements().size());
         
-        Assert.assertEquals("Adil", ((CustomerElementDTO) dto.getElements().iterator().next()).getName());
+        for (PolicyElementDTO element: dto.getElements()) {
+            if (element instanceof CustomerElementDTO) {
+                Assert.assertEquals("Adil", ((CustomerElementDTO) element).getName());
+            }
+        }
+        
     }
 }
