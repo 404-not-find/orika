@@ -1,6 +1,4 @@
-=Getting Started Guide (New for v 1.1.0-SNAPSHOT)=
-|| *Under Construction* ||
- _This is an updated version of the Getting Started Guide which applies   for the changes in the 1.1.0 generics branch found at http://orika.googlecode.com/svn/branches/1.1-generics, which should soon be merged into the trunk_
+=Getting Started Guide (New for v 1.1.0)=
 <wiki:toc max_depth="3" />
 
 _This guide is very brief and incomplete. Feel free to fix or improve it_
@@ -15,7 +13,7 @@ _Please verify the latest version_:
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-core</artifactId>
-   <version>1.0</version>
+   <version>1.1.0</version>
 </dependency> 
 }}}
 
