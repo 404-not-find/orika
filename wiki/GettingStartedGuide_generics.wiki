@@ -130,12 +130,12 @@ For specific field we have specific treatment, in this case we will create and r
 ClassMapBuilder<ProductDto, Product> builder = ClassMapBuilder.map(ProductDto.class, Product.class);
 builder.customize(new CustomMapper<ProductDto, Product>() {
     
-// create your custom mapper                
-@Override
-public void mapBtoA( Product b,  ProductDto a, MappingContext  context) {
-a.setDescription("The " + b.getProductName() + " is a fabulous  product which only cost  " + b.getPrice());
+   // create your custom mapper                
+   @Override
+   public void mapBtoA( Product b,  ProductDto a, MappingContext  context) {
+      a.setDescription("The " + b.getProductName() + " is a fabulous  product which only cost  " + b.getPrice());
 
-}});
+   }});
 mapperFactory.registerClassMap(builder.byDefault().toClassMap());
 
 }}}
