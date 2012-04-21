@@ -1,6 +1,5 @@
 =Getting Started Guide=
 <wiki:toc max_depth="3" />
-_Updated for v1.1.0_
 _This guide is very brief and incomplete. Feel free to fix or improve it_
 
 ==Installation==
