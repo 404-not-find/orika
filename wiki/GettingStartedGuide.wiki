@@ -45,6 +45,36 @@ factory.build();
 factory.getMapperFacade();
 }}}
 
+*Alternative Configuration/Setup Option (since 1.1.2)*:
+
+Extend *{{{ma.glasnost.orika.impl.ConfigurableMapper}}}*, overriding the *{{{configure(MapperFactory mapperFactory)}}}* method to register any class-maps, converters, etc. Since ConfigurableMapper implements MapperFacade, you can then simply construct a new instance (or have one injected) of your extension class and use it as a mapper (your custom configure method will be called during initialization).
+{{{
+public class MyCustomMapper extends ConfigurableMapper {
+
+   @Override
+   public void configure(MapperFactory mapperFactory) {
+      ...
+      mapperFactory.registerClassMap(...)
+      mapperFactory.getConverterFactory().registerConverter(...)
+      ...
+
+   }
+}
+
+public class SomeOtherClass {
+
+   private MapperFacade mapper = new MyCustomMapper();
+ 
+   void someMethod() {
+       
+      mapper.map(blah, Blah.class);
+      ...
+   }
+   ...
+}
+
+}}}
+
 === Reference ====
 
 In this example we will show you how to map from a class A to another class B and vice versa.
