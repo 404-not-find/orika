@@ -390,10 +390,11 @@ But we can accomplish it by explicitly telling Orika both the source and target 
  * Register the class-mapping as usual, using the Type<?> instances instead
  * of Class values
  */
+Type<Entry<Container<Holder<Long>>, Envelope<Container<String>>> fromType = new TypeBuilder<Entry<Container<Holder<Long>>, Envelope<Container<String>>>(){}.build();
+Type<Entry<Holder<String>, Container<String>>> toType = new TypeBuilder<Entry<Holder<String>, Container<String>>>(){}.build();
+
 mapperFactory.registerClassMap(
-   ClassMapBuilder.map(
-         new TypeBuilder<Entry<Container<Holder<Long>>, Envelope<Container<String>>>(){}.build(),
-         new TypeBuilder<Entry<Holder<String>, Container<String>>>(){}.build())
+   ClassMapBuilder.map(fromType, toType)
       .field("key.contained.held", "key.held")
       .field("value.contents.contained", "value.contained")
       .toClassMap());
