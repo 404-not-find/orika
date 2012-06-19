@@ -1,0 +1,15 @@
+#summary This page contains details of each release.
+=Release Notes=
+
+==1.1.6 (bug fix)==
+  * Issue 26: Generic super-type not recognized
+  * Issue 27: Occasionally the wrong Type is resolved for a class
+  * fixes for multi-threading issues (simultaneous generation of mappers and object factories could occasionally fail)
+
+==1.1.5 (bug fix)==
+  * Issue 21: NPE when collection is changed. (failure to distinguish between mapping strategies for mapping in place and those for mapping to a new instance)
+  * fix for NPE on TypeFactory.valueOf(null) when mapping using Class-based mapping methods with a null input value
+
+==1.1.4 (bug fix)==
+  * Issue 20: StackOverflowError mapping hibernate4 proxy.
+
