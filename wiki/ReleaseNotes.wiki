@@ -1,6 +1,7 @@
 #summary This page contains details of each release.
 =Release Notes=
-
+_by version_
+----
 ==1.1.6 (bug fix)==
   * Issue 26: Generic super-type not recognized
   * Issue 27: Occasionally the wrong Type is resolved for a class
@@ -12,4 +13,3 @@
 
 ==1.1.4 (bug fix)==
   * Issue 20: StackOverflowError mapping hibernate4 proxy.
-
