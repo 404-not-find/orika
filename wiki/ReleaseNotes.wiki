@@ -1,7 +1,12 @@
 #summary This page contains details of each release.
+#labels Featured
 =Release Notes=
 _by version_
 ----
+
+==1.1.7 (bug fix)==
+  * Issue 28: StackoverflowException on recursively-defined type
+
 ==1.1.6 (bug fix)==
   * Issue 26: Generic super-type not recognized
   * Issue 27: Occasionally the wrong Type is resolved for a class
