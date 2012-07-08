@@ -13,7 +13,8 @@
 	 Field(title(String), title(String)) : treating as immutable (using copy-by-reference)
 	}
 	Types used: [PublicationFormatDTOAltCase]
-        Converters used: LegacyConverter(ma.glasnost.orika.test.enums.EnumsTestCase$1@150ac9a8)]
+        
+      Converters used: LegacyConverter(ma.glasnost.orika.test.enums.EnumsTestCase$1@150ac9a8)]
 </pre>
     * Improved debugging: detailed description of class-mapping process for auto-generated mappers; now you can see what was mapped "`byDefault()`", for example:
 <pre>
