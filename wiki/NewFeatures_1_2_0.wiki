@@ -39,3 +39,4 @@
     * example: `MapperFactory.registerMapper(Mapper mapper)`
  * Support for registration of concrete types to be instantiated for abstract classes or interfaces
     * example: `MapperFactory.registerConcreteType(anInterface, aConcreteType)`
+ * Registered custom converters will now have access to an instance of the current MapperFacade (via a protected variable named `mapperFacade`)
