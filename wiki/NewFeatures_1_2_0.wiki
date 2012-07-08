@@ -25,7 +25,6 @@
  * Improved debugging: details regarding the mapping 'strategy' chosen to map a particular set of inputs; for example:
 <pre>
 08:56:01.929 [main] DEBUG m.g.orika.impl.MapperFacadeImpl - MappingStrategy resolved and cached:
-    
       Inputs:[ sourceClass: ma.glasnost.orika.test.enums.EnumsTestCaseClasses.BookImpl, sourceType: BookImpl, destinationType: BookDTOWithAltCaseEnum]
     
       Resolved:[ strategy: InstantiateByDefaultAndUseCustomMapperStrategy, sourceType: BookImpl, destinationType: BookDTOWithAltCaseEnum, mapper: ma.glasnost.orika.generated.OrikaBookDTOWithAltCaseEnumBookImplMapper892899908@560c7816, mapInverse?: false]
