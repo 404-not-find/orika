@@ -1,7 +1,8 @@
 #summary New features added for 1.2.0 release
 
 =New Features for release 1.2.0=
-  * Improved debugging: detailed description of what was generated (and how) for registered and auto-generated mappers; for example:
+  * Improved debugging: detailed description of what was generated (and how) for registered and auto-generated mappers
+    * example:
 <pre>
 08:56:01.928 [main] DEBUG m.g.o.impl.generator.MapperGenerator - Generating new mapper for (BookImpl, BookDTOWithAltCaseEnum)	
        OrikaBookDTOWithAltCaseEnumBookImplMapper892899908.mapAToB(BookImpl, BookDTOWithAltCaseEnum) {
@@ -16,13 +17,15 @@
         
        Converters used: LegacyConverter(ma.glasnost.orika.test.enums.EnumsTestCase$1@150ac9a8)]
 </pre>
-    * Improved debugging: detailed description of class-mapping process for auto-generated mappers; now you can see what was mapped "`byDefault()`", for example:
+ * Improved debugging: detailed description of class-mapping process for auto-generated mappers; now you can see what was mapped "`byDefault()`"
+   * example:
 <pre>
 08:56:01.910 [main] DEBUG m.g.orika.metadata.ClassMapBuilder - ClassMap created:
 	ClassMapBuilder.map(BookImpl, BookDTOWithAltCaseEnum)
 	 .field([format(PublicationFormat)], [format(PublicationFormatDTOAltCase)])
 	 .field([title(String)], [title(String)])</pre>
- * Improved debugging: details regarding the mapping 'strategy' chosen to map a particular set of inputs; for example:
+ * Improved debugging: details regarding the mapping 'strategy' chosen to map a particular set of inputs
+   * example:
 <pre>
 08:56:01.929 [main] DEBUG m.g.orika.impl.MapperFacadeImpl - MappingStrategy resolved and cached:
       Inputs:[ sourceClass: ma.glasnost.orika.test.enums.EnumsTestCaseClasses.BookImpl, sourceType: BookImpl, destinationType: BookDTOWithAltCaseEnum]
@@ -34,3 +37,5 @@
     * Via direct mapping methods ( mapAsMap(...), mapAsList(...) )
  * Support for direct registration of custom Mapper instances
     * example: `MapperFactory.registerMapper(Mapper mapper)`
+ * Support for registration of concrete types to be instantiated for abstract classes or interfaces
+    * example: `MapperFactory.registerConcreteType(anInterface, aConcreteType)`
