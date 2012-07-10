@@ -4,6 +4,10 @@
 _by version_
 ----
 
+==1.1.8 (bug fix)==
+  * Issue 30: MappingException: cannot determine runtime type of destination collection
+  * Issue 32: ClassLoader leak via "strategyKey" ThreadLocal
+
 ==1.1.7 (bug fix)==
   * Issue 28: StackoverflowException on recursively-defined type
 
