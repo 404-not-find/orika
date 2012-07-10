@@ -40,3 +40,14 @@
  * Support for registration of concrete types to be instantiated for abstract classes or interfaces
     * example: `MapperFactory.registerConcreteType(anInterface, aConcreteType)`
  * Registered custom converters will now have access to an instance of the current MapperFacade (via a protected variable named `mapperFacade`)
+ * Improved error reporting for mapping failures, giving better context information about the inputs of the mapping operation, and (if possible) the mapper/converter/etc. used
+   * example:
+<pre>
+ma.glasnost.orika.MappingException: While attempting the folling mapping:
+sourceType = BigDecimal
+destinationType = Double
+Error occurred: No converter registered for conversion from BigDecimal to Double, nor any ObjectFactory which can generate Double from BigDecimal
+	at ma.glasnost.orika.impl.DefaultMapperFactory.lookupMapper(DefaultMapperFactory.java:372)
+	at ma.glasnost.orika.impl.MapperFacadeImpl.prepareMapper(MapperFacadeImpl.java:442)
+...
+</pre>
