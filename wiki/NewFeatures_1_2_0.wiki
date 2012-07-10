@@ -44,10 +44,11 @@
    * example:
 <pre>
 ma.glasnost.orika.MappingException: While attempting the folling mapping:
-sourceType = BigDecimal
-destinationType = Double
-Error occurred: No converter registered for conversion from BigDecimal to Double, nor any ObjectFactory which can generate Double from BigDecimal
-	at ma.glasnost.orika.impl.DefaultMapperFactory.lookupMapper(DefaultMapperFactory.java:372)
-	at ma.glasnost.orika.impl.MapperFacadeImpl.prepareMapper(MapperFacadeImpl.java:442)
+    sourceType = BigDecimal 
+    destinationType = Double
+    Error occurred: No converter registered for conversion from BigDecimal to Double, nor any ObjectFactory which can generate Double from BigDecimal
+    
+    at ma.glasnost.orika.impl.DefaultMapperFactory.lookupMapper(DefaultMapperFactory.java:372)
+    at ma.glasnost.orika.impl.MapperFacadeImpl.prepareMapper(MapperFacadeImpl.java:442)
 ...
 </pre>
