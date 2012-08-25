@@ -6,7 +6,8 @@ _by version_
 
 ==1.1.9 (bug fix)==
   * Issue 41 : StackOverflowError for nested Enum	
-  * Issue 38 : Option to not set target object property when property value in the source object is null	 
+  * Issue 38 : Option to not set target object property when property value in the source object is null	
+  * Issue 36:  Cleanup orika-core pom.xml 
   * Issue 35 : Remove compile-scope dependency to slf4j-simple
 
 ==1.1.8 (bug fix)==
