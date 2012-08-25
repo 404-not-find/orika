@@ -4,6 +4,11 @@
 _by version_
 ----
 
+==1.1.9 (bug fix)==
+  * Issue 41 : StackOverflowError for nested Enum	
+  * Issue 38 : Option to not set target object property when property value in the source object is null	 
+  * Issue 35 : Remove compile-scope dependency to slf4j-simple
+
 ==1.1.8 (bug fix)==
   * Issue 30: MappingException: cannot determine runtime type of destination collection
   * Issue 32: ClassLoader leak via "strategyKey" ThreadLocal
