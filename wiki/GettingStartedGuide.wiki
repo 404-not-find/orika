@@ -344,6 +344,25 @@ As you can see, nothing has changed, and of course the destination object will h
 Orika will map from primitives to their respective wrapper and vice versa automatically. 
 Orika also automatically handles mappings for primitives (and their respective wrapper types) to and from `java.lang.String` whenever possible.
 
+=== Immutable Types ===
+
+Orika has a built-in set of types it will treat as immutable (most of the primitive wrappers, String, etc.; the exact list (as of 1.1.9) is: 
+{{{
+   Byte.class, Short.class, Integer.class, Long.class, Boolean.class,    
+   Character.class, Float.class, Double.class, String.class,  
+   BigDecimal.class, Date.class, java.sql.Date.class, Byte.TYPE,   
+   Short.TYPE, Integer.TYPE, Long.TYPE, Boolean.TYPE, Character.TYPE, 
+   Float.TYPE, Double.TYPE
+}}}
+
+To add your own types, just register a PassThroughConverter with any number of types you want to treat as immutable, like so:
+{{{
+mapperFactory.getConverterFactory().registerConverter(
+   new PassThroughConverter(MyType1.class, MyType2.class, MyType3.class));
+}}}
+
+You can pass in any number of Class<?> or Type<?> instances when constructing the PassThroughConverter; these types will then be "passed through" like immutable types instead of mapping their individual properties.
+
 === Enumerations ===
 
 Orika will map between instances of the same Enum automatically.
