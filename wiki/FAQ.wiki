@@ -47,7 +47,7 @@ Yes. Orika automatically maps between multi-occurrence types (Arrays and java.ut
 
 ==Is class inheritance supported?==
 
-Yes. Orika will reuse mappers already defined for a given class hierarchy, and 
+Yes. Orika will reuse mappers already defined for a given class hierarchy, and you can customize it using `ClassMapBuilder.use`
 
 ==Are generics supported?==
 
@@ -118,6 +118,11 @@ Yes. Enum instance are automatically mapped based on their instance values (when
 ==When mapping generic Collections or Maps how do I tell Orika the values of the template parameters?==
 
 Use the ma.glasnost.orika.metadata.Type<?> construct to pass the runtime type into a given map method. 
+
+
+==How can I do a workaroud, for a mapping case not supported by Orika? ==
+
+Disable or do not register a field map, then customize your class mapping to map by overriding `mapAtoB` and `mapBtoA` methods.
 
 
 ==How can I debug Orika?==
