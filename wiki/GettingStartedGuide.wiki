@@ -40,9 +40,7 @@ factory.registerClassMap(factory.classMap(Order.class,OrderDTO.class)
   .field("product.state.type.label", "stateLabel")
   .field("product.name", "productName").toClassMap());
         
-factory.build();
-
-factory.getMapperFacade();
+MapperFacade mapper = factory.getMapperFacade();
 }}}
 
 *Alternative Configuration/Setup Option (since 1.1.2)*:
@@ -53,11 +51,16 @@ public class MyCustomMapper extends ConfigurableMapper {
 
    @Override
    public void configure(MapperFactory mapperFactory) {
+      // register class maps, Mappers, ObjectFactories, and Converters
       ...
       mapperFactory.registerClassMap(...)
       mapperFactory.getConverterFactory().registerConverter(...)
       ...
 
+   }
+   @Override
+   public void configureFactoryBuilder(DefaultMapperFactory.Builder builder) {
+      // configure properties of the factory, if needed
    }
 }
 
