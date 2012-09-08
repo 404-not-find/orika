@@ -57,6 +57,14 @@ ma.glasnost.orika.MappingException: While attempting the folling mapping:
 </pre>
   * Support for extending ClassMapBuilder (enhancement for Issue 33)
   * Built-in converters for numeric and data/time types which can be enabled using `useBuiltinConverters(true)` on DefaultMapperFactory.Builder
+  * Change to the way ClassMapBuilder instances are obtained; the old method, while convenient, resulted in a static member variable containing a PropertyResolverStrategy which is not desirable; now, ClassMapBuilders are obtained from the MapperFactory instance, like so:
+{{{
+   // new, preferred pattern
+   mapperFactory.classMap(TypeA.class, TypeB.class)
+      ...
+   // old, deprecated pattern
+   ClassMapBuilder.map(TypeA.class, TypeB.class)
+}}}
   * Bug fixes for:
    * issue 45
    * issue 34
