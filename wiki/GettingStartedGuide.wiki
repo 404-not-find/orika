@@ -36,7 +36,7 @@ The get an instance of MapperFacade initialise a MapperFactory:
 
 {{{
 MapperFactory factory = new DefaultMapperFactory.Builder().build();
-factory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
+factory.registerClassMap(factory.classMap(Order.class,OrderDTO.class)
   .field("product.state.type.label", "stateLabel")
   .field("product.name", "productName").toClassMap());
         
@@ -129,17 +129,17 @@ This allows you to do any of the following:
   # map all properties automatically
 {{{
 // register the auto-mapping function
-mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,ProductDto.class).byDefault().toClassMap());
+mapperFactory.registerClassMap(mapperFactory.classMap(Product.class,ProductDto.class).byDefault().toClassMap());
 }}}
   # explicitly specify every property mapping
 {{{
-mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
+mapperFactory.registerClassMap(mapperFactory.classMap(Order.class,OrderDTO.class)
   .field("product.state.type.label", "stateLabel")
   .field("product.name", "productName").toClassMap());
 }}}
   # customize some properties, and accept automatic behavior for the rest
 {{{
-mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,OrderDTO.class)
+mapperFactory.registerClassMap(mapperFactory.classMap(Order.class,OrderDTO.class)
   .field("product.state.type.label", "stateLabel")
   .field("product.name", "productName")
   .byDefault().toClassMap());
@@ -157,7 +157,7 @@ For specific field we have specific treatment, in this case we will create and r
 
 {{{
 // register your custom mapper
-ClassMapBuilder<ProductDto, Product> builder = ClassMapBuilder.map(ProductDto.class, Product.class);
+ClassMapBuilder<ProductDto, Product> builder = mapperFactory.classMap(ProductDto.class, Product.class);
 builder.customize(new CustomMapper<ProductDto, Product>() {
     
    // create your custom mapper                
@@ -212,8 +212,8 @@ ConverterFactory converterFactory = factory.getConverterFactory();
         converterFactory.registerConverter("dateConverter1", new DateToStringConverter("dd/MM/yyyy"));
 converterFactory.registerConverter("dateConverter2", new DateToStringConverter("dd-MM-yyyy"));
         
-factory.registerClassMap(ClassMapBuilder.map(A.class, B.class).fieldMap("date").converter("dateConverter1").add().toClassMap());
-factory.registerClassMap(ClassMapBuilder.map(A.class, C.class).fieldMap("date").converter("dateConverter2").add().toClassMap());
+factory.registerClassMap(factory.classMap(A.class, B.class).fieldMap("date").converter("dateConverter1").add().toClassMap());
+factory.registerClassMap(factory.classMap(A.class, C.class).fieldMap("date").converter("dateConverter2").add().toClassMap());
 }}}
 
 In the last snippet, two converters are registered using two identifiers: ("dateConverter1" and "dateConverter2") and are specified on two different field mappings.
@@ -226,7 +226,7 @@ Is an easy task--just point out the name of the attribute in class A and the sup
 
 {{{
 mapperFactory.registerClassMap(
-   ClassMapBuilder.map(Product.class,ProductDto.class)
+   mapperFactory.classMap(Product.class,ProductDto.class)
       .field("productDescription", "description")
       .byDefault()
       .toClassMap()
@@ -264,7 +264,7 @@ You can also pass any hints you've defined (as var-args) into the *byDefault()* 
 MappingHint myHint = ... // same hint as defined above
 
 mapperFactory.registerClassMap(
-   ClassMapBuilder.map(A.class,B.class)
+   mapperFactory.classMap(A.class,B.class)
       .byDefault(myHint)
       .toClassMap()
    );
@@ -303,7 +303,7 @@ Our Dto diagram contains a new attribute the orderNum which is in our case the p
 {{{
 // register the nested property expression
 mapperFactory.registerClassMap(
-   ClassMapBuilder.map(Order.class,OrderDto.class)
+   mapperFactory.classMap(Order.class,OrderDto.class)
       .field("product.productName", "orderNum")
       .byDefault()
       .toClassMap()
@@ -315,11 +315,11 @@ mapperFactory.registerClassMap(
 In reality an order contains a set of products:
 {{{
 // register product and order
-mapperFactory.registerClassMap(ClassMapBuilder.map(Product.class,
+mapperFactory.registerClassMap(mapperFactory.classMap(Product.class,
 ProductDto.class).field("productDescription", "description")
 .byDefault().toClassMap());
 
-mapperFactory.registerClassMap(ClassMapBuilder.map(Order.class,
+mapperFactory.registerClassMap(mapperFactory.classMap(Order.class,
 OrderDto.class).field("products", "productsDto").byDefault()
 .toClassMap());
 
@@ -413,7 +413,7 @@ Type<Entry<Container<Holder<Long>>, Envelope<Container<String>>> fromType = new 
 Type<Entry<Holder<String>, Container<String>>> toType = new TypeBuilder<Entry<Holder<String>, Container<String>>>(){}.build();
 
 mapperFactory.registerClassMap(
-   ClassMapBuilder.map(fromType, toType)
+   mapperFactory.classMap(fromType, toType)
       .field("key.contained.held", "key.held")
       .field("value.contents.contained", "value.contained")
       .toClassMap());
