@@ -128,7 +128,7 @@ Orika mappings can be customized by creating your own custom Converters, Mappers
 
 To show debug logging information about the mappings used, generated, and the types resolved, set the "ma.glasnost.orika" package to DEBUG logging level.
 
-To step-debug (in Eclipse) into the actual generated classes, you'll first need to include the 'orika-eclipse-tools' jar in your project.
+To step-debug (in Eclipse or other IDE) into the actual generated classes, you'll first need to include the 'orika-eclipse-tools' jar in your project.
 {{{
     <dependency>
       <groupId>ma.glasnost.orika</groupId>
@@ -137,6 +137,8 @@ To step-debug (in Eclipse) into the actual generated classes, you'll first need 
       <scope>test</scope>
     </dependency>
 }}}
+_Note that Orika makes use of Eclipse JDT independent of any containing Eclipse runtime environment_
+
 We recommend including this at 'test' scope if using Maven. Then, you can enable use of the EclipseJdtCompilerStrategy.class by setting the following system property value:
    -Dma.glasnost.orika.compilerStrategy=ma.glasnost.orika.impl.generator.EclipseJdtCompilerStrategy
 
