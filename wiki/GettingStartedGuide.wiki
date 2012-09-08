@@ -77,6 +77,10 @@ public class SomeOtherClass {
 }
 
 }}}
+_This method works particularly well with Spring; just wire up your extension class as a singleton_
+{{{
+   <bean id="mapper" class="org.example.MyCustomMapper" />
+}}}
 
 === Reference ====
 
