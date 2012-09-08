@@ -1,7 +1,5 @@
 #summary Frequently asked questions related to Orika mapping
 
-=D R A F T=
-
 ==Should I write unit tests to confirm that Orika mapped my objects successfully?==
 
 Of course! If you mapped these objects by hand, you would write a unit test, right? So you're just going to trust us that we mapped your objects the way you expected us to? That's giving Orika and it's authors a little too much credit. Please write tests to confirm the objects are mapped as you expect.
@@ -14,7 +12,9 @@ Orika takes this a little bit further, including java.lang.Boolean types for the
 
 ==Will Orika convert data types?==
 
-Yes. Most scenarios are supported by default, including primitives, primitive wrappers, Collections, Arrays, Maps, and Complex types.
+Yes. Most scenarios are supported by default, including primitives, primitive wrappers, Enums, Collections, Arrays, Maps, and Complex types.
+There are an additional set of converters for numeric and date types which can be enabled by calling the useBuiltinConverters(true) on DefaultMapperFactory.Builder.
+Additionally, it is straightforward to register a custom mapper (by `extending ma.glasnost.orika.CustomMapper`) to deal with a conversion that is not built-in.
 
 ==How does Orika handle immutable types?==
 
@@ -23,7 +23,7 @@ User-defind/declared immutable types are possible via the registration of a spec
 
 ==Does Orika automatically map fields with the same property name?==
 
-Yes--in the default mode; when a mapping is requested for 2 types which have not been explicitly registered. When registering an explicit mapping from one type to another, Orika will do this only if the 'byDefault' method is called on the fluent-style ClassMapBuilder API.
+Yes; when a mapping is requested for 2 types which have not been explicitly registered. When registering an explicit mapping from one type to another, Orika will do this only if the 'byDefault' method is called on the fluent-style ClassMapBuilder API.
 
 ==Is the default mapping behavior configurable?==
 
@@ -42,7 +42,7 @@ Orika uses reflection to investigate the metadata of the objects to be mapped an
 
 ==Are Collections and Arrays and Maps supported?==
 
-Yes. Orika automatically maps between multi-occurrence types (Arrays and java.util.Collection types) and automatically performs the necessary type conversions; java.util.Map types are also supported, and mapping between Arrays, Collections, and Maps can easily be performed via a simple syntax which treats Map as a Collection of java.util.Map.Entry objects.
+Yes. Orika automatically maps between compatible multi-occurrence types (Arrays and java.util.Collection types, or between Map types) and automatically performs the necessary type conversions; mapping between Arrays, Collections, and Maps can be declared using the ClassMapBuilder API. 
 
 
 ==Is class inheritance supported?==
@@ -59,27 +59,28 @@ Yes. Orika has support for the registration of a "concrete" type for a given abs
 
 ==How is Orika mapping configured?==
 
-Orika mapping is configured completely at runtime, via a fluent-style ClassMapBuilder API. An instance is obtained from a MapperFactory which is then used to describe the mapping from one type to antoher. Finally, the specified ClassMap is registered with the MapperFactory for later use in generating a byte-code mapper.
-
-
+Orika mapping is configured via Java code at runtime, via a fluent-style ClassMapBuilder API. An instance is obtained from a MapperFactory which is then used to describe the mapping from one type to antoher. Finally, the specified ClassMap is registered with the MapperFactory for later use in generating a byte-code mapper.
+The recommended way to configure orika is by extending `ma.glasnost.orika.impl.ConfigurableMapper`, and providing any necessary customizations/configurations in the `configure` and `configureFactoryBuilder` methods; an instance of that custom mapper can then be safely shared as a singleton.
 
 ==Can Orika be used with Spring?==
-Yes. The best option is to define your own sub-class of ConfigurableMapper, implement the configure() methods and wire it in singleton scope. 
+Yes. The best option is to define your own sub-class of ConfigurableMapper (as mentioned above) in singleton scope. 
 
 
 ==When do I need to explicitly register mapping for 2 types?==
 
 Ideally, most of your field mappings can be performed automatically;  for the exceptions, a custom mapping can be registered.
-If using an extension of ConfigurableMapper (as mentioned above), the configure() method is where this should be done.
-
-
+Using an extension of ConfigurableMapper (as mentioned above), the configure() method is where this should be done.
 
 ==Is an explicitly registered mapping definition bi-directional, or do I need to define it in both directions?==
 
+Yes; registered (and automatically generated) mappings are bi-directional by default.
+
 ==What if I want some of the mappings require different definitions in each direction?==
 
+When defining a mapping, instead of using the `field("fieldA","fieldB")` method, use one of `fieldAToB("fieldA","fieldB")` or `fieldBToA("fieldB","fieldA")` to register a mapping in a single direction.
+
 ==How can I tell what Orika is doing at runtime? (Which mappers are registered, how did it resolve my request to a particular mapper/converter/etc., when and how did it auto-generate a mapping?)==
-Simply enable DEBUG logging for "ma.glasnost.orika" logger.
+Simply enable DEBUG logging for "ma.glasnost.orika" logger; Orika uses the Slf4J logging API, so should be compatible with most logging implementations if using an appropriate logging bridge.
 
 ==Which version JDK versions are supported?==
 
@@ -95,21 +96,14 @@ Yes.
       <version>1.2.0</version>
     </dependency>
 }}}             
-==Can I map an object contained in a collection or map to a field?==
+==Can I map an object contained in a collection or map to a field, or vise-versa?==
 
-No. Orika does not currently support this.
+Orika does not currently support this by default, but it can be achieved using a custom converter (by extending `ma.glasnost.orika.CustomConverter` or `ma.glasnost.orika.converter.BidirectionalConverter`).
 
-==Can I map a single Complex object into a Collection, Array, or Map?==
-      
-No. Orika does not currently support this.
-
-==Can I map fields that don't have corresponding getter/setter methods?==
+==Can I map fields that don't have corresponding getter/setter methods, or call non-public constructors?==
    
-Orika will allow mapping of public fields as properties, but otherwise, the mapping of inaccessible fields is not supported.
-
-==Does Orika support non-public constructors?==
-
-No. Orika does not currently support this.
+Orika will allow mapping of public fields as properties, but otherwise, the mapping of inaccessible fields is not supported. 
+Since Orika generates Java code to perform the actual mapping, it will generally follow the same restrictions of what you could write yourself.
 
 ==Are Enum types supported?==
 
@@ -119,10 +113,15 @@ Yes. Enum instance are automatically mapped based on their instance values (when
 
 Use the ma.glasnost.orika.metadata.Type<?> construct to pass the runtime type into a given map method. 
 
+==I have a mapping case not supported by Orika--what are my options? ==
 
-==How can I do a workaroud, for a mapping case not supported by Orika? ==
+Orika mappings can be customized by creating your own custom Converters, Mappers, and ObjectFactory types. See the question below for information on what the different constructs are used for and which you might need.
 
-Disable or do not register a field map, then customize your class mapping to map by overriding `mapAtoB` and `mapBtoA` methods.
+
+==What is the difference between a Mapper, ObjectFactory, and Converter?==
+* A *Mapper* is used for applying the properties of an object of one type to an object of another type.
+* An *ObjectFactory* is used for constructing an instance of a particular destination type, in the context of mapping from a particular source type.
+* A *Converter* is used to completely take over the mapping process for a particular set of types.
 
 
 ==How can I debug Orika?==
