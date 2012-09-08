@@ -150,3 +150,20 @@ Yes. The reason it is not the default has mostly to do with size and number of a
 Runtime performance has been roughly equivalent to the Javassist strategy in tests thusfar, but you will want to disable the automatic writing of class and source files to disk by setting the following system properties (which default to 'true' in the EclipseJDt strategy):
     -Dma.glasnost.orika.writeSourceFiles=false
     -Dma.glasnost.orika.writeClassFiles=false
+
+You will first need to make sure to include the 'orika-eclipse-tools' jar in your project's dependencies.
+{{{
+    <dependency>
+      <groupId>ma.glasnost.orika</groupId>
+      <artifactId>orika-eclipse-tools</artifactId>
+      <version>1.2.0</version>
+    </dependency>
+}}}
+To enable/specify this compiler strategy, the best option is to specify it in the `configureFactoryBuilder` method of your extension of `ConfigurableMapper`, like so:
+{{{
+   public void configureFactoryBuilder(DefaultMapperFactory.Builder builder) {
+      builder.compilerStrategy(new EclipseJdtCompilerStrategy());
+   }
+
+}}}
+A less-preferable option is to specify the system property (as mentioned in the above question about debugging Orika)
