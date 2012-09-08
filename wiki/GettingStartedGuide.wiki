@@ -13,7 +13,7 @@ _Please verify the latest version_:
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-core</artifactId>
-   <version>1.1.5</version><!-- latest version -->
+   <version>1.2.0</version><!-- latest version -->
 </dependency> 
 }}}
 
@@ -499,7 +499,7 @@ To enable step-through debugging into the generated objects (which Orika is buil
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-eclipse-tools</artifactId>
-   <version>1.1.5</version><!-- please verify the latest version -->
+   <version>1.2.0</version><!-- please verify the latest version -->
 </dependency> 
 }}}
 In addition, you'll also need to tell Orika you want to use Eclipse Jdt as the compiler strategy; there are 2 ways to do this, listed in order of precedence: 
