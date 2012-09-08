@@ -119,9 +119,9 @@ Orika mappings can be customized by creating your own custom Converters, Mappers
 
 
 ==What is the difference between a Mapper, ObjectFactory, and Converter?==
-* A *Mapper* is used for applying the properties of an object of one type to an object of another type.
-* An *ObjectFactory* is used for constructing an instance of a particular destination type, in the context of mapping from a particular source type.
-* A *Converter* is used to completely take over the mapping process for a particular set of types.
+  * A *Mapper* is used for applying the properties of an object of one type to an object of another type.
+  * An *ObjectFactory* is used for constructing an instance of a particular destination type, in the context of mapping from a particular source type.
+  * A *Converter* is used to completely take over the mapping process for a particular set of types.
 
 
 ==How can I debug Orika?==
