@@ -21,12 +21,7 @@ public class MediaMappingConfigurer implements MappingConfigurer {
     
     public void configure(MapperFactory factory) {
         configureAuthor(factory);
-        configureMedia(factory);
-        // configureAuthor(factory);
-        // configureAuthor(factory);
-        // configureAuthor(factory);
-        // configureAuthor(factory);
-        // configureAuthor(factory);
+        configureMedia(factory);       
         
     }
     
