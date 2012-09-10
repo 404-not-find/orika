@@ -19,13 +19,11 @@ package ma.glasnost.orika.test.community;
 
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Assert;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
-import ma.glasnost.orika.OrikaSystemProperties;
 import ma.glasnost.orika.test.MappingUtil;
 
 import org.junit.Test;
@@ -107,29 +105,25 @@ public class Issue46TestCase {
     @Test
     public void test() {
         
-        MapperFactory factory = MappingUtil.getMapperFactory(true);
+        MapperFactory factory = MappingUtil.getMapperFactory();
         MapperFacade facade = factory.getMapperFacade();
-
-        List<Parent> parents = new ArrayList<Parent>();
-        for (int i = 0; i < 100; i++) {
+        
+        int transforms = 0;
+       
+        for (int i = 0; i < 10000; i++) {
             Parent parent = new Parent();
             List<One> ones = new ArrayList<One>();
             List<Two> twos = new ArrayList<Two>();
-            for (int j = 0; j < 5000; j++) {
+            for (int j = 0; j < 1000; j++) {
                 ones.add(new One(Integer.toString(j)));
                 twos.add(new Two(Integer.toString(j)));
             }
 
             parent.oneList = ones;
             parent.twoList = twos;
-            parents.add(parent);
-        }
-
-        int transforms = 0;
-        try {
-        	Iterator<Parent> parentIter = parents.iterator();
-            while (parentIter.hasNext()) {
-            	Parent parent = parentIter.next();
+            
+            try {
+            
                 transforms++;
 
                 Parent result = facade.map(parent, Parent.class);
@@ -137,11 +131,10 @@ public class Issue46TestCase {
                 for (One one : result.oneList)
                     for (Two two : one.twos)
                        Assert.assertNotNull(two.getName());
-                
-                parentIter.remove();
+                    
+            } catch (Exception e) {
+                throw new AssertionError("Failed to process graph. failed after " + transforms + " transforms, exception = "+e);
             }
-        } catch (Exception e) {
-            throw new AssertionError("Failed to process graph. failed after " + transforms + " transforms, exception = "+e);
         }
     }
 
