@@ -115,7 +115,7 @@ public class Issue46TestCase {
             Parent parent = new Parent();
             List<One> ones = new ArrayList<One>();
             List<Two> twos = new ArrayList<Two>();
-            for (int j = 0; j < 10000; j++) {
+            for (int j = 0; j < 5000; j++) {
                 ones.add(new One(Integer.toString(j)));
                 twos.add(new Two(Integer.toString(j)));
             }
