@@ -105,18 +105,16 @@ public class Issue46TestCase {
 
     @Test
     public void test() {
-        System.setProperty(OrikaSystemProperties.WRITE_SOURCE_FILES, "true");
-
+        
         MapperFactory factory = MappingUtil.getMapperFactory(true);
         MapperFacade facade = factory.getMapperFacade();
-
 
         List<Parent> parents = new ArrayList<Parent>();
         for (int i = 0; i < 100; i++) {
             Parent parent = new Parent();
             List<One> ones = new ArrayList<One>();
             List<Two> twos = new ArrayList<Two>();
-            for (int j = 0; j < 10000; j++) {
+            for (int j = 0; j < 5000; j++) {
                 ones.add(new One(Integer.toString(j)));
                 twos.add(new Two(Integer.toString(j)));
             }
