@@ -42,6 +42,22 @@ import org.slf4j.LoggerFactory;
  */
 public class ClassMapBuilder<A, B> {
     
+	
+	public static class Factory extends ClassMapBuilderFactory {
+
+		/* (non-Javadoc)
+		 * @see ma.glasnost.orika.metadata.ClassMapBuilderFactory#newClassMapBuilder(ma.glasnost.orika.metadata.Type, ma.glasnost.orika.metadata.Type, ma.glasnost.orika.property.PropertyResolverStrategy, ma.glasnost.orika.DefaultFieldMapper[])
+		 */
+		@Override
+		protected <A, B> ClassMapBuilder<A, B> newClassMapBuilder(
+				Type<A> aType, Type<B> bType,
+				PropertyResolverStrategy propertyResolver,
+				DefaultFieldMapper[] defaults) {
+			
+			return new ClassMapBuilder<A,B>(aType, bType, propertyResolver, defaults);
+		}
+	}
+	
     private final Map<String, Property> aProperties;
     private final Map<String, Property> bProperties;
     private final Set<String> propertiesCacheA;
