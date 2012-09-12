@@ -266,9 +266,9 @@ By using this default field mapper, you could automatically map from A to B with
 
 The `DefaultFieldMapper`s registered are applied whenever the internal auto-mapping functionality is triggered, and are applied only _after_ a direct one-to-one mapping for the attribute has failed. This means that if you have any attribute names which *_do_* match exactly, the hints would not override them; hints are used to provide extra 'guesses' when the name doesn't match.
 
-You can also pass any hints you've defined (as var-args) into the *byDefault()* method when using ClassMapBuilder to build a class mapping; like so:
+You can also pass any default field mappers you've defined (as var-args) into the *byDefault()* method when using ClassMapBuilder to build a class mapping; like so:
 {{{
-MappingHint myHint = ... // same hint as defined above
+DefaultFieldMapper myHint = ... // same hint as defined above
 
 mapperFactory.registerClassMap(
    mapperFactory.classMap(A.class,B.class)
