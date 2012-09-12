@@ -184,6 +184,18 @@ public class ClassMapBuilder<A, B> {
     }
     
     /**
+     * Create a fieldMap for the particular field (same property name used in both types)
+     * 
+     * @param a
+     * @param byDefault
+     * @return
+     */
+    public FieldMapBuilder<A, B> fieldMap(String a, boolean byDefault) {
+        return fieldMap(a, a, byDefault);
+    }
+    
+    
+    /**
      * Create a fieldMap for the particular field mapping 
      * 
      * @param fieldNameA the name of the field in type A
@@ -191,9 +203,21 @@ public class ClassMapBuilder<A, B> {
      * @return
      */
     public FieldMapBuilder<A, B> fieldMap(String fieldNameA, String fieldNameB) {
+    	return fieldMap(fieldNameA, fieldNameB, false); 
+    }
+    
+    /**
+     * Create a fieldMap for the particular field mapping 
+     * 
+     * @param fieldNameA the name of the field in type A
+     * @param fieldNameB the name of the field in type B
+     * @param byDefault whether the field mapping has been provided by default
+     * @return
+     */
+    public FieldMapBuilder<A, B> fieldMap(String fieldNameA, String fieldNameB, boolean byDefault) {
     
     	try {
-	    	final FieldMapBuilder<A, B> fieldMapBuilder = new FieldMapBuilder<A, B>(this, fieldNameA, fieldNameB);
+	    	final FieldMapBuilder<A, B> fieldMapBuilder = new FieldMapBuilder<A, B>(this, fieldNameA, fieldNameB, byDefault);
 	        
 	        return fieldMapBuilder;
 	    } catch (MappingException e) {
@@ -311,7 +335,7 @@ public class ClassMapBuilder<A, B> {
                          * in either direction.
                          */
                         if (!propertyName.equals("class")) {
-                            fieldMap(propertyName).add();
+                            fieldMap(propertyName, true).add();
                         }
                     }
                 } else {
@@ -320,7 +344,7 @@ public class ClassMapBuilder<A, B> {
                         String suggestion = defaulter.suggestMappedField(propertyName, prop.getType());
                         if (suggestion != null && getPropertiesForTypeB().contains(suggestion)) {
                             if (!getMappedPropertiesForTypeB().contains(suggestion)) {
-                                fieldMap(propertyName, suggestion).add();
+                                fieldMap(propertyName, suggestion, true).add();
                             }
                         }
                     }
