@@ -2,6 +2,12 @@
 #labels Featured
 =Release Notes=
 _by version_
+==1.2.1 (bug fix)==
+  * Issue 33: (enhancement) Improved extensibility of ClassMapBuilder
+  * Issue 46: Class-cast exception for mapped objects 
+  * Issue 48: Exception on collection mapping
+  * Issue 49: MappingException when enum toString() is overridden
+  * Issue 50: Exclusions are ignored when combined with used mappers
 ----
 ==1.2.0 (feature)==
   * Improved debugging: detailed description of what was generated (and how) for registered and auto-generated mappers
