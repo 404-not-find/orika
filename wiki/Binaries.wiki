@@ -37,6 +37,5 @@ Include our Cloudbees snapshot repository
 }}} 
 ----
 == Not using Maven dependency management? ==
-Download *release binaries* [http://search.maven.org/#search|ga|1|orika here]
-
-Download *snapshot binaries* [https://repository-orika.forge.cloudbees.com/snapshot/ here]
+Download the jars from one of the links below:
+|| [http://search.maven.org/#search|ga|1|orika Releases] || [https://repository-orika.forge.cloudbees.com/snapshot/ Snapshots] ||
