@@ -1,0 +1,42 @@
+#summary how to get orika binaries
+
+= Downloads =
+== Releases ==
+_Available from *Maven central*_
+{{{
+<dependency>
+   <groupId>ma.glasnost.orika</groupId>
+   <artifactId>orika-core</artifactId>
+   <version>1.2.1</version><!-- or latest version -->
+</dependency> 
+}}}
+
+----
+== Snapshots ==
+Include our Cloudbees snapshot repository
+{{{
+<repositories>
+   ...
+   <repository>
+      <id>orika-snapshots</id>
+      <name>Orika Snapshots hosted by Cloudbees</name>
+      <url>https://repository-orika.forge.cloudbees.com/snapshot</url>
+   </repository>
+   ...	
+</repositories>
+
+<dependencies>
+   ...
+   <dependency>
+      <groupId>ma.glasnost.orika</groupId>
+      <artifactId>orika-core</artifactId>
+      <version>1.2.2-SNAPSHOT</version><!-- or latest version -->
+   </dependency> 
+   ...
+</dependencies>
+}}} 
+----
+== Not using Maven dependency management? ==
+Download *release binaries* [http://search.maven.org/#search|ga|1|orika here]
+
+Download *snapshot binaries* [https://repository-orika.forge.cloudbees.com/snapshot/ here]
