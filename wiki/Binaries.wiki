@@ -1,6 +1,10 @@
 #summary how to get orika binaries
 
 = Downloads =
+The easiest way to include Orika in your project (if using Maven or a build tool compatible with Maven dependency management) is to include a dependency as shown below.
+
+Not using Maven? Follow these links to download jars for *[http://search.maven.org/#search|ga|1|orika releases]* or *[https://repository-orika.forge.cloudbees.com/snapshot/ma/glasnost/orika/ snapshots]*
+
 == Releases ==
 _Available from *Maven central*_
 {{{
@@ -35,7 +39,3 @@ Include our Cloudbees snapshot repository
    ...
 </dependencies>
 }}} 
-----
-== Not using Maven dependency management? ==
-Download the jars from one of the links below:
-|| [http://search.maven.org/#search|ga|1|orika Releases] || [https://repository-orika.forge.cloudbees.com/snapshot/ma/glasnost/orika/ Snapshots] ||
