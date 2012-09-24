@@ -2,6 +2,10 @@
 #labels Featured
 =Release Notes=
 _by version_
+
+==1.2.2 (bug fix)==
+  * Issue 52; corrected additional problem found when used mappers were specified in flipped direction
+
 ==1.2.1 (bug fix)==
   * Issue 33: (enhancement) Improved extensibility of ClassMapBuilder
   * Issue 46: Class-cast exception for mapped objects 
