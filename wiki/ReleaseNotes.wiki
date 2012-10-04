@@ -2,6 +2,153 @@
 #labels Featured
 =Release Notes=
 _by version_
+----
+==1.3.0 (feature)==
+Release 1.3.0:
+
+ * Performance Enhancement - BoundMapperFacade
+  This release includes a new BoundMapperFacade<A,B> which can be obtained from the MapperFactory
+  using `factory.getMapperFacade(Entity.class,Dto.class)`; this bound facade tends to complete
+  mappings in about 3/4th the time (on rough average) required by mapperFacade.map().
+  So if you're executing mapping operations against a known set of types, this is definitely the
+  route you want to take.
+  
+  In the case where you're mapping an object graph with no cycles (parent references child which references parent, or similar),
+  then you can leverage a special "non-cyclic" version of the BoundMapperFacade which tends to
+  complete mappings in about 1/4th the time (on rough average) required by mapperFacade.map().
+  
+  Note that the BoundMapperFacade pattern has been applied to the auto-generated mappers, which means
+  that the overall performance is improved for each nested mapping (so this can be even greater improvement for
+  if have multiple levels of nesting)
+  
+ * In-line Property Definition
+  It is now possible to define properties (with arbitrary getter/setter method) within an in-line ClassMapBuilder definition; here's an example:
+{{{
+factory.classMap(Entity.class, Dto.class)
+   .field("customField{readTheCustomField|writeTheField}","field")
+   ...
+}}}
+  In this case, we're defining a property named "customField" with getter method "readTheCustomField"
+  and setter method "writeTheField".
+  Once you've defined an ad-hoc property, you can continue to reference it by the name you used to  define it, for example:
+{{{
+factory.classMap(Entity.class, Dto.class)
+   .field("name{readTheName|writeName}.firstName","givenName")
+   .field("name.lastName", "sirName")
+   ...
+}}}
+  Here, we've defined 'name' with getter 'readTheName' and setter 'writeTheName' (and used it within a
+  nested property), and then we re-use it in a following line (without re-defining the getter/setter).
+  
+  An in-line property with no setter is defined like this: "propertyName{getterName}", while an ad-hoc
+  property with no getter is like this: "propertyName{|setterName}".
+
+  Alternatively, in-line properties can also be specified as a java method call, even allowing for constant/static
+  parameters to be passed, like so:
+{{{
+factory.classMap(Entity.class, Dto.class)
+   .field("name{readTheNameIn(\"english\")|writeTheNameIn(\"english\", %s)|type=my.org.Name}.firstName","givenName")
+   .field("name.lastName", "sirName")
+}}}
+  Note that a third argument (type={the type}) is allowed to specify the exact type of the property, since it will not be drawn from
+  the read/write methods in this case. Type names passed in this way can be fully-qualified class names or valid generic
+  type expressions. There is also some allowed assumption of "automatic imports" for 'java.lang' and 'java.util' packages
+  for the types/sub-types specified this way, so `List<Long>` would be understood as `java.util.List<java.lang.Long>`.
+  
+ * Enhancements for extensibility of PropertyResolverStrategy
+  Now, your own custom implementation can be defined by extending from PropertyResolver (or one of the
+  other existing implementations) and implementing the 'collectProperties(...)' method.
+
+ * Added new RegexPropertyResolver which can be configured to extend the default JavaBeans property discovery
+  with your own custom patterns for recognizing getter/setter methods.
+  An example configuration is as follows:
+{{{
+DefaultMapperFactory.Builder()
+   .propertyResolverStrategy(
+      new RegexPropertyResolver(
+         "readThe([\\w]+)", "writeThe([\\w]+)Field", true, true))  
+   .build();
+}}}
+  Here, we've defined a regular expression for getters as "readThe([\\w]+)", and "writeThe([\\w]+)Field" for
+  the setters. This would discover a property named "address", based on finding a getter method named 'readTheAddress'
+  and a setter named 'writeTheAddressField'. In regular expression terms, there must be a group matched at 
+  index (1), which is used as the name of the field.
+  The additional parameters (true, true) specify that JavaBeans properties should be supported and that
+  public fields should be supported, respectively.
+
+ * Built-in Date/Numeric/String converters enabled by default
+  The enhancement to include the converters defined within BuiltinConverters is now enabled by default,
+  whereas, previously, it had to be explicitly enabled using `.useBuiltinConverters(true)` on the DefaultMapperFactory.Builder
+
+ * Fix to converter resolution process; 
+  Previously, converters were resolved according to non-deterministic ordering (HashSet lookup), which could result
+  in unexpected behavior when more than 1 converter is registered which is able to convert for a given type par.
+  
+  Now, the resolution process has been updated to use the same (most-specific-wins) strategy as is used to resolve
+  mappers so the behavior is consistent, even when converters are registered in different order; if two converters
+  with exact same set of types is registered, the first one registered wins (built-in converters are registered when
+  the MapperFactory is first initialized, which is usually upon the first call to getMapperFacade(). 
+  
+ * Convenience 'register' method added to the ClassMapBuilder API
+  Now, to register a class map, the syntax is a bit simplified, to this:
+{{{
+mapperFactory.classMap(A.class, B.class)
+   .field("name", "fullName")
+   .field("address.street", "streetAddress")
+   .field("age", "legalAge")
+   .byDefault()
+   .register(); 
+}}}
+  For comparison, it used to be like this:
+{{{
+mapperFactory.registerClassMap(
+   mapperFactory.classMap(A.class, Map.class)
+      .field("name", "fullName")
+      .field("address.street", "streetAddress")
+      .field("age", "legalAge")
+      .byDefault()
+      .toClassMap());
+}}}		
+  Of course, the old syntax will still work (this is what is called under the covers anyway).
+  
+ * Capability to map from standard POJO types to Map
+  Now, a mapping can be defined which converts a POJO to a Map, using the normal mapping API, like so:
+{{{
+mapperFactory.classMap(A.class, Map.class)
+   .field("name", "fullName")
+   .field("address.street", "streetAddress")
+   .field("age", "legalAge")
+   .byDefault()
+   .register();
+}}}
+  This would map the 'name' property of class A to a value in the map keyed by "fullName", the nested 'address.street'
+  property to a value keyed by "streetAddress", and so on. The 'byDefault()' method in this case, would continue adding
+  the top-level properties of class A to the map, keyed by their property names.
+  Note that more specific Map types can be specified by passing a Type<?> value into the classMap method; when Map.class
+  is used, the type uses the default of Map<Object, Object>; an example of using a Map<String,String> is as follows:
+     mapperFactory.classMap(TypeFactory.valueOf(A.class), new TypeBuilder<Map<String,String>>(){}.build())
+		.field(...)
+  In this case, it's best to define the map type once, since you'll need to pass it in as an argument to the 'map' method
+  (or the new 'getMapperFacade(Type<?>,Type<?>)' ) to assure that your specific Map type is used.
+  
+ * Capability to map from standard POJO types to List and Array
+  Now, a mapping can be defined which converts a POJO to a List or Array, using the normal mapping API, like so:
+{{{
+mapperFactory.classMap(A.class, List.class)
+   .field("name", "0")
+   .field("address.street", "1")
+   .field("age", "2")
+   .byDefault()
+   .register();
+}}}
+  This would map the 'name' property of class A to the 0-index value in the list/array, the nested 'address.street'
+  property to the 1-index value, and so on. The 'byDefault()' method in this case, would continue adding
+  the top-level properties of class A to the array/list, in the order of their declaration within class A.
+  As mentioned for Bean to Map (above), a more specific List type may be specified using the 'classMap(Type<?>,Type<?>)'
+  signature. Since arrays keep their component type at runtime, you can simply pass in the specific array type
+  to the standard 'map(Class<?>,Class<?>)' 
+
+----
 
 ==1.2.2 (bug fix)==
   * Issue 52; corrected additional problem found when used mappers were specified in flipped direction
