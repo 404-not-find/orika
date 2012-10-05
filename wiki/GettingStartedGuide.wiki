@@ -13,7 +13,7 @@ _Please verify the latest version_:
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-core</artifactId>
-   <version>1.2.1</version><!-- latest version -->
+   <version>1.3.0</version><!-- latest version -->
 </dependency> 
 }}}
 
@@ -129,7 +129,7 @@ Note that we have explicitly chosen different and alike attributes names and typ
 
 *Result (Orika-AutoMapping) :*
 
-Orika will automatically find all attributes with the same name and type and map them.
+Orika will automatically find all attributes with the same name and compatible types and map them.
 
 NB: Remember that, when declaring a custom mapper and/or a converter, you are overriding the Orika auto-mapping functionality temporarily; applying the byDefault() method to the ClassMapBuilder will apply default auto-mapping behvaior to the remaining properties.
 This allows you to do any of the following:
@@ -276,7 +276,12 @@ mapperFactory.registerClassMap(
       .toClassMap()
    );
 }}}
-
+=== Disabling auto-mapping altogether ===
+To tell Orika that it should not auto-generate any mappers at runtime, you can apply the `useAutoMapping(false)` method on the DefaultMapperFactory.Builder, like so:
+{{{
+new DefaultMapperFactory.Builder().useAutoMapping(false).build();
+}}}
+This will only allow generation of mappers before the first time you call `getMapperFacade()`, which means that Only mappers you have registered will be auto-generated.
 
 === Nested property ===
 
@@ -506,7 +511,7 @@ To enable step-through debugging into the generated objects (which Orika is buil
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-eclipse-tools</artifactId>
-   <version>1.2.1</version><!-- please verify the latest version -->
+   <version>1.3.0</version><!-- please verify the latest version -->
 </dependency> 
 }}}
 In addition, you'll also need to tell Orika you want to use Eclipse Jdt as the compiler strategy; there are 2 ways to do this, listed in order of precedence: 
