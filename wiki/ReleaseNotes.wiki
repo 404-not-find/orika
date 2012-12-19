@@ -15,7 +15,7 @@ Release 1.4.0 (2012-12-17):
  * Issue 53: Dynamic mapping always uses existing parent mapper even if it doesn't map all fields
  * Issue 64: SimpleConstructorResolverStrategy ignores generic parameter types
  * Issue 65: Orika wraps user exceptions in MapperException
- * Issue 71: Orika maps enum to enum, but not List<enum> to List<enum>
+ * Issue 71: Orika maps enum to enum, but not List&lt;enum&gt; to List&lt;enum&gt;
 
 ----
 ==1.3.5 (bug fix)==
