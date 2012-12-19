@@ -3,8 +3,37 @@
 =Release Notes=
 _by version_
 ----
+==1.4.0 (feature)==
+Release 1.4.0 (2012-12-17):
+
+ * Refactor of inline/adhoc property definitions; they now begin with ':{' and end with '}',
+ and refactor of nested element expressions, which use '{ }' 
+ _Enhancements_
+ * Issue 62: Add capability to ignore mapping of null values (instead of setting results NULL)
+
+ _Fixes_
+ * Issue 53: Dynamic mapping always uses existing parent mapper even if it doesn't map all fields
+ * Issue 64: SimpleConstructorResolverStrategy ignores generic parameter types
+ * Issue 65: Orika wraps user exceptions in MapperException
+ * Issue 71: Orika maps enum to enum, but not List<enum> to List<enum>
+
+----
+==1.3.5 (bug fix)==
+Release 1.3.5 (2012-10-21):
+
+ * Issue 61:   StackOverflowError on circle association.
+
+
+----
+==1.3.4 (bug fix)==
+Release 1.3.4 (2012-10-15):
+ * Issue 58: Orika fails to map short to int, long to int, short to long, etc.
+ * Issue 59: NPE thrown when mapping null list property on source to destination
+ * Issue 60: Javolution dependency causing classloader problems on Websphere
+ 
+----
 ==1.3.0 (feature)==
-Release 1.3.0:
+Release 1.3.0 (2012-10-04):
 
  * Performance Enhancement - BoundMapperFacade
   This release includes a new BoundMapperFacade<A,B> which can be obtained from the MapperFactory
