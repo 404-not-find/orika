@@ -1,3 +1,6 @@
 #summary Orika source is now on github
 = Orika source is now hosted on Github! =
-https://github.com/elaatifi/orika
+
+https://github.com/orika-mapper/orika
+
+* Note: we've recently moved to a Github Organization repo
