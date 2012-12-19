@@ -1,4 +1,8 @@
 #labels Featured
+==_Some of this information may be outdated_==
+==_Check out our new [http://orika-mapper.github.com/orika-docs/ User Guide]_==
+----
+
 =Getting Started Guide=
 <wiki:toc max_depth="3" />
 _This guide is very brief and incomplete. Feel free to fix or improve it_
