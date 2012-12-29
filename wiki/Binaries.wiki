@@ -11,7 +11,7 @@ _Available from *Maven central*_
 <dependency>
    <groupId>ma.glasnost.orika</groupId>
    <artifactId>orika-core</artifactId>
-   <version>1.2.1</version><!-- or latest version -->
+   <version>1.4.0</version><!-- or latest version -->
 </dependency> 
 }}}
 
@@ -34,7 +34,7 @@ Include our Cloudbees snapshot repository
    <dependency>
       <groupId>ma.glasnost.orika</groupId>
       <artifactId>orika-core</artifactId>
-      <version>1.2.2-SNAPSHOT</version><!-- or latest version -->
+      <version>1.4.1-SNAPSHOT</version><!-- or latest version -->
    </dependency> 
    ...
 </dependencies>
