@@ -8,9 +8,10 @@ _by version_
 Release 1.4.1 (2013-02-10):
 
  _Fixes_
+ * Issue 69: Orika fails to map classes with lists which do not return internal references
  * Issue 76: Conversion between java.sql.Time and java.util.Date
  * Issue 74: Concurrent use of a non-threadsafe Map implementation
- * Issue 77:	(Orika 1.4.0) A sub type is not beeing mapped to the configured mapping type
+ * Issue 77: (Orika 1.4.0) A sub type is not beeing mapped to the configured mapping type
 
 ==1.4.0 (feature)==
 Release 1.4.0 (2012-12-17):
