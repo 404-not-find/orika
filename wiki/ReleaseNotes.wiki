@@ -3,7 +3,19 @@
 =Release Notes=
 _by version_
 ----
+==1.4.2 (bugfix)==
+Release 1.4.2 (TBD):
 
+ _Fixes_
+ * Issue 98: ClassCastException when mapping list of subtypes
+ * Issue 97: Concurrent Modification Exception
+ * Issue 95: Orika sometimes fails to detect inacessible types -- results in IllegalAccessError
+ * Issue 94: Mapping null values for nested fields does not work
+ * Issue 92: NPE when mapping a class implementing a map
+ * Issue 88: 1.4.1 throws java.lang.NoSuchMethodError ConcurrentLinkedHashMap$Builder.maximumWeightedCapacity
+ * Issue 82: MappingException on customization the default field-name mapping.
+
+----
 ==1.4.1 (bugfix)==
 Release 1.4.1 (2013-02-10):
 
