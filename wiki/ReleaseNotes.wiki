@@ -4,9 +4,10 @@
 _by version_
 ----
 ==1.4.2 (bugfix)==
-Release 1.4.2 (TBD):
+Release 1.4.2 (2013-05-16):
 
  _Fixes_
+ * Issue 100: Add case-insensitive capability for mapping
  * Issue 98: ClassCastException when mapping list of subtypes
  * Issue 97: Concurrent Modification Exception
  * Issue 95: Orika sometimes fails to detect inacessible types -- results in IllegalAccessError
