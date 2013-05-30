@@ -1,0 +1,13 @@
+#summary This page contains a tentative roadmap for upcoming releases
+=Roadmap=
+----
+==1.4.3 (bugfix)==
+Expected Release Date (2013-07-01):
+
+ * Issue 92: NPE when mapping a class implementing a map
+ * Issue 106: Allow ObjectFactory to be registered by source and destination type 
+
+==1.5.0 (enhancement)==
+
+
+==2.0.0 (rewrite)==
