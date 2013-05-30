@@ -6,6 +6,7 @@ Expected Release Date (2013-07-01):
 
  * Issue 92: NPE when mapping a class implementing a map
  * Issue 106: Allow ObjectFactory to be registered by source and destination type 
+ * Issue 107: Custom mappers use unnecessary string concatenation
 
 ==1.5.0 (enhancement)==
 
