@@ -12,7 +12,6 @@ Release 1.4.2 (2013-05-16):
  * Issue 97: Concurrent Modification Exception
  * Issue 95: Orika sometimes fails to detect inacessible types -- results in IllegalAccessError
  * Issue 94: Mapping null values for nested fields does not work
- * Issue 92: NPE when mapping a class implementing a map
  * Issue 88: 1.4.1 throws java.lang.NoSuchMethodError ConcurrentLinkedHashMap$Builder.maximumWeightedCapacity
  * Issue 82: MappingException on customization the default field-name mapping.
 
