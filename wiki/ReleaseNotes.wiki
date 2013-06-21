@@ -2,6 +2,22 @@
 #labels Featured
 =Release Notes=
 _by version_
+
+----
+==1.4.3 (bugfix)==
+Expected Release Date (2013-07-01):
+ * Issue 80: There is a bug for JavaBean to Map
+ * Issue 85: NullPointerException in MultiOccurrenceToMultiOccurrence.mapFields
+ * Issue 86: Single directional default mapping
+ * Issue 90: Simple mappings fail
+ * Issue 92: NPE when mapping a class implementing a map
+ * Issue 102: Not able to set map type using orika
+ * Issue 105: Using CaseInsensitiveClassMapBuilder for standard field mapping
+ * Issue 106: Allow ObjectFactory to be registered by source and destination type 
+ * Issue 107: Custom mappers use unnecessary string concatenation
+ * Issue 108: ma.glasnost.orika.impl.Comparators violates Comparator contract
+ * Issue 109: Mapping for multi-occurrence elements doesn't trigger auto-generated mappings
+
 ----
 ==1.4.2 (bugfix)==
 Release 1.4.2 (2013-05-16):
