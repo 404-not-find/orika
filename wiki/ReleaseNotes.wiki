@@ -9,6 +9,7 @@ Expected Release Date (2013-07-01):
  * Issue 80: There is a bug for JavaBean to Map
  * Issue 85: NullPointerException in MultiOccurrenceToMultiOccurrence.mapFields
  * Issue 86: Single directional default mapping
+ * Issue 87: Nested properties: Allow abstract nested property's fields mapping
  * Issue 90: Simple mappings fail
  * Issue 92: NPE when mapping a class implementing a map
  * Issue 102: Not able to set map type using orika
