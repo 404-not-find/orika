@@ -6,6 +6,7 @@ _by version_
 ----
 ==1.4.3 (bugfix)==
 Expected Release Date (2013-07-01):
+ * Issue 44: Allow converters for Lists (or other collections).
  * Issue 80: There is a bug for JavaBean to Map
  * Issue 85: NullPointerException in MultiOccurrenceToMultiOccurrence.mapFields
  * Issue 86: Single directional default mapping
