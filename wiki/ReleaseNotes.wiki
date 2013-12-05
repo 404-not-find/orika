@@ -4,6 +4,55 @@
 _by version_
 
 ----
+
+==1.4.4 (bugfix)==
+  * Added some javadocs, clean up code, fix tests
+  * Added a copy of tccl instead of using the existing tccl to isolate from other tests.
+  * Added explicit pre-loading of hidden types.
+  * Removed separate alternate compiler strategy.
+  * Migrated eclipse tools to use recent versions of eclipse jdt dependencies.
+  * Fix Issue 135 : NPE while mapping to a nested property
+  * Separated MultiLayeredClassloader into it's own suite, as it was being negatively affected by previously loaded classes
+  * Fix  Issue 134 : Using eclipse compiler with classes in the default package.
+  * Added optional deferred initialisation to allow subclass constructor arguments to be captured first.
+  * Massive performance improvements for very large mappings
+  * Added test case and fix for mapping non-assignable properties (in-place) if possible.
+  * Added test case for Issue 132. Added ConstructorParameter, and ConstructorParameterResolver to help in resolving parameters from constructor.
+  * Fix to debug logging for excluded fields.
+  * Fix Issue 128 
+  * Fix Issue 126 : To avoid throwing error in 'exclude' method if field does not exist in both types.
+  * Fix Issue 114
+  * Fix Issue 121 : Added fixes to: Type: created new method isSelfOrAncestorParameterized, used by updated PropertyResol
+  * Fix Issue 119
+  * Applied fixes to specifications for comparison generation. Added test cases for many-to-one and one-to-many mappings.
+  * Added existsProperty method to allow checking for existence of a property without triggering exceptions.
+  * Added handling for special one-to-many and many-to-one specifications.
+  * Added one-to-many and many-to-one specs.
+  * Fix to specification debug printing; restored field tag prefix was lost in a previous change.
+  * Fix Issue 130 : Inline Property Syntax does not support primitives ...
+  * Tighten type bounds on the parameters to filter methods.
+  * Apply filters in multi-occurrence-to-multi-occurrence setting too.
+  * Provide a NullFilter to simplify the implementation of simple filters.
+  * Improve the information passed to Filter.shouldMap().
+  * Provide more information when descending into nested objects.
+  * Allow subclasses to determine the A- and B-types.
+  * Fix NPE when destination in a comparison is null.
+  * Fix Issue 118, Keep using unenhance strategy
+  * Added fix to constructor resolution to avoid resolving constructors for which we can't map all the arguments with known source properties
+  * Updated ObjectFactoryGenerator to check for mismatch of parameters to constructor args and throw a descriptive exception telling user t
+  * Added fix for PersonMappingTestCase -- issue with properly detecting nested property when a element type is used
+  * Enhance DateToStringConverter to handle localization.
+  * Fix issue 116 : Remove SLF4J from orika-deps-included jar and add/relocate concurrentlinkedhashmap
+  * Fix Issue 113  Cannot find a mapper when a child bean infers a generic type of its parent bean
+  * Fix Issue 115 : NPE in MultiOccurrence To MultiOccurrence mapping.
+  * Fix Array or collection to array mapping specification.
+  * Changed MappingContext constructor to public for better usability.
+  * Added MappingContextFactory to UtilityResolver and to DefaultMapperFactory.Builder to allow users to customize the MappingContextFactor
+  * Fix Issue 112, along with test case.
+  * Added initial implementation of Filters feature
+
+
+
 ==1.4.3 (bugfix)==
 Expected Release Date (2013-07-01):
  * Issue 44: Allow converters for Lists (or other collections).
