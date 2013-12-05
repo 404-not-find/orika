@@ -4,6 +4,7 @@
 _by version_
 
 ----
+Expected Release Date (2013-12-05):
 
 ==1.4.4 (bugfix)==
   * Added some javadocs, clean up code, fix tests
